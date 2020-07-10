@@ -11,6 +11,7 @@ import {
   semver,
   base64,
   parse,
+  yolk,
 } from "../deps.ts";
 import {
   pathExists,
@@ -171,17 +172,8 @@ export const publish = new Command()
         );
       }
 
-      let existingPackage = await fetch(`${ENDPOINT}/api/package/${egg.name}`)
-        .catch(() => void 0);
-      let existingPackageBody: {
-        name: string;
-        owner: string;
-        description: string;
-        latestVersion?: string;
-        latestStableVersion?: string;
-        packageUploadNames: string[];
-      } | undefined = existingPackage?.ok && await existingPackage?.json();
-
+      let existingPackage = await yolk.moduleByName(egg.name);
+      let existingPackageBody = existingPackage.data;
       if (
         existingPackageBody &&
         existingPackageBody.packageUploadNames.indexOf(
