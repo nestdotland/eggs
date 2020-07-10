@@ -1,42 +1,18 @@
 import {
-  Command,
-  existsSync,
-  green,
-  red,
-  yellow,
-  bold,
-  lstatSync,
-  expandGlobSync,
-  path,
-  semver,
   base64,
-  parse,
-} from "../deps.ts";
-import {
-  pathExists,
-  configExists,
-  readmeExists,
-} from "../utilities/files.ts";
-import {
-  getAPIKey,
-  ENDPOINT,
-} from "../utilities/keyfile.ts";
-import {
-  ConfigFormats,
-} from "../types.ts";
-
-interface IEggConfig {
-  name: string;
-  entry?: string;
-  description?: string;
-  repository?: string;
-  version?: string;
-  stable?: boolean;
-  unlisted?: boolean;
-  fmt?: boolean;
-
-  files: string[];
-}
+  bold,
+  Command,
+  expandGlobSync,
+  green,
+  lstatSync,
+  path,
+  red,
+  semver,
+  yellow,
+} from "../../deps.ts";
+import { Config, ConfigFormats, parseConfig } from "../config.ts";
+import { configExists, pathExists, readmeExists } from "../utilities/files.ts";
+import { ENDPOINT, getAPIKey } from "../utilities/keyfile.ts";
 
 function detectConfig(): ConfigFormats {
   if (pathExists("egg.yaml")) return "yaml";
@@ -44,7 +20,7 @@ function detectConfig(): ConfigFormats {
   return "json";
 }
 
-function readFileBtoa(path: string) {
+function readFileBtoa(path: string): string {
   const data = Deno.readFileSync(path);
   return base64.fromUint8Array(data);
 }
@@ -58,17 +34,11 @@ export const publish = new Command()
       const content = decoder.decode(
         await Deno.readFile(`egg.${configFormat}`),
       );
-      let egg: IEggConfig;
-      if (["yaml", "yml"].includes(configFormat)) {
-        let yamlConfig = parse(content);
-        // @ts-ignore
-        egg = typeof yamlConfig == "object" ? yamlConfig : {};
-      } else {
-        try {
-          egg = JSON.parse(content);
-        } catch (err) {
-          throw err;
-        }
+      let egg: Config;
+      try {
+        egg = parseConfig(content, configFormat);
+      } catch (err) {
+        throw err;
       }
       if (!egg.name) {
         throw new Error(red("You must provide a name for your package!"));
@@ -104,9 +74,15 @@ export const publish = new Command()
         const readmeContent = decoder.decode(
           await Deno.readFile(`README.md`),
         );
-        if (readmeContent.toLowerCase().includes(`://deno.land/x/${ egg.name.toLowerCase() }`)) {
+        if (
+          readmeContent.toLowerCase().includes(
+            `://deno.land/x/${egg.name.toLowerCase()}`,
+          )
+        ) {
           console.log(
-            yellow(`Your readme contains old import URLs from your project using deno.land/x/${ egg.name.toLowerCase() }.\nYou can change these to https://x.nest.land/${ egg.name }@VERSION`),
+            yellow(
+              `Your readme contains old import URLs from your project using deno.land/x/${egg.name.toLowerCase()}.\nYou can change these to https://x.nest.land/${egg.name}@VERSION`,
+            ),
           );
         }
       } catch (e) {
@@ -149,8 +125,10 @@ export const publish = new Command()
       }
 
       if (egg.entry) {
-        egg.entry = egg.entry?.replace(/^[.]/, "").replace(/^[^/]/, (s) =>
-          `/${s}`);
+        egg.entry = egg.entry?.replace(/^[.]/, "").replace(
+          /^[^/]/,
+          (s: string) => `/${s}`,
+        );
       }
 
       if (
@@ -281,8 +259,15 @@ export const publish = new Command()
           }`,
         );
       });
-      console.log(green("You can now find your package on our registry at " + bold(`https://nest.land/package/${egg.name}\n`)));
-      console.log(`Add this badge to your README to let everyone know:\n\n [![nest badge](https://nest.land/badge.svg)](https://nest.land/package/${egg.name})`);
+      console.log(
+        green(
+          "You can now find your package on our registry at " +
+            bold(`https://nest.land/package/${egg.name}\n`),
+        ),
+      );
+      console.log(
+        `Add this badge to your README to let everyone know:\n\n [![nest badge](https://nest.land/badge.svg)](https://nest.land/package/${egg.name})`,
+      );
     } else {
       throw new Error(
         red(
