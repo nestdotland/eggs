@@ -1,43 +1,19 @@
 import {
-  Command,
-  existsSync,
-  green,
-  red,
-  yellow,
-  bold,
-  lstatSync,
-  expandGlobSync,
-  path,
-  semver,
   base64,
-  parse,
+  bold,
+  Command,
+  expandGlobSync,
+  green,
+  lstatSync,
+  path,
   ProgressBar,
-} from "../deps.ts";
-import {
-  pathExists,
-  configExists,
-  readmeExists,
-} from "../utilities/files.ts";
-import {
-  getAPIKey,
-  ENDPOINT,
-} from "../utilities/keyfile.ts";
-import {
-  ConfigFormats,
-} from "../types.ts";
-
-interface IEggConfig {
-  name: string;
-  entry?: string;
-  description?: string;
-  repository?: string;
-  version?: string;
-  stable?: boolean;
-  unlisted?: boolean;
-  fmt?: boolean;
-
-  files: string[];
-}
+  red,
+  semver,
+  yellow,
+} from "../../deps.ts";
+import { Config, ConfigFormats, parseConfig } from "../config.ts";
+import { configExists, pathExists, readmeExists } from "../utilities/files.ts";
+import { ENDPOINT, getAPIKey } from "../utilities/keyfile.ts";
 
 function detectConfig(): ConfigFormats {
   if (pathExists("egg.yaml")) return "yaml";
@@ -45,7 +21,7 @@ function detectConfig(): ConfigFormats {
   return "json";
 }
 
-function readFileBtoa(path: string) {
+function readFileBtoa(path: string): string {
   const data = Deno.readFileSync(path);
   return base64.fromUint8Array(data);
 }
@@ -64,17 +40,11 @@ export const publish = new Command()
         await Deno.readFile(`egg.${configFormat}`),
       );
       progress.render(completed++)
-      let egg: IEggConfig;
-      if (["yaml", "yml"].includes(configFormat)) {
-        let yamlConfig = parse(content);
-        // @ts-ignore
-        egg = typeof yamlConfig == "object" ? yamlConfig : {};
-      } else {
-        try {
-          egg = JSON.parse(content);
-        } catch (err) {
-          throw err;
-        }
+      let egg: Config;
+      try {
+        egg = parseConfig(content, configFormat);
+      } catch (err) {
+        throw err;
       }
       progress.render(completed++)
       if (!egg.name) {
@@ -159,8 +129,10 @@ export const publish = new Command()
       progress.render(completed++)
 
       if (egg.entry) {
-        egg.entry = egg.entry?.replace(/^[.]/, "").replace(/^[^/]/, (s) =>
-          `/${s}`);
+        egg.entry = egg.entry?.replace(/^[.]/, "").replace(
+          /^[^/]/,
+          (s: string) => `/${s}`,
+        );
       }
       progress.render(completed++)
       if (

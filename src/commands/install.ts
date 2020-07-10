@@ -1,18 +1,22 @@
 import {
-  Command,
-  bold,
-  yellow,
-  red,
-  installUpdateHandler,
-  writeJson,
-  readJson,
-  exists,
-  semver,
-  getLatestVersion,
   analyzeURL,
+  bold,
+  Command,
+  exists,
+  getLatestVersion,
   globalModulesConfigPath,
-  version,
-} from "../deps.ts";
+  installUpdateHandler,
+  red,
+  semver,
+  yellow,
+} from "../../deps.ts";
+import {
+  GlobalModuleConfig,
+  readGlobalModuleConfig,
+  writeGlobalModuleConfig,
+} from "../global_module.ts";
+
+import { version } from "../version.ts";
 
 const installPrefix = "eggs--";
 
@@ -78,7 +82,7 @@ export const install = new Command()
   .useRawArgs()
   .action(installModule);
 
-async function installModule(_: any, ...args: string[]) {
+async function installModule(_: unknown, ...args: string[]): Promise<void> {
   /** help option need to be parsed manually */
   if (["-h", "--help", "help"].includes(args[0])) {
     Deno.stdout.writeSync(
@@ -101,13 +105,15 @@ async function installModule(_: any, ...args: string[]) {
 
   const currentVersion = semver.valid(version) ??
     await getLatestVersion(registry, moduleName, owner);
-  
+
   if (!currentVersion || !semver.valid(currentVersion)) {
     console.log(
-      yellow(`Warning: could not find the latest version of ${moduleName}.\nModule will not receive any notification of updates.`),
+      yellow(
+        `Warning: could not find the latest version of ${moduleName}.\nModule will not receive any notification of updates.`,
+      ),
     );
-    await installModuleWithoutUpdates(args)
-    Deno.exit()
+    await installModuleWithoutUpdates(args);
+    Deno.exit();
   }
 
   /** If no exec name is given, provide one */
@@ -139,7 +145,9 @@ async function installModule(_: any, ...args: string[]) {
   args[args.findIndex((arg) => arg.match(/https:\/\//))] = versionURL;
 
   const configExists = await exists(configPath);
-  const config: any = configExists ? await readJson(configPath) : {};
+  const config: GlobalModuleConfig = configExists
+    ? await readGlobalModuleConfig(configPath)
+    : {};
 
   config[execName] = {
     registry,
@@ -151,10 +159,10 @@ async function installModule(_: any, ...args: string[]) {
     lastUpdateCheck: Date.now(),
   };
 
-  writeJson(configPath, config, { spaces: 2 });
+  await writeGlobalModuleConfig(configPath, config);
 }
 
-async function installModuleHandler(args: string[]) {
+async function installModuleHandler(args: string[]): Promise<void> {
   const installation = Deno.run({
     cmd: [
       "deno",
@@ -174,7 +182,7 @@ async function installModuleHandler(args: string[]) {
   }
 }
 
-async function installModuleWithoutUpdates(args: string[]) {
+async function installModuleWithoutUpdates(args: string[]): Promise<void> {
   const installation = Deno.run({
     cmd: [
       "deno",

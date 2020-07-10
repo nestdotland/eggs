@@ -4,7 +4,7 @@
  * Requires: --allow-read, --allow-run, --allow-write
  */
 
-import { assertEquals, assertMatch, path } from "../../../src/deps.ts";
+import { assertEquals, assertMatch, path } from "../../../deps.ts";
 
 const pathToHere = "tests/commands/update/";
 
@@ -40,6 +40,7 @@ function removeDependencyFile(filename: string): void {
   try {
     Deno.removeSync(pathToHere + filename);
   } catch (err) {
+    console.log(err);
   }
 }
 
@@ -68,7 +69,9 @@ Deno.test({
       ),
     );
     const newDepContent = new TextDecoder("utf-8").decode(
-      Deno.readFileSync(path.join(Deno.cwd(), "/eggs/tests/commands/update/deps.ts")),
+      Deno.readFileSync(
+        path.join(Deno.cwd(), "/eggs/tests/commands/update/deps.ts"),
+      ),
     );
     assertEquals(originalDepContent !== newDepContent, true);
     replaceMainDepFileContent("deps.ts", "original_deps.ts");
@@ -101,7 +104,9 @@ Deno.test({
       ),
     );
     const newDepContent = new TextDecoder("utf-8").decode(
-      Deno.readFileSync(path.join(Deno.cwd(), "/eggs/tests/commands/update/deps.ts")),
+      Deno.readFileSync(
+        path.join(Deno.cwd(), "/eggs/tests/commands/update/deps.ts"),
+      ),
     );
     assertEquals(originalDepContent !== newDepContent, true);
     assertEquals(newDepContent.indexOf("eggs@0.1.6") > 0, true);
