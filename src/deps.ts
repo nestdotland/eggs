@@ -10,4 +10,5 @@ export * as base64 from "https://denopkg.com/chiefbiiko/base64@v0.2.0/mod.ts";
 export { installUpdateHandler, globalModulesConfigPath } from "https://x.nest.land/eggs-update-handler@0.5.1/mod.ts";
 export { getLatestVersionFromNestRegistry, getLatestVersion, analyzeURL, versionSubstitute } from "https://x.nest.land/eggs-update-handler@0.5.1/lib/registries.ts";
 export { version } from "./version.ts";
+export * as yolk from "https://raw.githubusercontent.com/nestdotland/yolk/master/mod.ts";
 export const lstatSync = Deno.lstatSync;
