@@ -11,6 +11,7 @@ import {
   semver,
   base64,
   parse,
+  ProgressBar,
 } from "../deps.ts";
 import {
   pathExists,
@@ -52,12 +53,17 @@ function readFileBtoa(path: string) {
 export const publish = new Command()
   .description("Publishes the current directory to the nest.land registry.")
   .action(async () => {
+    const progress = new ProgressBar({ title: 'Publishing:', total: 25 })
+    let completed = 0
+    progress.render(completed++)
     if (configExists()) {
+      progress.render(completed++)
       const decoder = new TextDecoder("utf-8");
       let configFormat = detectConfig();
       const content = decoder.decode(
         await Deno.readFile(`egg.${configFormat}`),
       );
+      progress.render(completed++)
       let egg: IEggConfig;
       if (["yaml", "yml"].includes(configFormat)) {
         let yamlConfig = parse(content);
@@ -70,9 +76,11 @@ export const publish = new Command()
           throw err;
         }
       }
+      progress.render(completed++)
       if (!egg.name) {
         throw new Error(red("You must provide a name for your package!"));
       }
+      progress.render(completed++)
       if (!egg.description) {
         console.log(
           yellow(
@@ -80,11 +88,13 @@ export const publish = new Command()
           ),
         );
       }
+      progress.render(completed++)
       if (!egg.version) {
         console.log(
           yellow("No version found. Generating a new version now..."),
         );
       }
+      progress.render(completed++)
       if (!egg.files) {
         throw new Error(
           red(
@@ -92,18 +102,20 @@ export const publish = new Command()
           ),
         );
       }
+      progress.render(completed++)
       if (!readmeExists()) {
         console.log(
           yellow("No README found at project root, continuing without one..."),
         );
       }
-
+      progress.render(completed++)
       //testing if README has original deno.land/x urls instead of x.nest.land urls
       //if we add a README location field to the egg config, this needs to be updated
       try {
         const readmeContent = decoder.decode(
           await Deno.readFile(`README.md`),
         );
+        progress.render(completed++)
         if (readmeContent.toLowerCase().includes(`://deno.land/x/${ egg.name.toLowerCase() }`)) {
           console.log(
             yellow(`Your readme contains old import URLs from your project using deno.land/x/${ egg.name.toLowerCase() }.\nYou can change these to https://x.nest.land/${ egg.name }@VERSION`),
@@ -114,12 +126,14 @@ export const publish = new Command()
           yellow("Could not open the README for url checking..."),
         );
       }
+      progress.render(completed++)
 
       //formatting
       if (egg.fmt) {
         const formatProcess = Deno.run({ cmd: ["deno", "fmt"] }),
           formatStatus = await formatProcess.status();
 
+        progress.render(completed++)
         if (formatStatus.success) {
           console.log(green("Formatted your code."));
         } else {
@@ -130,7 +144,7 @@ export const publish = new Command()
           );
         }
       }
-
+      progress.render(completed++)
       let matched = [];
       for (let file of egg.files) {
         let matches = [
@@ -147,12 +161,13 @@ export const publish = new Command()
           .filter((el) => el.lstat.isFile);
         matched.push(...matches);
       }
+      progress.render(completed++)
 
       if (egg.entry) {
         egg.entry = egg.entry?.replace(/^[.]/, "").replace(/^[^/]/, (s) =>
           `/${s}`);
       }
-
+      progress.render(completed++)
       if (
         !matched.find((e) => e.path === egg.entry || "/mod.ts")
       ) {
@@ -160,7 +175,7 @@ export const publish = new Command()
           red(`No ${egg.entry || "/mod.ts"} found. This file is required.`),
         );
       }
-
+      progress.render(completed++)
       let apiKey = await getAPIKey();
       if (!apiKey) {
         throw new Error(
@@ -171,6 +186,7 @@ export const publish = new Command()
         );
       }
 
+      progress.render(completed++)
       let existingPackage = await fetch(`${ENDPOINT}/api/package/${egg.name}`)
         .catch(() => void 0);
       let existingPackageBody: {
@@ -181,7 +197,7 @@ export const publish = new Command()
         latestStableVersion?: string;
         packageUploadNames: string[];
       } | undefined = existingPackage?.ok && await existingPackage?.json();
-
+      progress.render(completed++)
       if (
         existingPackageBody &&
         existingPackageBody.packageUploadNames.indexOf(
@@ -192,7 +208,7 @@ export const publish = new Command()
           "This version was already published. Please increment the version in egg.json.",
         );
       }
-
+      progress.render(completed++)
       let latestServerVersion = "0.0.0";
       if (existingPackageBody) {
         latestServerVersion = (egg.stable
@@ -205,6 +221,7 @@ export const publish = new Command()
           }
         });
       }
+      progress.render(completed++)
       egg.version = egg.version ||
         semver.inc(latestServerVersion, "patch") as string;
 
@@ -230,19 +247,20 @@ export const publish = new Command()
       }).catch(() => {
         throw new Error(red("Something broke when publishing..."));
       });
-
+      progress.render(completed++)
       let fileContents = matched.map((el) =>
         [el, readFileBtoa(el.fullPath)] as [typeof el, string]
       ).reduce((p, c) => {
         p[c[0].path] = c[1];
         return p;
       }, {} as { [x: string]: string });
-
+      progress.render(completed++)
       if (!uploadResponse.ok) {
         throw new Error(
           red("Something broke when publishing... " + uploadResponse.status),
         );
       }
+      progress.render(completed++)
       let uploadResponseBody: {
         token: string;
         name: string;
@@ -262,7 +280,7 @@ export const publish = new Command()
       }).catch(() => {
         throw new Error(red("Something broke when sending pieces..."));
       });
-
+      progress.render(completed++)
       if (!pieceResponse.ok) {
         throw new Error(
           red("Something broke when sending pieces... " + pieceResponse.status),
@@ -270,6 +288,7 @@ export const publish = new Command()
       }
       let pieceResponseBody: { name: string; files: { [x: string]: string } } =
         await pieceResponse.json();
+      progress.render(completed++)
       console.log(
         green(`Successfully published ${bold(pieceResponseBody.name)}!`),
       );
