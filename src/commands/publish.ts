@@ -53,7 +53,7 @@ function readFileBtoa(path: string) {
 export const publish = new Command()
   .description("Publishes the current directory to the nest.land registry.")
   .action(async () => {
-    const progress = new ProgressBar({ title: 'Publishing:', total: 25 })
+    const progress = new ProgressBar({ title: 'Publishing:', total: 23 })
     let completed = 0
     progress.render(completed++)
     if (configExists()) {
@@ -82,15 +82,13 @@ export const publish = new Command()
       }
       progress.render(completed++)
       if (!egg.description) {
-        console.log(
-          yellow(
-            "You haven't provided a description for your package, continuing without one...",
-          ),
-        );
+        progress.console(yellow(
+          "You haven't provided a description for your package, continuing without one...",
+        ));
       }
       progress.render(completed++)
       if (!egg.version) {
-        console.log(
+        progress.console(
           yellow("No version found. Generating a new version now..."),
         );
       }
@@ -104,7 +102,7 @@ export const publish = new Command()
       }
       progress.render(completed++)
       if (!readmeExists()) {
-        console.log(
+        progress.console(
           yellow("No README found at project root, continuing without one..."),
         );
       }
@@ -115,14 +113,13 @@ export const publish = new Command()
         const readmeContent = decoder.decode(
           await Deno.readFile(`README.md`),
         );
-        progress.render(completed++)
         if (readmeContent.toLowerCase().includes(`://deno.land/x/${ egg.name.toLowerCase() }`)) {
-          console.log(
+          progress.console(
             yellow(`Your readme contains old import URLs from your project using deno.land/x/${ egg.name.toLowerCase() }.\nYou can change these to https://x.nest.land/${ egg.name }@VERSION`),
           );
         }
       } catch (e) {
-        console.log(
+        progress.console(
           yellow("Could not open the README for url checking..."),
         );
       }
@@ -132,10 +129,8 @@ export const publish = new Command()
       if (egg.fmt) {
         const formatProcess = Deno.run({ cmd: ["deno", "fmt"] }),
           formatStatus = await formatProcess.status();
-
-        progress.render(completed++)
         if (formatStatus.success) {
-          console.log(green("Formatted your code."));
+          progress.console(green("Formatted your code."));
         } else {
           throw new Error(
             red(
@@ -289,19 +284,19 @@ export const publish = new Command()
       let pieceResponseBody: { name: string; files: { [x: string]: string } } =
         await pieceResponse.json();
       progress.render(completed++)
-      console.log(
+      progress.console(
         green(`Successfully published ${bold(pieceResponseBody.name)}!`),
       );
-      console.log("\r\nFiles uploaded: ");
+      progress.console("\r\nFiles uploaded: ");
       Object.entries(pieceResponseBody.files).map((el) => {
-        console.log(
+        progress.console(
           `${el[0]} -> ${
             bold(`${ENDPOINT}/${pieceResponseBody.name}${el[0]}`)
           }`,
         );
       });
-      console.log(green("You can now find your package on our registry at " + bold(`https://nest.land/package/${egg.name}\n`)));
-      console.log(`Add this badge to your README to let everyone know:\n\n [![nest badge](https://nest.land/badge.svg)](https://nest.land/package/${egg.name})`);
+      progress.console(green("You can now find your package on our registry at " + bold(`https://nest.land/package/${egg.name}\n`)));
+      progress.console(`Add this badge to your README to let everyone know:\n\n [![nest badge](https://nest.land/badge.svg)](https://nest.land/package/${egg.name})`);
     } else {
       throw new Error(
         red(
@@ -309,4 +304,8 @@ export const publish = new Command()
         ),
       );
     }
+
+    //add newline after progress bar
+    console.log('\n')
+
   });
