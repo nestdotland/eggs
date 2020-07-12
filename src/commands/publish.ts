@@ -1,6 +1,6 @@
-import { base64, Command, log, ProgressBar, red, yellow, } from "../../deps.ts";
+import { base64, Command, log, ProgressBar, red, yellow } from "../../deps.ts";
 
-import { Config, defaultConfig, readConfig, } from "../config.ts";
+import { Config, defaultConfig, readConfig } from "../config.ts";
 
 import { readmeExists } from "../utilities/files.ts";
 

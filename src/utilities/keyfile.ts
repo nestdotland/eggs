@@ -2,18 +2,34 @@ import { existsSync, join } from "../../deps.ts";
 import { homedir } from "./files.ts";
 
 export const ENDPOINT = Deno.env.get("EGGS_ENDPOINT") || "https://x.nest.land";
-export const keySuffix = (ENDPOINT === "https://x.nest.land")
+export const KEY_SUFFIX = (ENDPOINT === "https://x.nest.land")
   ? ""
-  : `-${ENDPOINT.replace(/[^A-Za-z0-9-_.]/g, "-")}`;
+  : `-${slugify(ENDPOINT)}`;
+
+export const KEY_FILE = `.nest-api-key${KEY_SUFFIX}`;
+
+function slugify(text) {
+  return text.toString().toLowerCase()
+    .replace(/\s+/g, "-")
+    .replace(/[^\w\-]+/g, "")
+    .replace(/--+/g, "-")
+    .replace(/^-+/, "")
+    .replace(/-+$/, "");
+}
+
+export async function writeAPIKey(key: string): Promise<void> {
+  const keyPath = join(homedir(), KEY_FILE);
+  await Deno.writeFile(keyPath, new TextEncoder().encode());
+}
 
 export async function getAPIKey(): Promise<string> {
   if (
-    !existsSync(join(homedir(), `.nest-api-key${keySuffix}`))
+    !existsSync(join(homedir(), KEY_FILE))
   ) {
     return ""; // empty string
   }
   const decoder = new TextDecoder("utf-8");
   return decoder.decode(
-    await Deno.readFile(join(homedir(), `.nest-api-key${keySuffix}`)),
+    await Deno.readFile(join(homedir(), KEY_FILE)),
   );
 }
