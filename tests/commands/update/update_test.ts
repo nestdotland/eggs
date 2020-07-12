@@ -6,7 +6,7 @@
 
 import { assertEquals, assertMatch, path } from "../../../src/deps.ts";
 
-const pathToHere = "eggs/tests/commands/update/";
+const pathToHere = "tests/commands/update/";
 
 const updateCmd = [
   "deno",
