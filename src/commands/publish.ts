@@ -30,7 +30,7 @@ export const publish = new Command()
   .description("Publishes the current directory to the nest.land registry.")
   .action(async () => {
     const progress = new ProgressBar({ title: "Publishing:", total: 23 });
-    let completed = 0;
+    let completed = 1;
     progress.render(completed++);
     if (configExists()) {
       progress.render(completed++);
@@ -291,5 +291,5 @@ export const publish = new Command()
     }
 
     //add newline after progress bar
-    console.log("\n");
+    console.log();
   });
