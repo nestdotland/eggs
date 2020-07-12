@@ -7,7 +7,7 @@
 import { assertEquals } from "../../deps.ts";
 import commands from "./commands.ts";
 
-const pathToHere = "eggs/tests/commands/";
+const pathToHere = "tests/commands/";
 
 for (let i = 0; i < commands.length; i++) {
   const cmd = commands[i];
