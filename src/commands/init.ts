@@ -46,7 +46,7 @@ async function initCommand() {
   );
   const format: string = await Select.prompt({
     message: "Config format: ",
-    default: !!configPath ? configFormat(configPath) : ConfigFormat.JSON,
+    default: configPath ? configFormat(configPath) : ConfigFormat.JSON,
     options: [
       {name: "YAML", value: ConfigFormat.YAML},
       {name: "JSON", value: ConfigFormat.JSON},
