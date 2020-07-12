@@ -38,6 +38,8 @@ export * as semver from "https://deno.land/x/semver@v1.0.0/mod.ts";
 
 export * as base64 from "https://denopkg.com/chiefbiiko/base64@v0.2.0/mod.ts";
 
+export { default as ProgressBar } from "https://x.nest.land/progress@1.1.0/mod.ts";
+
 export {
   installUpdateHandler,
   globalModulesConfigPath,
