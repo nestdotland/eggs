@@ -4,6 +4,7 @@ import {
   getLatestVersion,
   globalModulesConfigPath,
   green,
+  log,
   semver,
   versionSubstitute,
   yellow,
@@ -68,11 +69,7 @@ async function updateGlobalModules(
     }
 
     if (!latestRelease || !semver.valid(latestRelease)) {
-      console.log(
-        yellow(
-          `Warning: could not find the latest version of ${module.moduleName}.`,
-        ),
-      );
+      log.warning(`could not find the latest version of ${module.moduleName}.`);
       continue;
     }
 
@@ -180,8 +177,8 @@ async function updateLocalModules(
     }
 
     if (!latestRelease || !semver.valid(latestRelease)) {
-      console.log(
-        yellow(`Warning: could not find the latest version of ${moduleName}.`),
+      log.warning(
+        `Warning: could not find the latest version of ${moduleName}.`,
       );
       continue;
     }
