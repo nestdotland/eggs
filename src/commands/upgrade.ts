@@ -1,9 +1,4 @@
-import {
-  bold,
-  Command,
-  getLatestVersionFromNestRegistry,
-  green,
-} from "../../deps.ts";
+import { Command, getLatestVersionFromNestRegistry, log } from "../../deps.ts";
 
 import { version } from "../version.ts";
 
@@ -29,5 +24,5 @@ export const upgrade = new Command()
     });
     await upgradeProcess.status();
     upgradeProcess.close();
-    console.log(bold(green("Successfully upgraded eggs cli!")));
+    log.info("Successfully upgraded eggs cli!");
   });
