@@ -5,10 +5,15 @@ import {
   configFormat,
   defaultConfig,
   readConfig,
-  writeConfig
+  writeConfig,
 } from "../config.ts";
 import { version } from "../version.ts";
 
+/**
+ * Init Command.
+ * `init` creates (or overrides) configuration in
+ * the cwd with an interactive prompt.
+ */
 async function initCommand() {
   let currentConfig: Config = {};
 
@@ -21,41 +26,41 @@ async function initCommand() {
     currentConfig = await readConfig(configPath);
   }
 
-  const pName: string = await Input.prompt({
+  const name: string = await Input.prompt({
     message: "Package name:",
     default: currentConfig.name,
     minLength: 2,
     maxLength: 40,
   });
-  const pDesc: string = await Input.prompt({
+  const description: string = await Input.prompt({
     message: "Package description:",
     default: currentConfig.description,
     maxLength: 4294967295,
   });
-  const pStable: boolean = await Confirm.prompt({
+  const stable: boolean = await Confirm.prompt({
     message: "Is this a stable version?",
-    default: currentConfig.stable
+    default: currentConfig.stable,
   });
-  const pFiles: string[] = await List.prompt(
+  const files: string[] = await List.prompt(
     "Enter the files and relative directories that nest.land will publish separated by a comma.",
   );
-  const pFormat: string = await Select.prompt({
+  const format: string = await Select.prompt({
     message: "Config format: ",
     default: !!configPath ? configFormat(configPath) : ConfigFormat.JSON,
     options: [
       {name: "YAML", value: ConfigFormat.YAML},
-      {name: "JSON", value: ConfigFormat.JSON}
-    ]
+      {name: "JSON", value: ConfigFormat.JSON},
+    ],
   });
 
-  const eggConfig = {
-    name: pName,
-    description: pDesc,
-    stable: pStable,
-    files: (pFiles.length === 0 ? currentConfig.files : pFiles),
+  const config = {
+    name: name,
+    description: description,
+    stable: stable,
+    files: (files.length === 0 ? currentConfig.files : files),
   };
 
-  await writeConfig(eggConfig, pFormat as ConfigFormat);
+  await writeConfig(config, format as ConfigFormat);
 }
 
 export const init = new Command()

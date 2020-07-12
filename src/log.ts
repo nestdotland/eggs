@@ -24,7 +24,7 @@ export class ConsoleHandler extends BaseHandler {
     let msg = "";
     switch (record.level) {
       case LogLevels.DEBUG:
-        msg += green("[DBG ]");
+        msg += green("[DBG]");
         break;
       case LogLevels.INFO:
         msg += blue("[INFO]");
@@ -33,7 +33,7 @@ export class ConsoleHandler extends BaseHandler {
         msg += yellow("[WARN]");
         break;
       case LogLevels.ERROR:
-        msg += red("[ERR ]");
+        msg += red("[ERR]");
         break;
       case LogLevels.CRITICAL:
         msg += bold(red("[CRIT]"));
@@ -60,6 +60,10 @@ export class ConsoleHandler extends BaseHandler {
   }
 }
 
+/**
+ * Setup custom deno logger. Follows format:
+ * `[LEVEL] <msg> <args>`
+ */
 export async function setupLog(): Promise<void> {
   const level = DEBUG_LEVEL; // TODO(@qu4k): make it an flag
   await log.setup({
