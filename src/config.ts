@@ -1,6 +1,9 @@
-import { parse, stringify, writeJson } from "../deps.ts";
+import { existsSync, extname, parseYaml, stringifyYaml, writeJson, } from "../deps.ts";
 
-export type ConfigFormats = "yaml" | "yml" | "json";
+export enum ConfigFormat {
+  YAML = "yml",
+  JSON = "json",
+}
 
 export interface Config {
   name?: string;
@@ -15,22 +18,54 @@ export interface Config {
   files?: string[];
 }
 
+const DEFAULT_CONFIGS = [
+  "egg.json",
+  "egg.yaml",
+  "egg.yml",
+];
+
+export function defaultConfig(): string | undefined {
+  return DEFAULT_CONFIGS.find((path) => {
+    return existsSync(path);
+  });
+}
+
+export function configFormat(path: string): ConfigFormat {
+  const ext = extname(path);
+  if (ext.match(/^.ya?ml$/)) return ConfigFormat.YAML;
+  return ConfigFormat.JSON;
+}
+
 async function writeYaml(filename: string, content: string): Promise<void> {
   return Deno.writeFileSync(filename, new TextEncoder().encode(content));
 }
 
 export async function writeConfig(
   data: Partial<Config>,
-  format: ConfigFormats,
+  format: ConfigFormat,
 ): Promise<void> {
-  ["yaml", "yml"].includes(format)
-    ? await writeYaml(`egg.${format}`, stringify(data))
-    : await writeJson("egg.json", data, { spaces: 2 });
+  switch (format) {
+    case ConfigFormat.YAML:
+      await writeYaml(`egg.yml`, stringifyYaml(data));
+      break;
+    case ConfigFormat.JSON:
+      await writeJson("egg.json", data, {spaces: 2});
+      break;
+  }
 }
 
-export function parseConfig(data: string, format: ConfigFormats): Config {
-  if (["yaml", "yml"].includes(format)) {
-    return (parse(data) ?? {}) as Config;
+export async function readConfig(path: string): Promise<Config> {
+  const decoder = new TextDecoder("utf-8");
+  const format = configFormat(path);
+  const data = decoder.decode(
+    await Deno.readFile(path),
+  );
+  return parseConfig(data, format);
+}
+
+export function parseConfig(data: string, format: ConfigFormat): Config {
+  if (format == ConfigFormat.YAML) {
+    return (parseYaml(data) ?? {}) as Config;
   }
   return JSON.parse(data) as Config;
 }

@@ -1,11 +1,9 @@
-import { readJson, writeJson } from "../deps.ts";
+import { log, readJson, writeJson } from "../deps.ts";
 
 export interface GlobalModule {
   registry: string;
-  moduleName: string // TODO(@qu4k): ugly
-  ;
-  installName: string // TODO(@qu4k): ugly
-  ;
+  moduleName: string; // TODO(@qu4k): ugly
+  installName: string; // TODO(@qu4k): ugly
   owner: string;
   version: string;
   args: string[];
@@ -22,7 +20,7 @@ export async function readGlobalModuleConfig(
   try {
     return await readJson(path) as GlobalModuleConfig;
   } catch {
-    console.error("config file doesn't exist.");
+    log.critical("config file doesn't exist.");
     Deno.exit(1);
   }
 }
