@@ -11,7 +11,7 @@ function detectConfig(): ConfigFormats {
 
 export const init = new Command()
   .version(version)
-  .description("Initiates a new package for the nest.land registry.")
+  .description("Initiates a new module for the nest.land registry.")
   .action(async () => {
     let previousConfig: Config = {};
     let previousConfigFormat: ConfigFormats = detectConfig();

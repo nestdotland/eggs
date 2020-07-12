@@ -29,7 +29,7 @@ function readFileBtoa(path: string): string {
 export const publish = new Command()
   .description("Publishes the current directory to the nest.land registry.")
   .action(async () => {
-    const progress = new ProgressBar({ title: "Publishing:", total: 23 });
+    const progress = new ProgressBar({title: "Publishing:", total: 23});
     let completed = 1;
     progress.render(completed++);
     if (configExists()) {
@@ -103,7 +103,7 @@ export const publish = new Command()
 
       //formatting
       if (egg.fmt) {
-        const formatProcess = Deno.run({ cmd: ["deno", "fmt"] }),
+        const formatProcess = Deno.run({cmd: ["deno", "fmt"]}),
           formatStatus = await formatProcess.status();
         if (formatStatus.success) {
           progress.console(green("Formatted your code."));
@@ -154,7 +154,7 @@ export const publish = new Command()
         throw new Error(
           red(
             "No API Key file found. Please create one. Refer to the documentation on creating a " +
-              bold("~/.nest-api-key") + " file.",
+            bold("~/.nest-api-key") + " file.",
           ),
         );
       }
@@ -174,8 +174,8 @@ export const publish = new Command()
       if (
         existingPackageBody &&
         existingPackageBody.packageUploadNames.indexOf(
-            `${egg.name}@${egg.version}`,
-          ) !== -1
+          `${egg.name}@${egg.version}`,
+        ) !== -1
       ) {
         throw red(
           "This version was already published. Please increment the version in egg.json.",
@@ -276,7 +276,7 @@ export const publish = new Command()
       progress.console(
         green(
           "You can now find your package on our registry at " +
-            bold(`https://nest.land/package/${egg.name}\n`),
+          bold(`https://nest.land/package/${egg.name}\n`),
         ),
       );
       progress.console(

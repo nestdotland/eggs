@@ -8,10 +8,7 @@ import {
   versionSubstitute,
   yellow,
 } from "../../deps.ts";
-import {
-  readGlobalModuleConfig,
-  writeGlobalModuleConfig,
-} from "../global_module.ts";
+import { readGlobalModuleConfig, writeGlobalModuleConfig, } from "../global_module.ts";
 
 const decoder = new TextDecoder("utf-8");
 
@@ -28,7 +25,7 @@ export const update = new Command<Options, Arguments>()
   .option(
     "--file <file:string>",
     "Set dependency filename",
-    { default: "deps.ts" },
+    {default: "deps.ts"},
   )
   .option("-g, --global", "Update global modules")
   .action(async (options: Options, requestedModules: string[] = []) => {
@@ -157,7 +154,7 @@ async function updateLocalModules(
    * Skips the dependency if it is not versioned (no need to try to update it) */
   const dependenciesToUpdate: Array<ModuleToUpdate> = [];
   for (const line of dependencyFileContents) {
-    let { moduleName, versionURL, registry, owner, version } = analyzeURL(line);
+    let {moduleName, versionURL, registry, owner, version} = analyzeURL(line);
 
     // TODO(@qu4k): edge case: dependency isn't a module, for example: from
     //  "https://deno.land/std@version/version.ts";, will return -> "version.ts";

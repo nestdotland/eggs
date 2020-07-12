@@ -11,7 +11,7 @@ import { version } from "./src/version.ts";
 await new Command()
   .name("eggs")
   .version(version)
-  .description("nest.land - A package registry for Deno, on the permaweb")
+  .description("nest.land - A module registry and CDN for Deno, on the permaweb")
   .command("link", link)
   .option("-k, --key <value:string>", "Your API Key")
   .command("init", init)

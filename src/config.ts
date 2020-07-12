@@ -25,7 +25,7 @@ export async function writeConfig(
 ): Promise<void> {
   ["yaml", "yml"].includes(format)
     ? await writeYaml(`egg.${format}`, stringify(data))
-    : await writeJson("egg.json", data, { spaces: 2 });
+    : await writeJson("egg.json", data, {spaces: 2});
 }
 
 export function parseConfig(data: string, format: ConfigFormats): Config {
