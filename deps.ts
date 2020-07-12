@@ -8,9 +8,22 @@ export {
   exists,
 } from "https://deno.land/std@v0.61.0/fs/mod.ts";
 
+export * as log from "https://deno.land/std@v0.60.0/log/mod.ts";
+
+export { LogRecord } from "https://deno.land/std@v0.60.0/log/logger.ts";
+
 export {
+  LogLevels,
+} from "https://deno.land/std@v0.60.0/log/levels.ts";
+
+export { BaseHandler } from "https://deno.land/std@v0.60.0/log/handlers.ts";
+
+export {
+  setColorEnabled,
+  reset,
   bold,
   green,
+  blue,
   yellow,
   red,
 } from "https://deno.land/std@v0.61.0/fmt/colors.ts";
@@ -22,8 +35,8 @@ export {
 } from "https://deno.land/std@v0.61.0/testing/asserts.ts";
 
 export {
-  parse,
-  stringify,
+  parse as parseYaml,
+  stringify as stringifyYaml,
 } from "https://deno.land/std@0.61.0/encoding/yaml.ts";
 
 export {
@@ -35,6 +48,7 @@ export {
 export {
   Input,
   Confirm,
+  Select,
   List,
 } from "https://raw.githubusercontent.com/nestdotland/deno-cliffy/fix/bump-deps/packages/prompt/mod.ts";
 
