@@ -6,7 +6,10 @@ import {
   green,
   lstatSync,
   path,
+<<<<<<< HEAD
   ProgressBar,
+=======
+>>>>>>> clean-code
   red,
   semver,
   yellow,
@@ -39,7 +42,10 @@ export const publish = new Command()
       const content = decoder.decode(
         await Deno.readFile(`egg.${configFormat}`),
       );
+<<<<<<< HEAD
       progress.render(completed++);
+=======
+>>>>>>> clean-code
       let egg: Config;
       try {
         egg = parseConfig(content, configFormat);
@@ -88,7 +94,11 @@ export const publish = new Command()
             `://deno.land/x/${egg.name.toLowerCase()}`,
           )
         ) {
+<<<<<<< HEAD
           progress.console(
+=======
+          console.log(
+>>>>>>> clean-code
             yellow(
               `Your readme contains old import URLs from your project using deno.land/x/${egg.name.toLowerCase()}.\nYou can change these to https://x.nest.land/${egg.name}@VERSION`,
             ),
@@ -273,13 +283,21 @@ export const publish = new Command()
           }`,
         );
       });
+<<<<<<< HEAD
       progress.console(
+=======
+      console.log(
+>>>>>>> clean-code
         green(
           "You can now find your package on our registry at " +
             bold(`https://nest.land/package/${egg.name}\n`),
         ),
       );
+<<<<<<< HEAD
       progress.console(
+=======
+      console.log(
+>>>>>>> clean-code
         `Add this badge to your README to let everyone know:\n\n [![nest badge](https://nest.land/badge.svg)](https://nest.land/package/${egg.name})`,
       );
     } else {
