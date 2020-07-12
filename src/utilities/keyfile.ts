@@ -1,5 +1,5 @@
-import { path } from "../../deps.ts";
-import { homedir, pathExists } from "./files.ts";
+import { existsSync, join } from "../../deps.ts";
+import { homedir } from "./files.ts";
 
 export const ENDPOINT = Deno.env.get("EGGS_ENDPOINT") || "https://x.nest.land";
 export const keySuffix = (ENDPOINT === "https://x.nest.land")
@@ -8,12 +8,12 @@ export const keySuffix = (ENDPOINT === "https://x.nest.land")
 
 export async function getAPIKey(): Promise<string> {
   if (
-    !pathExists(path.join(homedir(), `.nest-api-key${keySuffix}`))
+    !existsSync(join(homedir(), `.nest-api-key${keySuffix}`))
   ) {
     return ""; // empty string
   }
   const decoder = new TextDecoder("utf-8");
   return decoder.decode(
-    await Deno.readFile(path.join(homedir(), `.nest-api-key${keySuffix}`)),
+    await Deno.readFile(join(homedir(), `.nest-api-key${keySuffix}`)),
   );
 }
