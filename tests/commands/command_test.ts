@@ -4,7 +4,7 @@
  * Requires: --allow-read, --allow-run, --allow-write
  */
 
-import { assertEquals } from "../../src/deps.ts"
+import { assertEquals } from "../../deps.ts";
 import commands from "./commands.ts";
 
 const pathToHere = "tests/commands/";
@@ -18,7 +18,7 @@ for (let i = 0; i < commands.length; i++) {
         cmd: ["deno", "run", "--unstable", "-A", "../../mod.ts", cmd],
         stdout: "piped",
         stderr: "piped",
-        cwd: pathToHere
+        cwd: pathToHere,
       });
       const status = await p.status();
       const stdout = new TextDecoder("utf-8").decode(await p.output());
@@ -26,6 +26,6 @@ for (let i = 0; i < commands.length; i++) {
       assertEquals(status.code, 0);
       assertEquals(status.success, true);
       p.close();
-    }
+    },
   });
 }

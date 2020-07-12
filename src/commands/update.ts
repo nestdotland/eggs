@@ -1,15 +1,15 @@
 import {
+  analyzeURL,
   Command,
-  yellow,
+  getLatestVersion,
+  globalModulesConfigPath,
   green,
   semver,
-  getLatestVersion,
-  analyzeURL,
-  readJson,
-  writeJson,
-  globalModulesConfigPath,
   versionSubstitute,
-} from "../deps.ts";
+  yellow,
+} from "../../deps.ts";
+import { readGlobalModuleConfig, writeGlobalModuleConfig, } from "../global_module.ts";
+
 const decoder = new TextDecoder("utf-8");
 
 /** What the constructed dependency objects should contain */
@@ -25,7 +25,7 @@ export const update = new Command<Options, Arguments>()
   .option(
     "--file <file:string>",
     "Set dependency filename",
-    { default: "deps.ts" },
+    {default: "deps.ts"},
   )
   .option("-g, --global", "Update global modules")
   .action(async (options: Options, requestedModules: string[] = []) => {
@@ -39,9 +39,9 @@ export const update = new Command<Options, Arguments>()
 async function updateGlobalModules(
   options: Options,
   requestedModules: string[],
-) {
+): Promise<void> {
   const configPath = globalModulesConfigPath();
-  const config = await readConfig(configPath);
+  const config = await readGlobalModuleConfig(configPath);
 
   for (const execName in config) {
     const module = config[execName];
@@ -113,8 +113,7 @@ async function updateGlobalModules(
     );
   }
 
-  // Re-write the file
-  await writeJson(configPath, config, { spaces: 2 });
+  await writeGlobalModuleConfig(configPath, config);
 
   console.info("\nUpdated your dependencies!");
   Deno.exit();
@@ -123,7 +122,7 @@ async function updateGlobalModules(
 async function updateLocalModules(
   options: Options,
   requestedModules: string[],
-) {
+): Promise<void> {
   /** Gather the path to the user's dependency file using the CLI arguments */
   let pathToDepFile = "";
   try {
@@ -155,9 +154,10 @@ async function updateLocalModules(
    * Skips the dependency if it is not versioned (no need to try to update it) */
   const dependenciesToUpdate: Array<ModuleToUpdate> = [];
   for (const line of dependencyFileContents) {
-    let { moduleName, versionURL, registry, owner, version } = analyzeURL(line);
+    let {moduleName, versionURL, registry, owner, version} = analyzeURL(line);
 
-    // TODO Edge case: dependency isn't a module, for example: from "https://deno.land/std@version/version.ts";, will return -> "version.ts";
+    // TODO(@qu4k): edge case: dependency isn't a module, for example: from
+    //  "https://deno.land/std@version/version.ts";, will return -> "version.ts";
     // Issue: "Mandarine.TS" is a module while "version.ts" isn't
 
     // Now we have the name, ignore dependency if requested dependencies are set and it isn't one requested
@@ -220,16 +220,6 @@ async function updateLocalModules(
 
   console.info("\nUpdated your dependencies!");
   Deno.exit();
-}
-
-async function readConfig(configPath: string): Promise<any> {
-  try {
-    const config = await readJson(configPath);
-    return config;
-  } catch {
-    console.error("config file doesn't exist.");
-    Deno.exit(1);
-  }
 }
 
 type Arguments = [string[]];
