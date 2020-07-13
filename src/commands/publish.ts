@@ -1,269 +1,220 @@
-import { base64, Command, log, ProgressBar, red, yellow } from "../../deps.ts";
+import {
+  base64,
+  bold,
+  Command,
+  expandGlobSync,
+  green,
+  log,
+  relative,
+  semver,
+} from "../../deps.ts";
+import { ENDPOINT } from "../api/common.ts";
+import { fetchModule } from "../api/fetch.ts";
+import { postPieces, postPublishModule } from "../api/post.ts";
 
-import { Config, defaultConfig, readConfig } from "../config.ts";
+import {
+  Config,
+  defaultConfig,
+  ensureCompleteConfig,
+  readConfig,
+} from "../config.ts";
 
-import { readmeExists } from "../utilities/files.ts";
+import { envExistREADME } from "../utilities/environment.ts";
+import { getAPIKey } from "../utilities/keyfile.ts";
 
 function readFileBtoa(path: string): string {
   const data = Deno.readFileSync(path);
   return base64.fromUint8Array(data);
 }
 
-async function publishCommand() {
-  const progress = new ProgressBar({ title: "Publishing:", total: 22 });
-  let completed = 1;
-
+async function getConfig(): Promise<Config> {
   const configPath = defaultConfig();
-
   if (!configPath) {
     log.critical("You don't have an egg.json file!");
     log.info("You can create one running `eggs init`.");
     Deno.exit(1);
   }
 
-  let egg: Config;
+  let config: Partial<Config>;
   try {
-    egg = await readConfig(configPath);
+    config = await readConfig(configPath);
   } catch (err) {
     throw err;
   }
 
-  if (!egg.name) {
-    throw new Error(red("You must provide a name for your package!"));
+  if (!ensureCompleteConfig(config)) {
+    if (!config.name) {
+      log.critical("Your module configuration must provide a module name.");
+    }
+    if (!config.files) {
+      log.critical(
+        "Your module configuration must provide files to upload.",
+      );
+    }
+    Deno.exit(1);
   }
-  if (!egg.description) {
-    progress.console(yellow(
+
+  if (!config.description) {
+    log.warning(
       "You haven't provided a description for your package, continuing without one...",
-    ));
-  }
-  if (!egg.version) {
-    progress.console(
-      yellow("No version found. Generating a new version now..."),
     );
   }
-  if (!egg.files) {
-    throw new Error(
-      red(
-        "No files to upload found. Please see the documentation to add this.",
-      ),
-    );
+  if (!config.version) {
+    log.warning("No version found. Generating a new version now...");
+  }
+  return config;
+}
+
+async function checkREADME(config: Config) {
+  if (!envExistREADME()) {
+    log.warning("No README found at project root, continuing without one...");
   }
 
-  if (!readmeExists()) {
-    progress.console(
-      yellow("No README found at project root, continuing without one..."),
+  const name = config.name.toLowerCase();
+
+  try {
+    let readme = await Deno.readTextFile(`README.md`);
+    readme = readme.toLowerCase();
+    if (readme.includes(`://deno.land/x/${name}`)) {
+      log.warning(
+        `Your readme contains old import URLs from your project using deno.land/x/${name}.\nYou can change these to https://x.nest.land/${name}@VERSION`,
+      );
+    }
+  } catch (_) {
+    log.warning("Could not open the README for url checking...");
+  }
+}
+
+async function checkFmt(config: Config) {
+  if (!config.fmt) return;
+
+  const formatProcess = Deno.run({ cmd: ["deno", "fmt"] }),
+    formatStatus = await formatProcess.status();
+  if (formatStatus.success) {
+    log.info("Formatted your code.");
+  } else {
+    log.error("`deno fmt` returned a non-zero code.");
+  }
+}
+
+interface File {
+  fullPath: string;
+  path: string;
+  lstat: Deno.FileInfo;
+}
+
+function matchFiles(config: Config): File[] {
+  let matched = [];
+  for (let file of config.files) {
+    let matches = [
+      ...expandGlobSync(file, {
+        root: Deno.cwd(),
+        extended: true,
+      }),
+    ]
+      .map((el) => ({
+        fullPath: el.path.replace(/\\/g, "/"),
+        path: "/" + relative(Deno.cwd(), el.path).replace(/\\/g, "/"),
+        lstat: Deno.lstatSync(el.path),
+      }))
+      .filter((el) => el.lstat.isFile);
+    matched.push(...matches);
+  }
+  return matched;
+}
+
+function readFiles(matched: File[]): { [x: string]: string } {
+  return matched.map((el) =>
+    [el, readFileBtoa(el.fullPath)] as [typeof el, string]
+  ).reduce((p, c) => {
+    p[c[0].path] = c[1];
+    return p;
+  }, {} as { [x: string]: string });
+}
+
+async function checkEntry(config: Config, matched: File[]) {
+  if (config.entry) {
+    config.entry = config.entry?.replace(/^[.]/, "").replace(
+      /^[^/]/,
+      (s: string) => `/${s}`,
     );
   }
+  if (!matched.find((e) => e.path === config.entry || "/mod.ts")) {
+    log.critical(
+      `No ${config.entry || "/mod.ts"} found. This file is required.`,
+    );
+    Deno.exit(1);
+  }
+}
 
-  progress.render(completed++);
+async function publishCommand() {
+  let apiKey = await getAPIKey();
+  if (!apiKey) {
+    log.critical(
+      "No API Key file found. You can add one using `eggs link --key <api key>. You can create one on https://nest.land",
+    ), Deno.exit(1);
+  }
 
-  // //testing if README has original deno.land/x urls instead of x.nest.land urls
-  // //if we add a README location field to the egg config, this needs to be updated
-  // try {
-  //   const decoder = new TextDecoder();
-  //   const readmeContent = decoder.decode(
-  //     await Deno.readFile(`README.md`),
-  //   );
-  //   if (
-  //     readmeContent.toLowerCase().includes(
-  //       `://deno.land/x/${egg.name.toLowerCase()}`,
-  //     )
-  //   ) {
-  //     progress.console(
-  //       yellow(
-  //         `Your readme contains old import URLs from your project using deno.land/x/${egg.name.toLowerCase()}.\nYou can change these to https://x.nest.land/${egg.name}@VERSION`,
-  //       ),
-  //     );
-  //   }
-  // } catch (e) {
-  //   progress.console(
-  //     yellow("Could not open the README for url checking..."),
-  //   );
-  // }
+  const egg = await getConfig();
 
-  // progress.render(completed++);
+  await checkREADME(egg);
+  await checkFmt(egg);
 
-  // //formatting
-  // if (egg.fmt) {
-  //   const formatProcess = Deno.run({ cmd: ["deno", "fmt"] }),
-  //     formatStatus = await formatProcess.status();
-  //   if (formatStatus.success) {
-  //     progress.console(green("Formatted your code."));
-  //   } else {
-  //     throw new Error(
-  //       red(
-  //         `Error while formatting your code. Error code: ${formatStatus.code}`,
-  //       ),
-  //     );
-  //   }
-  // }
-  // progress.render(completed++);
-  // let matched = [];
-  // for (let file of egg.files) {
-  //   let matches = [
-  //     ...expandGlobSync(file, {
-  //       root: Deno.cwd(),
-  //       extended: true,
-  //     }),
-  //   ]
-  //     .map((el) => ({
-  //       fullPath: el.path.replace(/\\/g, "/"),
-  //       path: "/" + relative(Deno.cwd(), el.path).replace(/\\/g, "/"),
-  //       lstat: lstatSync(el.path),
-  //     }))
-  //     .filter((el) => el.lstat.isFile);
-  //   matched.push(...matches);
-  // }
-  // progress.render(completed++);
+  const matched = matchFiles(egg);
+  const matchedContent = readFiles(matched);
 
-  // if (egg.entry) {
-  //   egg.entry = egg.entry?.replace(/^[.]/, "").replace(
-  //     /^[^/]/,
-  //     (s: string) => `/${s}`,
-  //   );
-  // }
-  // progress.render(completed++);
-  // if (
-  //   !matched.find((e) => e.path === egg.entry || "/mod.ts")
-  // ) {
-  //   throw new Error(
-  //     red(`No ${egg.entry || "/mod.ts"} found. This file is required.`),
-  //   );
-  // }
-  // progress.render(completed++);
-  // let apiKey = await getAPIKey();
-  // if (!apiKey) {
-  //   throw new Error(
-  //     red(
-  //       "No API Key file found. Please create one. Refer to the documentation on creating a " +
-  //         bold("~/.nest-api-key") + " file.",
-  //     ),
-  //   );
-  // }
+  checkEntry(egg, matched);
 
-  // progress.render(completed++);
-  // let existingPackage = await fetch(`${ENDPOINT}/api/package/${egg.name}`)
-  //   .catch(() => void 0);
-  // let existingPackageBody: {
-  //   name: string;
-  //   owner: string;
-  //   description: string;
-  //   latestVersion?: string;
-  //   latestStableVersion?: string;
-  //   packageUploadNames: string[];
-  // } | undefined = existingPackage?.ok && await existingPackage?.json();
-  // progress.render(completed++);
-  // if (
-  //   existingPackageBody &&
-  //   existingPackageBody.packageUploadNames.indexOf(
-  //       `${egg.name}@${egg.version}`,
-  //     ) !== -1
-  // ) {
-  //   throw red(
-  //     "This version was already published. Please increment the version in egg.json.",
-  //   );
-  // }
-  // progress.render(completed++);
-  // let latestServerVersion = "0.0.0";
-  // if (existingPackageBody) {
-  //   latestServerVersion = (egg.stable
-  //     ? existingPackageBody.latestStableVersion
-  //     : existingPackageBody.latestVersion)?.split("@")[1] || "0.0.0";
+  const existing = await fetchModule(egg.name);
 
-  //   existingPackageBody.packageUploadNames.forEach((el) => {
-  //     if (semver.compare(el.split("@")[1], latestServerVersion) === 1) {
-  //       latestServerVersion = el.split("@")[1];
-  //     }
-  //   });
-  // }
-  // progress.render(completed++);
-  // egg.version = egg.version ||
-  //   semver.inc(latestServerVersion, "patch") as string;
+  const nv = `${egg.name}@${egg.version}`;
 
-  // let isLatest = semver.compare(egg.version, latestServerVersion) === 1;
+  if (existing && existing.packageUploadNames.indexOf(nv) !== -1) {
+    log.critical(
+      "This version was already published. Please increment the version in your configuration.",
+    );
+    Deno.exit(1);
+  }
 
-  // let uploadResponse = await fetch(`${ENDPOINT}/api/publish`, {
-  //   method: "POST",
-  //   headers: {
-  //     "Content-Type": "application/json",
-  //     "Authorization": apiKey,
-  //   },
-  //   body: JSON.stringify({
-  //     name: egg.name,
-  //     description: egg.description,
-  //     repository: egg.repository,
-  //     version: egg.version,
-  //     unlisted: egg.unlisted,
-  //     upload: true,
-  //     entry: egg.entry,
-  //     latest: isLatest,
-  //     stable: egg.stable,
-  //   }),
-  // }).catch(() => {
-  //   throw new Error(red("Something broke when publishing..."));
-  // });
-  // progress.render(completed++);
-  // let fileContents = matched.map((el) =>
-  //   [el, readFileBtoa(el.fullPath)] as [typeof el, string]
-  // ).reduce((p, c) => {
-  //   p[c[0].path] = c[1];
-  //   return p;
-  // }, {} as { [x: string]: string });
-  // progress.render(completed++);
-  // if (!uploadResponse.ok) {
-  //   throw new Error(
-  //     red("Something broke when publishing... " + uploadResponse.status),
-  //   );
-  // }
-  // progress.render(completed++);
-  // let uploadResponseBody: {
-  //   token: string;
-  //   name: string;
-  //   version: string;
-  //   owner: string;
-  // } = uploadResponse.ok && await uploadResponse.json();
-  // let pieceResponse = await fetch(`${ENDPOINT}/api/piece`, {
-  //   method: "POST",
-  //   headers: {
-  //     "Content-Type": "application/json",
-  //     "X-UploadToken": uploadResponseBody.token,
-  //   },
-  //   body: JSON.stringify({
-  //     pieces: fileContents,
-  //     end: true,
-  //   }),
-  // }).catch(() => {
-  //   throw new Error(red("Something broke when sending pieces..."));
-  // });
-  // progress.render(completed++);
-  // if (!pieceResponse.ok) {
-  //   throw new Error(
-  //     red("Something broke when sending pieces... " + pieceResponse.status),
-  //   );
-  // }
-  // let pieceResponseBody: { name: string; files: { [x: string]: string } } =
-  //   await pieceResponse.json();
-  // progress.render(completed++);
-  // progress.console(
-  //   green(`Successfully published ${bold(pieceResponseBody.name)}!`),
-  // );
-  // progress.console("\r\nFiles uploaded: ");
-  // Object.entries(pieceResponseBody.files).map((el) => {
-  //   progress.console(
-  //     `${el[0]} -> ${bold(`${ENDPOINT}/${pieceResponseBody.name}${el[0]}`)}`,
-  //   );
-  // });
-  // progress.console(
-  //   green(
-  //     "You can now find your package on our registry at " +
-  //       bold(`https://nest.land/package/${egg.name}\n`),
-  //   ),
-  // );
-  // progress.console(
-  //   `Add this badge to your README to let everyone know:\n\n [![nest badge](https://nest.land/badge.svg)](https://nest.land/package/${egg.name})`,
-  // );
+  let latest = "0.0.0";
+  if (existing) {
+    latest = existing.getLatestVersion(egg.stable);
+  }
 
-  // console.log(); // newline
+  egg.version = egg.version || semver.inc(latest, "patch") as string;
+
+  let isLatest = semver.compare(egg.version, latest) === 1;
+
+  let uploadResponse = await postPublishModule(apiKey, egg, isLatest);
+  if (!uploadResponse) {
+    log.critical("Something broke when publishing... ");
+    Deno.exit(1);
+  }
+
+  let pieceResponse = await postPieces(uploadResponse.token, matchedContent);
+
+  if (!pieceResponse) {
+    log.critical("Something broke when sending pieces... ");
+    Deno.exit(1);
+  }
+
+  log.info(`Successfully published ${bold(egg.name)}!`);
+
+  log.info("Files uploaded: ");
+  Object.entries(pieceResponse.files).map((el) => {
+    console.log(` - ${el[0]} -> ${bold(`${ENDPOINT}/${egg.name}${el[0]}`)}`);
+  });
+
+  console.log();
+  console.log(
+    green(
+      "You can now find your package on our registry at " +
+        bold(`https://nest.land/package/${egg.name}\n`),
+    ),
+  );
+  console.log(
+    `Add this badge to your README to let everyone know:\n\n [![nest badge](https://nest.land/badge.svg)](https://nest.land/package/${egg.name})`,
+  );
 }
 
 export const publish = new Command()

@@ -20,7 +20,7 @@ export enum ConfigFormat {
  * commands require at least some.
  */
 export interface Config {
-  name?: string;
+  name: string;
   entry?: string;
   description?: string;
   repository?: string;
@@ -29,7 +29,7 @@ export interface Config {
   unlisted?: boolean;
   fmt?: boolean;
 
-  files?: string[];
+  files: string[];
 }
 
 /**
@@ -77,7 +77,7 @@ async function writeYaml(filename: string, content: string): Promise<void> {
  * @param format
  */
 export async function writeConfig(
-  data: Config,
+  data: Partial<Config>,
   format: ConfigFormat,
 ): Promise<void> {
   switch (format) {
@@ -94,12 +94,9 @@ export async function writeConfig(
  * Read configuration from provided path.
  * @param path
  */
-export async function readConfig(path: string): Promise<Config> {
-  const decoder = new TextDecoder("utf-8");
+export async function readConfig(path: string): Promise<Partial<Config>> {
   const format = configFormat(path);
-  const data = decoder.decode(
-    await Deno.readFile(path),
-  );
+  const data = await Deno.readTextFile(path);
   return parseConfig(data, format);
 }
 
@@ -109,9 +106,20 @@ export async function readConfig(path: string): Promise<Config> {
  * @param data configuration as string
  * @param format
  */
-export function parseConfig(data: string, format: ConfigFormat): Config {
+export function parseConfig(
+  data: string,
+  format: ConfigFormat,
+): Partial<Config> {
   if (format == ConfigFormat.YAML) {
     return (parseYaml(data) ?? {}) as Config;
   }
   return JSON.parse(data) as Config;
+}
+
+export function ensureCompleteConfig(
+  config: Partial<Config>,
+): config is Config {
+  if (!config.name) return false;
+  if (!config.files) return false;
+  return true;
 }

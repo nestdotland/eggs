@@ -1,7 +1,8 @@
 import { existsSync, join } from "../../deps.ts";
-import { homedir } from "./files.ts";
 
-export const ENDPOINT = Deno.env.get("EGGS_ENDPOINT") || "https://x.nest.land";
+import { ENDPOINT } from "../api/common.ts";
+import { envHOMEDIR } from "./environment.ts";
+
 export const KEY_SUFFIX = (ENDPOINT === "https://x.nest.land")
   ? ""
   : `-${slugify(ENDPOINT)}`;
@@ -18,18 +19,18 @@ function slugify(text: string) {
 }
 
 export async function writeAPIKey(key: string): Promise<void> {
-  const keyPath = join(homedir(), KEY_FILE);
+  const keyPath = join(envHOMEDIR(), KEY_FILE);
   await Deno.writeFile(keyPath, new TextEncoder().encode(key));
 }
 
 export async function getAPIKey(): Promise<string> {
   if (
-    !existsSync(join(homedir(), KEY_FILE))
+    !existsSync(join(envHOMEDIR(), KEY_FILE))
   ) {
     return ""; // empty string
   }
   const decoder = new TextDecoder("utf-8");
   return decoder.decode(
-    await Deno.readFile(join(homedir(), KEY_FILE)),
+    await Deno.readFile(join(envHOMEDIR(), KEY_FILE)),
   );
 }

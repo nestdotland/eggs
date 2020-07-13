@@ -19,7 +19,7 @@ async function upgradeCommand() {
       "-n",
       "eggs",
       `https://x.nest.land/eggs@${newVersion}/mod.ts`,
-    ]
+    ],
   });
 
   const status = await upgradeProcess.status();

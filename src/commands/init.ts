@@ -15,14 +15,13 @@ import { version } from "../version.ts";
  * the cwd with an interactive prompt.
  */
 async function initCommand() {
-  let currentConfig: Config = {};
+  let currentConfig: Partial<Config> = {};
 
   let configPath = defaultConfig();
   if (configPath) {
     log.warning("An egg config file already exists...");
     const override = await Confirm.prompt("Do you want to override it?");
     if (!override) Deno.exit(0);
-
     currentConfig = await readConfig(configPath);
   }
 
