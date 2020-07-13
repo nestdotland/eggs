@@ -1,7 +1,8 @@
 import {
   base64,
   bold,
-  Command, existsSync,
+  Command,
+  existsSync,
   expandGlobSync,
   green,
   log,

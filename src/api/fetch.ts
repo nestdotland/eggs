@@ -8,7 +8,7 @@ export async function fetchResource<T>(query: string): Promise<T | undefined> {
     if (!response || !response.ok) return undefined;
     const value = await response.json();
     return value as T;
-  } catch (_) {
+  } catch {
     return undefined;
   }
 }

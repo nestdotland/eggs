@@ -9,11 +9,9 @@ import {
 } from "../config.ts";
 import { version } from "../version.ts";
 
-/**
- * Init Command.
+/** Init Command.
  * `init` creates (or overrides) configuration in
- * the cwd with an interactive prompt.
- */
+ * the cwd with an interactive prompt. */
 async function initCommand() {
   let currentConfig: Partial<Config> = {};
 

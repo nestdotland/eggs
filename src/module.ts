@@ -26,7 +26,7 @@ export class Module implements IModule {
     this.packageUploadNames = module.packageUploadNames;
   }
 
-  getLatestVersion(stable: boolean): string {
+  getLatestVersion(stable?: boolean): string {
     let latest =
       (stable ? this.latestStableVersion : this.latestVersion)?.split("@")[1] ??
         "0.0.0";

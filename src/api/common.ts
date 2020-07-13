@@ -11,8 +11,7 @@ export function enableMockApi() {
 
 export async function apiFetch(
   input: Request | URL | string,
-  init?: RequestInit
+  init?: RequestInit,
 ): Promise<Response> {
- return await fetch(input, init);
+  return await fetch(input, init);
 }
-

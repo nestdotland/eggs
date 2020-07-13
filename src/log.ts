@@ -1,5 +1,3 @@
-// Copyright 2020-present the denosaurs team. All rights reserved. MIT license.
-
 import {
   BaseHandler,
   blue,
@@ -60,10 +58,8 @@ export class ConsoleHandler extends BaseHandler {
   }
 }
 
-/**
- * Setup custom deno logger. Follows format:
- * `[LEVEL] <msg> <args>`
- */
+/** Setup custom deno logger. Follows format:
+ * `[LEVEL] <msg> <args>` */
 export async function setupLog(): Promise<void> {
   const level = DEBUG_LEVEL; // TODO(@qu4k): make it an flag
   await log.setup({
