@@ -26,7 +26,11 @@ export {
   stringify,
 } from "https://deno.land/std@0.56.0/encoding/yaml.ts";
 
-export { Command } from "https://deno.land/x/cliffy@v0.9.0/command.ts";
+export {
+  Command,
+  HelpCommand,
+  CompletionsCommand,
+} from "https://deno.land/x/cliffy@v0.10.0/command.ts";
 
 export {
   Input,
