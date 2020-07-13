@@ -1,5 +1,5 @@
 import { Config } from "../config.ts";
-import { ENDPOINT } from "./common.ts";
+import { ENDPOINT, apiFetch } from "./common.ts";
 
 type StringMap = {
   [key: string]: string;
@@ -12,7 +12,7 @@ export async function postResource<T>(
 ): Promise<T | undefined> {
   // TODO(@qu4k): add test resource
   try {
-    const response = await fetch(`${ENDPOINT}${query}`, {
+    const response = await apiFetch(`${ENDPOINT}${query}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

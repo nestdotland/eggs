@@ -1,10 +1,10 @@
 import { IModule, Module } from "../module.ts";
-import { ENDPOINT } from "./common.ts";
+import { ENDPOINT, apiFetch } from "./common.ts";
 
 export async function fetchResource<T>(query: string): Promise<T | undefined> {
   // TODO(@qu4k): add test resource
   try {
-    const response = await fetch(`${ENDPOINT}${query}`);
+    const response = await apiFetch(`${ENDPOINT}${query}`);
     if (!response || !response.ok) return undefined;
     const value = await response.json();
     return value as T;
