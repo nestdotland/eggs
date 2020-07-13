@@ -31,5 +31,5 @@ export async function writeGlobalModuleConfig(
   path: string,
   config: GlobalModuleConfig,
 ): Promise<void> {
-  await writeJson(path, config, {spaces: 2});
+  await writeJson(path, config, { spaces: 2 });
 }

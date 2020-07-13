@@ -1,4 +1,9 @@
-import { bold, Command, getLatestVersionFromNestRegistry, green, } from "../../deps.ts";
+import {
+  bold,
+  Command,
+  getLatestVersionFromNestRegistry,
+  green,
+} from "../../deps.ts";
 
 import { version } from "../version.ts";
 
