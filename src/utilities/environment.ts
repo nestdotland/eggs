@@ -1,10 +1,10 @@
 import { existsSync } from "../../deps.ts";
 
-export function homedir(): string {
+export function envHOMEDIR(): string {
   return Deno.env.get("HOME") || Deno.env.get("HOMEPATH") ||
     Deno.env.get("USERPROFILE") || "/";
 }
 
-export function readmeExists(): boolean {
+export function envExistREADME(): boolean {
   return existsSync("README.md");
 }
