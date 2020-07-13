@@ -1,5 +1,5 @@
 import { Command, log } from "../../deps.ts";
-import { KEY_FILE, writeAPIKey } from "../utilities/keyfile.ts";
+import { KEY_FILE, writeAPIKey } from "../keyfile.ts";
 import { version } from "../version.ts";
 
 /**
