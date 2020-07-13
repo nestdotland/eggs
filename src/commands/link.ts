@@ -2,12 +2,10 @@ import { Command, log } from "../../deps.ts";
 import { KEY_FILE, writeAPIKey } from "../keyfile.ts";
 import { version } from "../version.ts";
 
-/**
- * Link Command.
+/** Link Command.
  * Provided a key, the `link` commands creates
  * a persistent file on the host os to save
- * the API key to.
- */
+ * the API key to. */
 async function linkCommand() {
   if (Deno.args.length < 3) {
     log.critical(
