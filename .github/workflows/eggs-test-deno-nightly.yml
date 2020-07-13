@@ -27,13 +27,13 @@ jobs:
           iwr https://deno-nightly.now.sh/install.ps1 -useb | iex
           echo "::set-env name=DENO_INSTALL::${DENO_INSTALL:-$HOME/.deno}"
           echo "::add-path::$HOME/.deno/bin"
-
-      - name: Setup Deno Nightly (mac or linux)
+        
+      - name: Setup Deno Nightly (mac & linux)
         if: startsWith(matrix.os, 'mac') || startsWith(matrix.os, 'ubuntu')
         run: |
           curl -fsSL https://deno-nightly.now.sh/install.sh | sh
           echo "::set-env name=DENO_INSTALL::${DENO_INSTALL:-$HOME/.deno}"
           echo "::add-path::$HOME/.deno/bin"
 
-      - name: Test eggs link
+      - name: Deno test
         run: deno-nightly test -A --unstable
