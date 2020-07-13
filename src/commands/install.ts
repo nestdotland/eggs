@@ -100,7 +100,7 @@ async function installModule(_: unknown, ...args: string[]): Promise<void> {
   }
 
   const url = args[indexOfURL];
-  let {moduleName, versionURL, registry, owner, version} = analyzeURL(url);
+  let { moduleName, versionURL, registry, owner, version } = analyzeURL(url);
   let installName: string;
 
   const currentVersion = semver.valid(version) ??
