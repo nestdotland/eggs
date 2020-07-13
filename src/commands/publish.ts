@@ -1,7 +1,7 @@
 import {
   base64,
   bold,
-  Command,
+  Command, existsSync,
   expandGlobSync,
   green,
   log,
@@ -19,13 +19,7 @@ import {
   readConfig,
 } from "../config.ts";
 
-import { envExistREADME } from "../utilities/environment.ts";
-import { getAPIKey } from "../utilities/keyfile.ts";
-
-function readFileBtoa(path: string): string {
-  const data = Deno.readFileSync(path);
-  return base64.fromUint8Array(data);
-}
+import { getAPIKey } from "../keyfile.ts";
 
 async function getConfig(): Promise<Config> {
   const configPath = defaultConfig();
@@ -66,7 +60,7 @@ async function getConfig(): Promise<Config> {
 }
 
 async function checkREADME(config: Config) {
-  if (!envExistREADME()) {
+  if (!existsSync("README.md")) {
     log.warning("No README found at project root, continuing without one...");
   }
 
@@ -124,6 +118,11 @@ function matchFiles(config: Config): File[] {
 }
 
 function readFiles(matched: File[]): { [x: string]: string } {
+  function readFileBtoa(path: string): string {
+    const data = Deno.readFileSync(path);
+    return base64.fromUint8Array(data);
+  }
+
   return matched.map((el) =>
     [el, readFileBtoa(el.fullPath)] as [typeof el, string]
   ).reduce((p, c) => {
@@ -132,7 +131,7 @@ function readFiles(matched: File[]): { [x: string]: string } {
   }, {} as { [x: string]: string });
 }
 
-async function checkEntry(config: Config, matched: File[]) {
+function checkEntry(config: Config, matched: File[]) {
   if (config.entry) {
     config.entry = config.entry?.replace(/^[.]/, "").replace(
       /^[^/]/,
@@ -152,7 +151,8 @@ async function publishCommand() {
   if (!apiKey) {
     log.critical(
       "No API Key file found. You can add one using `eggs link --key <api key>. You can create one on https://nest.land",
-    ), Deno.exit(1);
+    );
+    Deno.exit(1);
   }
 
   const egg = await getConfig();
