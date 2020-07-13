@@ -10,7 +10,7 @@ function readFileBtoa(path: string): string {
 }
 
 async function publishCommand() {
-  const progress = new ProgressBar({title: "Publishing:", total: 22});
+  const progress = new ProgressBar({ title: "Publishing:", total: 22 });
   let completed = 1;
 
   const configPath = defaultConfig();

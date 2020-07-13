@@ -1,4 +1,10 @@
-import { existsSync, extname, parseYaml, stringifyYaml, writeJson, } from "../deps.ts";
+import {
+  existsSync,
+  extname,
+  parseYaml,
+  stringifyYaml,
+  writeJson,
+} from "../deps.ts";
 
 /**
  * Supported configuration formats.
@@ -79,7 +85,7 @@ export async function writeConfig(
       await writeYaml(`egg.yml`, stringifyYaml(data));
       break;
     case ConfigFormat.JSON:
-      await writeJson("egg.json", data, {spaces: 2});
+      await writeJson("egg.json", data, { spaces: 2 });
       break;
   }
 }

@@ -48,8 +48,8 @@ async function initCommand() {
     message: "Config format: ",
     default: configPath ? configFormat(configPath) : ConfigFormat.JSON,
     options: [
-      {name: "YAML", value: ConfigFormat.YAML},
-      {name: "JSON", value: ConfigFormat.JSON},
+      { name: "YAML", value: ConfigFormat.YAML },
+      { name: "JSON", value: ConfigFormat.JSON },
     ],
   });
 
