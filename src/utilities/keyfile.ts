@@ -8,7 +8,7 @@ export const KEY_SUFFIX = (ENDPOINT === "https://x.nest.land")
 
 export const KEY_FILE = `.nest-api-key${KEY_SUFFIX}`;
 
-function slugify(text) {
+function slugify(text: string) {
   return text.toString().toLowerCase()
     .replace(/\s+/g, "-")
     .replace(/[^\w\-]+/g, "")
@@ -19,7 +19,7 @@ function slugify(text) {
 
 export async function writeAPIKey(key: string): Promise<void> {
   const keyPath = join(homedir(), KEY_FILE);
-  await Deno.writeFile(keyPath, new TextEncoder().encode());
+  await Deno.writeFile(keyPath, new TextEncoder().encode(key));
 }
 
 export async function getAPIKey(): Promise<string> {
