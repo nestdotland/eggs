@@ -17,7 +17,7 @@
       <img src="https://nest.land/badge.svg" alt="nest.land badge">
     </a>
     <img
-      src="https://github.com/nestdotland/nest.land/workflows/Eggs%20Test/badge.svg"
+      src="https://img.shields.io/github/workflow/status/nestdotland/eggs/CI%20check"
       alt="Eggs Test"
     >
   </p>
