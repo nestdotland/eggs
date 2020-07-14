@@ -19,4 +19,4 @@ export const link = new Command<Options, Arguments>()
 
 type Arguments = [string];
 
-type Options = {}
+type Options = {};
