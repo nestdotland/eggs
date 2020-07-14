@@ -21,7 +21,6 @@ await new Command()
   .command("help", new HelpCommand())
   .command("completions", new CompletionsCommand())
   .command("link", link)
-  .option("-k, --key <value:string>", "Your API Key") // TODO(@oganexon): move key option to args
   .command("init", init)
   .command("publish", publish)
   .command("update", update)
