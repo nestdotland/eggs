@@ -53,7 +53,7 @@ These must be added to the path manually if required.`;
 export const install = new Command()
   .version(version)
   .description(desc)
-  .arguments("[OPTIONS...:string]")
+  .arguments("[options...:string]")
   .option("-A, --allow-all", "Allow all permissions")
   .option("--allow-env", "Allow environment access")
   .option("--allow-hrtime", "Allow high resolution time measurement")
@@ -85,9 +85,7 @@ export const install = new Command()
 async function installModule(_: unknown, ...args: string[]): Promise<void> {
   /** help option need to be parsed manually */
   if (["-h", "--help", "help"].includes(args[0])) {
-    Deno.stdout.writeSync(
-      new TextEncoder().encode(install.getHelpCommand().getHelp()),
-    );
+    Deno.stdout.writeSync(new TextEncoder().encode(install.getHelp()));
     Deno.exit();
   }
 
