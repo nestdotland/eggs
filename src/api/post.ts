@@ -1,4 +1,3 @@
-import { Config } from "../config.ts";
 import { ENDPOINT, apiFetch } from "./common.ts";
 
 type StringMap = {
@@ -36,25 +35,26 @@ export interface PublishResponse {
   owner: string;
 }
 
+export interface PublishModule {
+  name: string;
+  description?: string;
+  repository?: string;
+  version: string;
+  unlisted?: boolean;
+  upload: boolean;
+  entry?: string;
+  latest?: boolean;
+  stable?: boolean;
+}
+
 export async function postPublishModule(
   key: string,
-  module: Config,
-  latest: boolean,
+  module: PublishModule,
 ): Promise<PublishResponse | undefined> {
   let response: PublishResponse | undefined = await postResource(
     "/api/publish",
     { "Authorization": key },
-    {
-      name: module.name,
-      description: module.description,
-      repository: module.repository,
-      version: module.version,
-      unlisted: module.unlisted,
-      upload: true,
-      entry: module.entry,
-      latest: latest,
-      stable: module.stable,
-    },
+    module,
   );
   return response;
 }

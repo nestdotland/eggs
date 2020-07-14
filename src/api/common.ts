@@ -2,15 +2,15 @@ import { envENDPOINT } from "../environment.ts";
 
 export const ENDPOINT = envENDPOINT();
 
+// TODO(@qu4k): develop mock api
 let MOCK = false;
-const store: object = {};
 
 export function enableMockApi() {
   MOCK = true;
 }
 
 export async function apiFetch(
-  input: Request | URL | string,
+  input: string,
   init?: RequestInit,
 ): Promise<Response> {
   return await fetch(input, init);

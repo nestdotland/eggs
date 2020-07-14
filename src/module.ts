@@ -26,16 +26,27 @@ export class Module implements IModule {
     this.packageUploadNames = module.packageUploadNames;
   }
 
-  getLatestVersion(stable?: boolean): string {
-    let latest =
-      (stable ? this.latestStableVersion : this.latestVersion)?.split("@")[1] ??
-        "0.0.0";
+  getLatestVersion(): string {
+    function vn(n: string): string {
+      return n.split("@")[1];
+    }
+    let latest: string | undefined;
 
-    this.packageUploadNames.forEach((el) => {
-      if (semver.compare(el.split("@")[1], latest) === 1) {
-        latest = el.split("@")[1];
+    if (this.packageUploadNames.length > 0) {
+      function cmp(a: string, b: string): number {
+        return -(semver.compare(vn(a), vn(b)));
       }
-    });
-    return latest;
+
+      const sorted = this.packageUploadNames.sort(cmp);
+      latest = vn(sorted[0]);
+    }
+
+    if (!latest && this.latestVersion) {
+      latest = vn(this.latestVersion);
+    } else if (!latest && this.latestStableVersion) {
+      latest = vn(this.latestStableVersion);
+    }
+
+    return latest ?? "0.0.0";
   }
 }
