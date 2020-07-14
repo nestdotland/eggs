@@ -6,19 +6,17 @@ import { version } from "../version.ts";
  * Provided a key, the `link` commands creates
  * a persistent file on the host os to save
  * the API key to. */
-async function linkCommand() {
-  if (Deno.args.length < 3) {
-    log.critical(
-      "You need to pass in your API key! To do this, add `--key <your_key>` to the end of this command.",
-    );
-    Deno.exit(1);
-  }
-
-  await writeAPIKey(Deno.args[2]);
+async function linkCommand(options: Options, key: string) {
+  await writeAPIKey(key);
   log.info(`Successfully updated ${KEY_FILE} with your key!`);
 }
 
-export const link = new Command()
+export const link = new Command<Options, Arguments>()
   .version(version)
   .description("Links your nest.land API key to the CLI")
+  .arguments("<key:string>")
   .action(linkCommand);
+
+type Arguments = [string];
+
+interface Options {}
