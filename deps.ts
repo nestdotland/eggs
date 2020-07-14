@@ -30,13 +30,13 @@ export {
   Command,
   HelpCommand,
   CompletionsCommand,
-} from "https://raw.githubusercontent.com/nestdotland/deno-cliffy/fix/bump-deps/packages/command/mod.ts";
+} from "https://x.nest.land/cliffy@0.11.0/packages/command/mod.ts";
 
 export {
   Input,
   Confirm,
   List,
-} from "https://raw.githubusercontent.com/nestdotland/deno-cliffy/fix/bump-deps/packages/prompt/mod.ts";
+} from "https://x.nest.land/cliffy@0.11.0/packages/prompt/mod.ts";
 
 export * as semver from "https://deno.land/x/semver@v1.0.0/mod.ts";
 
