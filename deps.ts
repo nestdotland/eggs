@@ -47,13 +47,13 @@ export { default as ProgressBar } from "https://x.nest.land/progress@1.1.0/mod.t
 export {
   installUpdateHandler,
   globalModulesConfigPath,
-} from "https://x.nest.land/hatcher@0.6.0/mod.ts";
+} from "https://x.nest.land/hatcher@0.6.2/mod.ts";
 
 export {
   getLatestVersionFromNestRegistry,
   getLatestVersion,
   analyzeURL,
   versionSubstitute,
-} from "https://x.nest.land/hatcher@0.6.0/lib/registries.ts";
+} from "https://x.nest.land/hatcher@0.6.2/lib/registries.ts";
 
 export const lstatSync = Deno.lstatSync;
