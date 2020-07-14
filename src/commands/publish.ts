@@ -11,7 +11,7 @@ import {
 } from "../../deps.ts";
 import { ENDPOINT } from "../api/common.ts";
 import { fetchModule } from "../api/fetch.ts";
-import { postPieces, postPublishModule } from "../api/post.ts";
+import { postPieces, postPublishModule, PublishModule } from "../api/post.ts";
 
 import {
   Config,
@@ -21,6 +21,7 @@ import {
 } from "../config.ts";
 
 import { getAPIKey } from "../keyfile.ts";
+import { version } from "../version.ts";
 
 async function getConfig(): Promise<Config> {
   const configPath = defaultConfig();
@@ -147,7 +148,7 @@ function checkEntry(config: Config, matched: File[]) {
   }
 }
 
-async function publishCommand() {
+async function publishCommand({ dry }: { dry: boolean }) {
   let apiKey = await getAPIKey();
   if (!apiKey) {
     log.critical(
@@ -179,22 +180,40 @@ async function publishCommand() {
 
   let latest = "0.0.0";
   if (existing) {
-    latest = existing.getLatestVersion(egg.stable);
+    latest = existing.getLatestVersion();
   }
 
   egg.version = egg.version || semver.inc(latest, "patch") as string;
 
-  let isLatest = semver.compare(egg.version, latest) === 1;
+  const isLatest = semver.compare(egg.version, latest) === 1;
 
-  let uploadResponse = await postPublishModule(apiKey, egg, isLatest);
+  const module: PublishModule = {
+    name: egg.name,
+    description: egg.description,
+    repository: egg.repository,
+    version: egg.version,
+    unlisted: egg.unlisted,
+    upload: true,
+    latest: isLatest,
+  };
+
+  if (dry) {
+    log.info("This was a dry run, the resulting module is:");
+    console.error(module);
+    Deno.exit(1);
+  }
+
+  const uploadResponse = await postPublishModule(apiKey, module);
   if (!uploadResponse) {
+    // TODO(@qu4k): provide better error reporting
     log.critical("Something broke when publishing... ");
     Deno.exit(1);
   }
 
-  let pieceResponse = await postPieces(uploadResponse.token, matchedContent);
+  const pieceResponse = await postPieces(uploadResponse.token, matchedContent);
 
   if (!pieceResponse) {
+    // TODO(@qu4k): provide better error reporting
     log.critical("Something broke when sending pieces... ");
     Deno.exit(1);
   }
@@ -220,4 +239,6 @@ async function publishCommand() {
 
 export const publish = new Command()
   .description("Publishes the current directory to the nest.land registry.")
+  .version(version)
+  .option("-d, --dry [recursive:boolean]", "Do a dry run")
   .action(publishCommand);
