@@ -1,4 +1,4 @@
-import { Command } from "./deps.ts";
+import { Command, HelpCommand, CompletionsCommand } from "./deps.ts";
 import { link } from "./src/commands/link.ts";
 import { init } from "./src/commands/init.ts";
 import { publish } from "./src/commands/publish.ts";
@@ -11,9 +11,13 @@ import { version } from "./src/version.ts";
 await new Command()
   .name("eggs")
   .version(version)
-  .description("nest.land - A module registry and CDN for Deno, on the permaweb")
+  .description(
+    "nest.land - A module registry and CDN for Deno, on the permaweb",
+  )
+  .command("help", new HelpCommand())
+  .command("completions", new CompletionsCommand())
   .command("link", link)
-  .option("-k, --key <value:string>", "Your API Key")
+  .option("-k, --key <value:string>", "Your API Key") // TODO(@oganexon): move key option to args
   .command("init", init)
   .command("publish", publish)
   .command("update", update)
