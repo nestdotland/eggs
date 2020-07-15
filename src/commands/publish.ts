@@ -203,6 +203,10 @@ async function publishCommand({ dry }: { dry: boolean }) {
   if (dry) {
     log.info("This was a dry run, the resulting module is:");
     console.error(module);
+    log.info("The matched file were:");
+    matched.forEach(file => {
+      console.log(` - ${file.path}`);
+    });
     Deno.exit(1);
   }
 
@@ -224,7 +228,7 @@ async function publishCommand({ dry }: { dry: boolean }) {
   log.info(`Successfully published ${bold(egg.name)}!`);
 
   log.info("Files uploaded: ");
-  Object.entries(pieceResponse.files).map((el) => {
+  Object.entries(pieceResponse.files).forEach((el) => {
     console.log(` - ${el[0]} -> ${bold(`${ENDPOINT}/${egg.name}${el[0]}`)}`);
   });
 
