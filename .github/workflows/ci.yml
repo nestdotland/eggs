@@ -25,7 +25,13 @@ jobs:
       run: deno lint --unstable
       
   test:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macOS-latest, windows-latest, ubuntu-latest]
+
     steps:
     - name: Checkout sources
       uses: actions/checkout@v2
