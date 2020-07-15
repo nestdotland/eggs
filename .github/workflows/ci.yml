@@ -10,8 +10,11 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - uses: denolib/setup-deno@v2
+    - name: Checkout sources
+      uses: actions/checkout@v2
+      
+    - name: Setup latest deno version
+      uses: denolib/setup-deno@v2
       with:
         deno-version: v1.x
 
@@ -24,8 +27,11 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - uses: denolib/setup-deno@v2
+    - name: Checkout sources
+      uses: actions/checkout@v2
+      
+    - name: Setup latest deno version
+      uses: denolib/setup-deno@v2
       with:
         deno-version: v1.x
 
