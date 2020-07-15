@@ -1,4 +1,4 @@
-import { Command, Confirm, Input, List, log, Select } from "../../deps.ts";
+import { Command, Confirm, Input, List, log, Select, basename } from "../../deps.ts";
 import {
   Config,
   ConfigFormat,
@@ -24,13 +24,13 @@ async function initCommand() {
   }
 
   const name: string = await Input.prompt({
-    message: "Package name:",
-    default: currentConfig.name,
+    message: "Module name:",
+    default: currentConfig.name || basename(Deno.cwd()),
     minLength: 2,
     maxLength: 40,
   });
   const description: string = await Input.prompt({
-    message: "Package description:",
+    message: "Module description:",
     default: currentConfig.description,
     maxLength: 4294967295,
   });
@@ -43,7 +43,7 @@ async function initCommand() {
   );
   const format: string = await Select.prompt({
     message: "Config format: ",
-    default: configPath ? configFormat(configPath) : ConfigFormat.JSON,
+    default: (configPath ? configFormat(configPath) : ConfigFormat.JSON).toUpperCase(),
     options: [
       { name: "YAML", value: ConfigFormat.YAML },
       { name: "JSON", value: ConfigFormat.JSON },
