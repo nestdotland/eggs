@@ -6,6 +6,7 @@
     "repository": "https://github.com/nestdotland/nest.land",
     "files": [
         "./mod.ts",
+        "./deps.ts",
         "./src/**/*",
         "./README.md"
     ]
