@@ -75,7 +75,9 @@ async function checkREADME(config: Config) {
       log.warning(
         `Your readme contains old import URLs from your project using deno.land/x/${name}.`,
       );
-      log.warning(`You can change these to https://x.nest.land/${name}@VERSION`);
+      log.warning(
+        `You can change these to https://x.nest.land/${name}@VERSION`,
+      );
     }
   } catch (_) {
     log.warning("Could not open the README for url checking...");
