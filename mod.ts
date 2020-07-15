@@ -8,6 +8,10 @@ import { upgrade } from "./src/commands/upgrade.ts";
 
 import { version } from "./src/version.ts";
 
+import { setupLog } from "./src/log.ts";
+
+await setupLog();
+
 await new Command()
   .name("eggs")
   .version(version)

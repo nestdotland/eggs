@@ -6,9 +6,9 @@ import {
   getLatestVersion,
   globalModulesConfigPath,
   installUpdateHandler,
+  log,
   red,
   semver,
-  yellow,
 } from "../../deps.ts";
 import {
   GlobalModuleConfig,
@@ -105,11 +105,7 @@ async function installModule(_: unknown, ...args: string[]): Promise<void> {
     await getLatestVersion(registry, moduleName, owner);
 
   if (!currentVersion || !semver.valid(currentVersion)) {
-    console.log(
-      yellow(
-        `Warning: could not find the latest version of ${moduleName}.\nModule will not receive any notification of updates.`,
-      ),
-    );
+    log.warning(`Could not find the latest version of ${moduleName}.`);
     await installModuleWithoutUpdates(args);
     Deno.exit();
   }

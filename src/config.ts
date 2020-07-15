@@ -1,9 +1,22 @@
-import { parse, stringify, writeJson } from "../deps.ts";
+import {
+  existsSync,
+  extname,
+  parseYaml,
+  stringifyYaml,
+  writeJson,
+} from "../deps.ts";
 
-export type ConfigFormats = "yaml" | "yml" | "json";
+/** Supported configuration formats. */
+export enum ConfigFormat {
+  YAML = "yml",
+  JSON = "json",
+}
 
+/** Configuration options.
+ * All fields are optional but most
+ * commands require at least some. */
 export interface Config {
-  name?: string;
+  name: string;
   entry?: string;
   description?: string;
   repository?: string;
@@ -12,25 +25,78 @@ export interface Config {
   unlisted?: boolean;
   fmt?: boolean;
 
-  files?: string[];
+  files: string[];
 }
 
+/** Filenames of the default configs.
+ * The `defaultConfig` method checks
+ * if one of this config files is
+ * available in the cwd. */
+const DEFAULT_CONFIGS = [
+  "egg.json",
+  "egg.yaml",
+  "egg.yml",
+];
+
+/** Get default config in cwd. */
+export function defaultConfig(): string | undefined {
+  return DEFAULT_CONFIGS.find((path) => {
+    return existsSync(path);
+  });
+}
+
+/** Get config format for provided path.
+ * @param path configuration file path */
+export function configFormat(path: string): ConfigFormat {
+  const ext = extname(path);
+  if (ext.match(/^.ya?ml$/)) return ConfigFormat.YAML;
+  return ConfigFormat.JSON;
+}
+
+/** writeYaml. (similar to writeJson)
+ * @private */
 async function writeYaml(filename: string, content: string): Promise<void> {
   return Deno.writeFileSync(filename, new TextEncoder().encode(content));
 }
 
+/** Write config with specific provided format. */
 export async function writeConfig(
   data: Partial<Config>,
-  format: ConfigFormats,
+  format: ConfigFormat,
 ): Promise<void> {
-  ["yaml", "yml"].includes(format)
-    ? await writeYaml(`egg.${format}`, stringify(data))
-    : await writeJson("egg.json", data, { spaces: 2 });
+  switch (format) {
+    case ConfigFormat.YAML:
+      await writeYaml(`egg.yml`, stringifyYaml(data));
+      break;
+    case ConfigFormat.JSON:
+      await writeJson("egg.json", data, { spaces: 2 });
+      break;
+  }
 }
 
-export function parseConfig(data: string, format: ConfigFormats): Config {
-  if (["yaml", "yml"].includes(format)) {
-    return (parse(data) ?? {}) as Config;
+/** Read configuration from provided path. */
+export async function readConfig(path: string): Promise<Partial<Config>> {
+  const format = configFormat(path);
+  const data = await Deno.readTextFile(path);
+  return parseConfig(data, format);
+}
+
+/** Parse configuration (provided as string)
+ * for specific provided format */
+export function parseConfig(
+  data: string,
+  format: ConfigFormat,
+): Partial<Config> {
+  if (format == ConfigFormat.YAML) {
+    return (parseYaml(data) ?? {}) as Config;
   }
   return JSON.parse(data) as Config;
+}
+
+export function ensureCompleteConfig(
+  config: Partial<Config>,
+): config is Config {
+  if (!config.name) return false;
+  if (!config.files) return false;
+  return true;
 }
