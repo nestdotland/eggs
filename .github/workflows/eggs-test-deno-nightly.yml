@@ -2,9 +2,9 @@ name: Eggs Test on Deno Nightly
 
 on:
   push:
-    branches: [ master ]
+    branches: [ master, dev ]
   pull_request:
-    branches: [ master ]
+    branches: [ master, dev ]
   schedule:
     - cron: '0 9 * * *'
 
