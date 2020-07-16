@@ -1,18 +1,11 @@
 import {
-<<<<<<< HEAD
   basename,
-=======
->>>>>>> dev
   Command,
   Confirm,
   Input,
   List,
   log,
   Select,
-<<<<<<< HEAD
-=======
-  basename,
->>>>>>> dev
 } from "../../deps.ts";
 import {
   Config,
