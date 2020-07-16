@@ -1,10 +1,15 @@
-import { Command, getLatestVersionFromNestRegistry, log } from "../../deps.ts";
+import {
+  Command,
+  getLatestVersionFromNestRegistry,
+  log,
+  semver,
+} from "../../deps.ts";
 
 import { version } from "../version.ts";
 
 async function upgradeCommand() {
   const newVersion = await getLatestVersionFromNestRegistry("eggs");
-  if (newVersion === version) {
+  if (semver.eq(newVersion, version)) {
     log.info("You are already using the latest CLI version!");
     Deno.exit(0);
   }

@@ -37,10 +37,10 @@
 
 ## Installation
 
-**Note: You need to upgrade to Deno v1.1.0 or newer in order to use our CLI.**
+**Note: You need to upgrade to Deno v1.2.0 or newer in order to use our CLI.**
 
 ```shell script
-deno install -A -f --unstable -n eggs https://x.nest.land/eggs@0.1.8/mod.ts
+deno install -A -f --unstable -n eggs https://x.nest.land/eggs@0.1.10/mod.ts
 ```
 
 For more information, see the [documentation](https://docs.nest.land/).
