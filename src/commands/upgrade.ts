@@ -1,4 +1,9 @@
-import { Command, getLatestVersionFromNestRegistry, log, semver } from "../../deps.ts";
+import {
+  Command,
+  getLatestVersionFromNestRegistry,
+  log,
+  semver,
+} from "../../deps.ts";
 
 import { version } from "../version.ts";
 

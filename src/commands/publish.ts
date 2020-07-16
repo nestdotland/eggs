@@ -204,7 +204,7 @@ async function publishCommand({ dry }: { dry: boolean }) {
     log.info("This was a dry run, the resulting module is:");
     console.error(module);
     log.info("The matched file were:");
-    matched.forEach(file => {
+    matched.forEach((file) => {
       console.log(` - ${file.path}`);
     });
     Deno.exit(1);
