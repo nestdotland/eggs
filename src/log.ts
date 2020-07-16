@@ -22,7 +22,7 @@ class ConsoleHandler extends BaseHandler {
     let msg = "";
     switch (record.level) {
       case LogLevels.DEBUG:
-        msg += green("[DBG]");
+        msg += green("[DEBUG]");
         break;
       case LogLevels.INFO:
         msg += blue("[INFO]");
@@ -95,11 +95,11 @@ class FileHandler extends BaseHandler {
 /** Setup custom deno logger. Follows format:
  * `[LEVEL] <msg> <args>` */
 export async function setupLog(
-  consoleLevel: LevelName = "INFO",
+  debugEnabled = false,
 ): Promise<void> {
   await log.setup({
     handlers: {
-      console: new ConsoleHandler(consoleLevel),
+      console: new ConsoleHandler(debugEnabled ? "DEBUG": "INFO"),
       file: new FileHandler("DEBUG"),
     },
     loggers: {

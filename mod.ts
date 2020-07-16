@@ -8,18 +8,17 @@ import { upgrade } from "./src/commands/upgrade.ts";
 
 import { version } from "./src/version.ts";
 
-import { setupLog, writeLogFile } from "./src/log.ts";
-
-await setupLog();
+import { writeLogFile } from "./src/log.ts";
 
 try {
-  await new Command()
+  await new Command<Options, Arguments>()
     .throwErrors()
     .name("eggs")
     .version(version)
     .description(
       "nest.land - A module registry and CDN for Deno, on the permaweb",
     )
+    .option("-d, --debug", "Print additional information.", { global: true })
     .command("help", new HelpCommand())
     .command("completions", new CompletionsCommand())
     .command("link", link)
@@ -28,8 +27,14 @@ try {
     .command("update", update)
     .command("install", install)
     .command("upgrade", upgrade)
+    .action(() => {
+    })
     .parse(Deno.args);
 } catch (err) {
   log.critical(err.message, err.stack);
   await writeLogFile();
+  Deno.exit(1);
 }
+
+type Options = { debug: boolean };
+type Arguments = [];

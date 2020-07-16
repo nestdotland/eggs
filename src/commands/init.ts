@@ -16,12 +16,20 @@ import {
   writeConfig,
 } from "../config.ts";
 import { version } from "../version.ts";
+import { setupLog } from "../log.ts";
 
 /** Init Command.
  * `init` creates (or overrides) configuration in
  * the cwd with an interactive prompt. */
-async function initCommand() {
-  let currentConfig: Partial<Config> = {};
+async function initCommand(options: Options) {
+  await setupLog(options.debug);
+
+  log.debug("debug")
+  log.info("info")
+
+  throw new Error("error")
+
+ /*  let currentConfig: Partial<Config> = {};
 
   let configPath = defaultConfig();
   if (configPath) {
@@ -66,10 +74,13 @@ async function initCommand() {
     files: (files.length === 0 ? currentConfig.files : files),
   };
 
-  await writeConfig(config, format as ConfigFormat);
+  await writeConfig(config, format as ConfigFormat); */
 }
 
-export const init = new Command()
+export const init = new Command<Options, Arguments>()
   .version(version)
   .description("Initiates a new module for the nest.land registry.")
   .action(initCommand);
+
+type Options = { debug: boolean };
+type Arguments = [];

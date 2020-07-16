@@ -17,6 +17,6 @@ export const link = new Command<Options, Arguments>()
   .arguments("<key:string>")
   .action(linkCommand);
 
-type Arguments = [string];
+type Options = { debug: boolean };
 
-type Options = {};
+type Arguments = [string];
