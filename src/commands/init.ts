@@ -24,12 +24,7 @@ import { setupLog } from "../log.ts";
 async function initCommand(options: Options) {
   await setupLog(options.debug);
 
-  log.debug("debug")
-  log.info("info")
-
-  throw new Error("error")
-
- /*  let currentConfig: Partial<Config> = {};
+  let currentConfig: Partial<Config> = {};
 
   let configPath = defaultConfig();
   if (configPath) {
@@ -74,7 +69,7 @@ async function initCommand(options: Options) {
     files: (files.length === 0 ? currentConfig.files : files),
   };
 
-  await writeConfig(config, format as ConfigFormat); */
+  await writeConfig(config, format as ConfigFormat);
 }
 
 export const init = new Command<Options, Arguments>()

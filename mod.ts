@@ -1,4 +1,4 @@
-import { Command, HelpCommand, CompletionsCommand, log } from "./deps.ts";
+import { Command, HelpCommand, CompletionsCommand } from "./deps.ts";
 import { link } from "./src/commands/link.ts";
 import { init } from "./src/commands/init.ts";
 import { publish } from "./src/commands/publish.ts";
@@ -8,7 +8,7 @@ import { upgrade } from "./src/commands/upgrade.ts";
 
 import { version } from "./src/version.ts";
 
-import { writeLogFile } from "./src/log.ts";
+import { handleError } from "./src/log.ts";
 
 try {
   const eggs = new Command<Options, Arguments>()
@@ -32,9 +32,7 @@ try {
     .command("upgrade", upgrade)
   await eggs.parse(Deno.args);
 } catch (err) {
-  log.critical(err.message, err.stack);
-  await writeLogFile();
-  Deno.exit(1);
+  await handleError(err)
 }
 
 type Options = { debug: boolean };

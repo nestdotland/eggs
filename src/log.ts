@@ -3,17 +3,16 @@ import {
   blue,
   bold,
   green,
-  LevelName,
   log,
   LogLevels,
   LogRecord,
   red,
   reset,
+  resolve,
   yellow,
 } from "../deps.ts";
 
 import { version } from "./version.ts";
-
 
 let masterLogRecord = "";
 
@@ -99,7 +98,7 @@ export async function setupLog(
 ): Promise<void> {
   await log.setup({
     handlers: {
-      console: new ConsoleHandler(debugEnabled ? "DEBUG": "INFO"),
+      console: new ConsoleHandler(debugEnabled ? "DEBUG" : "INFO"),
       file: new FileHandler("DEBUG"),
     },
     loggers: {
@@ -130,6 +129,20 @@ export async function writeLogFile() {
         masterLogRecord,
     ),
   );
+}
+
+export async function handleError(err: any) {
+  log.critical(`An unexpected error occurred: "${err.message}"`, err.stack);
+  await writeLogFile();
+  log.info(
+    `If you think this is a bug, please open a bug report with the information provided in \"${
+      resolve(Deno.cwd(), "./eggs-error.log")
+    }\".`,
+  );
+  log.info(
+    "Visit https://docs.nest.land/eggs/ for documentation about this command.",
+  );
+  Deno.exit(1);
 }
 
 const colorRegex = /\x1B[[(?);]{0,2}(;?\d)*./g;
