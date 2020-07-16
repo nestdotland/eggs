@@ -116,7 +116,6 @@ async function updateGlobalModules(
   await writeGlobalModuleConfig(configPath, config);
 
   console.info("\nUpdated your dependencies!");
-  Deno.exit();
 }
 
 async function updateLocalModules(
@@ -200,7 +199,7 @@ async function updateLocalModules(
   // If no modules are needed to update then exit
   if (dependenciesToUpdate.length === 0) {
     console.info("\nYour dependencies are already up to date!");
-    Deno.exit();
+    return
   }
 
   // Loop through the users dependency file, replacing the imported version with the latest release for each dep
@@ -219,7 +218,6 @@ async function updateLocalModules(
   );
 
   console.info("\nUpdated your dependencies!");
-  Deno.exit();
 }
 
 type Arguments = [string[]];
