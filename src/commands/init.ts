@@ -1,11 +1,11 @@
 import {
+  basename,
   Command,
   Confirm,
   Input,
   List,
   log,
   Select,
-  basename,
 } from "../../deps.ts";
 import {
   Config,

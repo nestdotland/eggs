@@ -1,5 +1,5 @@
 import { Config, defaultConfig, readConfig } from "./config.ts";
-import { Ignore, defaultIgnore, readIgnore } from "./ignore.ts";
+import { defaultIgnore, Ignore, readIgnore } from "./ignore.ts";
 
 export interface Context {
   config?: Partial<Config>;

@@ -1,10 +1,10 @@
 import {
   existsSync,
   extname,
+  join,
   parseYaml,
   stringifyYaml,
   writeJson,
-  join,
 } from "../../deps.ts";
 
 /** Supported configuration formats. */

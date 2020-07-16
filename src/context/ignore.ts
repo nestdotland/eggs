@@ -1,4 +1,4 @@
-import { globToRegExp, log, existsSync, join } from "../../deps.ts";
+import { existsSync, globToRegExp, join, log } from "../../deps.ts";
 
 export interface Ignore {
   accepts: RegExp[];

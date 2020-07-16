@@ -7,23 +7,20 @@ import {
   green,
   log,
   relative,
+  resolve,
   semver,
   walkSync,
-  resolve,
 } from "../../deps.ts";
 import { ENDPOINT } from "../api/common.ts";
 import { fetchModule } from "../api/fetch.ts";
 import { postPieces, postPublishModule, PublishModule } from "../api/post.ts";
 
-import {
-  Config,
-  ensureCompleteConfig,
-} from "../context/config.ts";
+import { Config, ensureCompleteConfig } from "../context/config.ts";
+import { gatherContext } from "../context/context.ts";
+import { Ignore } from "../context/ignore.ts";
 
 import { getAPIKey } from "../keyfile.ts";
 import { version } from "../version.ts";
-import { gatherContext } from "../context/context.ts";
-import { Ignore } from "../context/ignore.ts";
 
 async function getContext(): Promise<[Config, Ignore]> {
   const context = await gatherContext();
