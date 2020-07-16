@@ -1,4 +1,12 @@
-import { Command, Confirm, Input, List, log, Select, basename } from "../../deps.ts";
+import {
+  Command,
+  Confirm,
+  Input,
+  List,
+  log,
+  Select,
+  basename,
+} from "../../deps.ts";
 import {
   Config,
   ConfigFormat,
@@ -6,7 +14,7 @@ import {
   defaultConfig,
   readConfig,
   writeConfig,
-} from "../config.ts";
+} from "../context/config.ts";
 import { version } from "../version.ts";
 
 /** Init Command.
@@ -15,7 +23,7 @@ import { version } from "../version.ts";
 async function initCommand() {
   let currentConfig: Partial<Config> = {};
 
-  let configPath = defaultConfig();
+  let configPath = await defaultConfig();
   if (configPath) {
     log.warning("An egg config file already exists...");
     const override = await Confirm.prompt("Do you want to override it?");
@@ -43,7 +51,8 @@ async function initCommand() {
   );
   const format: string = await Select.prompt({
     message: "Config format: ",
-    default: (configPath ? configFormat(configPath) : ConfigFormat.JSON).toUpperCase(),
+    default: (configPath ? configFormat(configPath) : ConfigFormat.JSON)
+      .toUpperCase(),
     options: [
       { name: "YAML", value: ConfigFormat.YAML },
       { name: "JSON", value: ConfigFormat.JSON },

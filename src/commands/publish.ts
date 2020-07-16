@@ -8,6 +8,8 @@ import {
   log,
   relative,
   semver,
+  walkSync,
+  resolve,
 } from "../../deps.ts";
 import { ENDPOINT } from "../api/common.ts";
 import { fetchModule } from "../api/fetch.ts";
@@ -15,39 +17,35 @@ import { postPieces, postPublishModule, PublishModule } from "../api/post.ts";
 
 import {
   Config,
-  defaultConfig,
   ensureCompleteConfig,
-  readConfig,
-} from "../config.ts";
+} from "../context/config.ts";
 
 import { getAPIKey } from "../keyfile.ts";
 import { version } from "../version.ts";
+import { gatherContext } from "../context/context.ts";
+import { Ignore } from "../context/ignore.ts";
 
-async function getConfig(): Promise<Config> {
-  const configPath = defaultConfig();
-  if (!configPath) {
+async function getContext(): Promise<[Config, Ignore]> {
+  const context = await gatherContext();
+  const { config, ignore } = context;
+
+  if (!config) {
     log.critical("You don't have an egg.json file!");
     log.info("You can create one running `eggs init`.");
     Deno.exit(1);
-  }
-
-  let config: Partial<Config>;
-  try {
-    config = await readConfig(configPath);
-  } catch (err) {
-    throw err;
   }
 
   if (!ensureCompleteConfig(config)) {
     if (!config.name) {
       log.critical("Your module configuration must provide a module name.");
     }
-    if (!config.files) {
-      log.critical(
-        "Your module configuration must provide files to upload.",
-      );
-    }
     Deno.exit(1);
+  }
+
+  if (!config.files && !ignore) {
+    log.critical(
+      "Your module configuration must provide files to upload in the form of a `files` field in the config or in an .eggignore file.",
+    );
   }
 
   if (!config.description) {
@@ -58,7 +56,7 @@ async function getConfig(): Promise<Config> {
   if (!config.version) {
     log.warning("No version found. Generating a new version now...");
   }
-  return config;
+  return [config, ignore];
 }
 
 async function checkREADME(config: Config) {
@@ -102,23 +100,45 @@ interface File {
   lstat: Deno.FileInfo;
 }
 
-function matchFiles(config: Config): File[] {
-  let matched = [];
-  for (let file of config.files) {
-    let matches = [
-      ...expandGlobSync(file, {
-        root: Deno.cwd(),
-        extended: true,
-      }),
-    ]
-      .map((el) => ({
-        fullPath: el.path.replace(/\\/g, "/"),
-        path: "/" + relative(Deno.cwd(), el.path).replace(/\\/g, "/"),
-        lstat: Deno.lstatSync(el.path),
-      }))
-      .filter((el) => el.lstat.isFile);
-    matched.push(...matches);
+function matchFiles(config: Config, ignore: Ignore): File[] {
+  let matched: File[] = [];
+  if (config.files) {
+    for (let file of config.files) {
+      let matches = [
+        ...expandGlobSync(file, {
+          root: Deno.cwd(),
+          extended: true,
+        }),
+      ]
+        .map((file) => ({
+          fullPath: file.path.replace(/\\/g, "/"),
+          path: "/" + relative(Deno.cwd(), file.path).replace(/\\/g, "/"),
+          lstat: Deno.lstatSync(file.path),
+        }));
+      matched.push(...matches);
+    }
+  } else {
+    for (const entry of walkSync(".")) {
+      const path = "/" + entry.path;
+      const fullPath = resolve(entry.path);
+      const lstat = Deno.lstatSync(entry.path);
+      const file: File = {
+        fullPath,
+        path,
+        lstat,
+      };
+      matched.push(file);
+    }
   }
+
+  matched = matched.filter((file) => file.lstat.isFile);
+  matched = matched.filter((file) => {
+    if (ignore.denies.some((rgx) => rgx.test(file.path.substr(1)))) {
+      return ignore.accepts.some((rgx) => rgx.test(file.path.substr(1)));
+    }
+    return true;
+  });
+
   return matched;
 }
 
@@ -160,12 +180,12 @@ async function publishCommand({ dry }: { dry: boolean }) {
     Deno.exit(1);
   }
 
-  const egg = await getConfig();
+  const [egg, ignore] = await getContext();
 
   await checkREADME(egg);
   await checkFmt(egg);
 
-  const matched = matchFiles(egg);
+  const matched = matchFiles(egg, ignore);
   const matchedContent = readFiles(matched);
 
   checkEntry(egg, matched);
@@ -204,7 +224,7 @@ async function publishCommand({ dry }: { dry: boolean }) {
     log.info("This was a dry run, the resulting module is:");
     console.error(module);
     log.info("The matched file were:");
-    matched.forEach(file => {
+    matched.forEach((file) => {
       console.log(` - ${file.path}`);
     });
     Deno.exit(1);

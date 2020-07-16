@@ -1,0 +1,3 @@
+.git*/**
+benchmarks/**
+!benchmarks/README.md

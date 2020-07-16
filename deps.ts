@@ -2,7 +2,9 @@ export {
   join,
   extname,
   relative,
+  resolve,
   basename,
+  globToRegExp,
 } from "https://deno.land/std@v0.61.0/path/mod.ts";
 
 export {
@@ -11,6 +13,7 @@ export {
   writeJson,
   readJson,
   exists,
+  walkSync,
 } from "https://deno.land/std@v0.61.0/fs/mod.ts";
 
 export * as log from "https://deno.land/std@v0.61.0/log/mod.ts";
