@@ -1,4 +1,5 @@
 .git*/**
 .idea/**
+.vscode/**
 benchmarks/**
 !benchmarks/README.md
