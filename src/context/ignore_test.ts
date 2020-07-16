@@ -11,7 +11,12 @@ test/*
 # this is a comment
     # this is a comment, just a bit indented
     `);
-    assertEquals(matched.denies, [/^\.git\/(?:[^//]*)$/, /^test\/(?:[^//]*)$/]);
-    assertEquals(matched.accepts, [/^test\/should_keep_this\.ts$/]);
+    if (Deno.build.os === "windows") {
+      assertEquals(matched.denies, [/^\.git(?:\\|\/)(?:[^\\/]*)$/, /^test(?:\\|\/)(?:[^\\/]*)$/]);
+      assertEquals(matched.accepts, [/^test\\should_keep_this\.ts$/]);
+    } else {
+      assertEquals(matched.denies, [/^\.git\/(?:[^//]*)$/, /^test\/(?:[^//]*)$/]);
+      assertEquals(matched.accepts, [/^test\/should_keep_this\.ts$/]);
+    }
   },
 });
