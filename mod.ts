@@ -11,7 +11,7 @@ import { version } from "./src/version.ts";
 import { writeLogFile } from "./src/log.ts";
 
 try {
-  await new Command<Options, Arguments>()
+  const eggs = new Command<Options, Arguments>()
     .throwErrors()
     .name("eggs")
     .version(version)
@@ -19,6 +19,9 @@ try {
       "nest.land - A module registry and CDN for Deno, on the permaweb",
     )
     .option("-d, --debug", "Print additional information.", { global: true })
+    .action(() => {
+      eggs.help();
+    })
     .command("help", new HelpCommand())
     .command("completions", new CompletionsCommand())
     .command("link", link)
@@ -27,9 +30,7 @@ try {
     .command("update", update)
     .command("install", install)
     .command("upgrade", upgrade)
-    .action(() => {
-    })
-    .parse(Deno.args);
+  await eggs.parse(Deno.args);
 } catch (err) {
   log.critical(err.message, err.stack);
   await writeLogFile();
