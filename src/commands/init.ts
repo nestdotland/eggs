@@ -1,4 +1,12 @@
-import { Command, Confirm, Input, List, log, Select, basename } from "../../deps.ts";
+import {
+  Command,
+  Confirm,
+  Input,
+  List,
+  log,
+  Select,
+  basename,
+} from "../../deps.ts";
 import {
   Config,
   ConfigFormat,
@@ -43,7 +51,8 @@ async function initCommand() {
   );
   const format: string = await Select.prompt({
     message: "Config format: ",
-    default: (configPath ? configFormat(configPath) : ConfigFormat.JSON).toUpperCase(),
+    default: (configPath ? configFormat(configPath) : ConfigFormat.JSON)
+      .toUpperCase(),
     options: [
       { name: "YAML", value: ConfigFormat.YAML },
       { name: "JSON", value: ConfigFormat.JSON },
@@ -60,7 +69,11 @@ async function initCommand() {
   await writeConfig(config, format as ConfigFormat);
 }
 
-export const init = new Command()
+export const init = new Command<Options, Arguments>()
   .version(version)
   .description("Initiates a new module for the nest.land registry.")
   .action(initCommand);
+
+type Arguments = [];
+
+type Options = {};
