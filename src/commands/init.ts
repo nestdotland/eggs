@@ -73,7 +73,3 @@ export const init = new Command<Options, Arguments>()
   .version(version)
   .description("Initiates a new module for the nest.land registry.")
   .action(initCommand);
-
-type Arguments = [];
-
-type Options = {};
