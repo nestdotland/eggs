@@ -1,3 +1,4 @@
 .git*/**
+.idea/**
 benchmarks/**
 !benchmarks/README.md
