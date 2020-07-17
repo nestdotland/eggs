@@ -13,6 +13,8 @@ import {
 
 import { version } from "./version.ts";
 
+const logFile = "./eggs-debug.log"
+
 let masterLogRecord = "";
 let detailedLog = false;
 
@@ -123,7 +125,7 @@ export async function writeLogFile() {
   const platform = `Platform:\n  ${Deno.build.target}\n\n`;
 
   await Deno.writeFile(
-    "./eggs-error.log",
+    logFile,
     encoder.encode(
       args +
         denoVersion +
@@ -139,7 +141,7 @@ export async function handleError(err: any) {
   await writeLogFile();
   log.info(
     `If you think this is a bug, please open a bug report with the information provided in ${
-      bold(resolve(Deno.cwd(), "./eggs-error.log"))
+      bold(resolve(Deno.cwd(), logFile))
     }.`,
   );
   log.info(
