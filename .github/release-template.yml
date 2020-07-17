@@ -1,0 +1,49 @@
+name-template: '$RESOLVED_VERSION'
+
+tag-template: '$RESOLVED_VERSION'
+
+categories:
+  - title: '🚀 Features'
+    labels: 'type: feature'
+
+  - title: '🐛 Bug Fixes'
+    labels: 'type: bugfix'
+
+#  - title: '🧰 Chores'
+#    label: ['type: chore', 'meta: documentation']
+
+change-template: '- [#$NUMBER]($URL) $TITLE (@$AUTHOR)'
+
+version-resolver:
+  major:
+    labels:
+      - 'semver: major'
+
+  minor:
+    labels:
+      - 'semver: minor'
+
+  patch:
+    labels:
+      - 'semver: patch'
+
+  default: patch
+
+template: |
+  ## $RESOLVED_VERSION Changelog
+
+  $CHANGES
+
+  ### Install / Upgrade
+
+  **Using Deno**
+
+  ```sh
+  deno install -A -f --unstable -n eggs https://x.nest.land/eggs@$RESOLVED_VERSION/mod.ts
+  ```
+
+  **Using eggs**
+
+  ```sh
+  eggs upgrade --version $RESOLVED_VERSION
+  ```
