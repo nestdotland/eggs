@@ -2,8 +2,7 @@ name: Ship
 
 on:
   push:
-    branches:
-      - master
+    branches: [master]
  
 jobs:
   release:
@@ -15,19 +14,10 @@ jobs:
       - name: Setup Deno
         uses: denolib/setup-deno@v2
 
-      - name: Prepare for release
-        run: |
-          deno fmt
-          deno lint --unstable
-          deno test --unstable -A
-
-      - name: Install eggs
-        run: deno install -A -f --unstable -n eggs mod.ts
-
       - name: Publish eggs
         run: |
-          eggs link ${{ secrets.NESTAPIKEY }}
-          eggs publish
+          deno run -A --unstable mod.ts link ${{ secrets.NESTAPIKEY }}
+          deno run -A --unstable mod.ts publish
 
       - name: Draft release
         uses: release-drafter/release-drafter@v5
