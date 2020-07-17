@@ -16,7 +16,7 @@ jobs:
         os: [macOS-latest, windows-latest, ubuntu-latest]
     steps:
     - name: Setup repo
-      uses: actions/checkout@latest
+      uses: actions/checkout@v2
       
     - name: Setup Deno
       uses: denolib/setup-deno@latest
@@ -34,7 +34,7 @@ jobs:
         os: [macOS-latest, windows-latest, ubuntu-latest]
     steps:
     - name: Setup repo
-      uses: actions/checkout@latest
+      uses: actions/checkout@v2
       
     - name: Setup Deno
       uses: denolib/setup-deno@master
