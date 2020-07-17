@@ -1,5 +1,5 @@
 import { IModule, Module } from "../module.ts";
-import { ENDPOINT, apiFetch } from "./common.ts";
+import { apiFetch, ENDPOINT } from "./common.ts";
 
 export async function fetchResource<T>(query: string): Promise<T | undefined> {
   // TODO(@qu4k): add test resource

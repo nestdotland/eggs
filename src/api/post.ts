@@ -1,4 +1,4 @@
-import { ENDPOINT, apiFetch } from "./common.ts";
+import { apiFetch, ENDPOINT } from "./common.ts";
 
 type StringMap = {
   [key: string]: string;

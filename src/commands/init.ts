@@ -1,11 +1,11 @@
 import {
+  basename,
   Command,
   Confirm,
   Input,
   List,
   log,
   Select,
-  basename,
 } from "../../deps.ts";
 import {
   Config,
@@ -14,7 +14,7 @@ import {
   defaultConfig,
   readConfig,
   writeConfig,
-} from "../config.ts";
+} from "../context/config.ts";
 import { version } from "../version.ts";
 import { setupLog } from "../log.ts";
 
@@ -26,7 +26,7 @@ async function initCommand(options: Options) {
 
   let currentConfig: Partial<Config> = {};
 
-  let configPath = defaultConfig();
+  let configPath = await defaultConfig();
   if (configPath) {
     log.warning("An egg config file already exists...");
     const override = await Confirm.prompt("Do you want to override it?");

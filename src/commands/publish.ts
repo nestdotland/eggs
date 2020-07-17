@@ -7,18 +7,18 @@ import {
   green,
   log,
   relative,
+  resolve,
   semver,
+  walkSync,
 } from "../../deps.ts";
 import { ENDPOINT } from "../api/common.ts";
 import { fetchModule } from "../api/fetch.ts";
 import { postPieces, postPublishModule, PublishModule } from "../api/post.ts";
 
-import {
-  Config,
-  defaultConfig,
-  ensureCompleteConfig,
-  readConfig,
-} from "../config.ts";
+import { Config, ensureCompleteConfig } from "../context/config.ts";
+import { gatherContext } from "../context/context.ts";
+import { Ignore } from "../context/ignore.ts";
+
 import { getAPIKey } from "../keyfile.ts";
 import { version } from "../version.ts";
 import { setupLog } from "../log.ts";
@@ -28,31 +28,32 @@ const nullConfig = {
   files: [""],
 };
 
-async function getConfig(): Promise<Config> {
-  const configPath = defaultConfig();
-  if (!configPath) {
+const nullIgnore = {
+  accepts: [],
+  denies: [],
+};
+
+async function getContext(): Promise<[Config, Ignore]> {
+  const context = await gatherContext();
+  const { config, ignore } = context;
+
+  if (!config) {
     log.error("You don't have an egg.json file!");
     log.info("You can create one running `eggs init`.");
-    return nullConfig;
-  }
-
-  let config: Partial<Config>;
-  try {
-    config = await readConfig(configPath);
-  } catch (err) {
-    throw err;
+    return [nullConfig, nullIgnore];
   }
 
   if (!ensureCompleteConfig(config)) {
     if (!config.name) {
       log.error("Your module configuration must provide a module name.");
     }
-    if (!config.files) {
-      log.error(
-        "Your module configuration must provide files to upload.",
-      );
-    }
-    return nullConfig;
+    return [nullConfig, nullIgnore];
+  }
+
+  if (!config.files && !ignore) {
+    log.critical(
+      "Your module configuration must provide files to upload in the form of a `files` field in the config or in an .eggignore file.",
+    );
   }
 
   if (!config.description) {
@@ -63,7 +64,7 @@ async function getConfig(): Promise<Config> {
   if (!config.version) {
     log.warning("No version found. Generating a new version now...");
   }
-  return config;
+  return [config, ignore];
 }
 
 async function checkREADME(config: Config) {
@@ -101,23 +102,45 @@ async function checkFmt(config: Config) {
   }
 }
 
-function matchFiles(config: Config): File[] {
-  let matched = [];
-  for (let file of config.files) {
-    let matches = [
-      ...expandGlobSync(file, {
-        root: Deno.cwd(),
-        extended: true,
-      }),
-    ]
-      .map((el) => ({
-        fullPath: el.path.replace(/\\/g, "/"),
-        path: "/" + relative(Deno.cwd(), el.path).replace(/\\/g, "/"),
-        lstat: Deno.lstatSync(el.path),
-      }))
-      .filter((el) => el.lstat.isFile);
-    matched.push(...matches);
+function matchFiles(config: Config, ignore: Ignore): File[] {
+  let matched: File[] = [];
+  if (config.files) {
+    for (let file of config.files) {
+      let matches = [
+        ...expandGlobSync(file, {
+          root: Deno.cwd(),
+          extended: true,
+        }),
+      ]
+        .map((file) => ({
+          fullPath: file.path.replace(/\\/g, "/"),
+          path: "/" + relative(Deno.cwd(), file.path).replace(/\\/g, "/"),
+          lstat: Deno.lstatSync(file.path),
+        }));
+      matched.push(...matches);
+    }
+  } else {
+    for (const entry of walkSync(".")) {
+      const path = "/" + entry.path;
+      const fullPath = resolve(entry.path);
+      const lstat = Deno.lstatSync(entry.path);
+      const file: File = {
+        fullPath,
+        path,
+        lstat,
+      };
+      matched.push(file);
+    }
   }
+
+  matched = matched.filter((file) => file.lstat.isFile);
+  matched = matched.filter((file) => {
+    if (ignore.denies.some((rgx) => rgx.test(file.path.substr(1)))) {
+      return ignore.accepts.some((rgx) => rgx.test(file.path.substr(1)));
+    }
+    return true;
+  });
+
   return matched;
 }
 
@@ -143,10 +166,10 @@ function checkEntry(config: Config, matched: File[]) {
     );
   }
   if (!matched.find((e) => e.path === config.entry || "/mod.ts")) {
-    log.critical(
+    log.error(
       `No ${config.entry || "/mod.ts"} found. This file is required.`,
     );
-    Deno.exit(1);
+    return true;
   }
 }
 
@@ -161,7 +184,7 @@ async function publishCommand(options: Options) {
     return;
   }
 
-  const egg = await getConfig();
+  const [egg, ignore] = await getContext();
 
   if (egg === nullConfig) return;
 
@@ -170,10 +193,11 @@ async function publishCommand(options: Options) {
   await checkREADME(egg);
   await checkFmt(egg);
 
-  const matched = matchFiles(egg);
+  const matched = matchFiles(egg, ignore);
   const matchedContent = readFiles(matched);
 
-  checkEntry(egg, matched);
+  const noEntryFile = checkEntry(egg, matched);
+  if (noEntryFile) return;
 
   const existing = await fetchModule(egg.name);
 
