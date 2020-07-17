@@ -10,7 +10,7 @@ import { setupLog } from "../log.ts";
 async function linkCommand(options: Options, key: string) {
   await setupLog(options.debug);
 
-  log.debug("Key: ", key)
+  log.debug("Key: ", key);
   await writeAPIKey(key);
   log.info(`Successfully updated ${KEY_FILE} with your key!`);
 }

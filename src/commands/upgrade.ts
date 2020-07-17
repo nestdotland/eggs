@@ -33,15 +33,15 @@ async function upgradeCommand(options: Options) {
   });
 
   const status = await upgradeProcess.status();
-  upgradeProcess.close()
+  upgradeProcess.close();
 
   const stdout = new TextDecoder("utf-8").decode(await upgradeProcess.output());
   const stderr = new TextDecoder("utf-8").decode(
     await upgradeProcess.stderrOutput(),
   );
-  
-  log.debug("stdout: ", stdout)
-  log.debug("stderr: ", stderr)
+
+  log.debug("stdout: ", stdout);
+  log.debug("stderr: ", stderr);
 
   if (!status.success) {
     throw new Error("Failed to upgrade to the latest CLI version!");

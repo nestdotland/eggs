@@ -13,7 +13,7 @@ import {
 
 import { version } from "./version.ts";
 
-const logFile = "./eggs-debug.log"
+const logFile = "./eggs-debug.log";
 
 let masterLogRecord = "";
 let detailedLog = false;

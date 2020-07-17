@@ -10,7 +10,7 @@ import { version } from "./src/version.ts";
 
 import { handleError, writeLogFile, setupLog } from "./src/log.ts";
 
-await setupLog()
+await setupLog();
 
 try {
   const eggs = new Command<Options, Arguments>()
@@ -40,7 +40,7 @@ try {
   const { options } = await eggs.parse(Deno.args);
 
   if (options.outputLog) {
-    await writeLogFile()
+    await writeLogFile();
   }
 } catch (err) {
   await handleError(err);

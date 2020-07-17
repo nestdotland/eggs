@@ -46,7 +46,7 @@ async function installCommand(
   let { moduleName, versionURL, registry, owner, version } = analyzeURL(url);
   let installName: string;
 
-  log.debug("Module info: ", moduleName, versionURL, registry, owner, version)
+  log.debug("Module info: ", moduleName, versionURL, registry, owner, version);
 
   const currentVersion = semver.valid(version) ??
     await getLatestVersion(registry, moduleName, owner);
@@ -74,7 +74,7 @@ async function installCommand(
   );
 
   if (result[0].status === "rejected") {
-    throw new Error(`Installation failed: ${result[0].reason}`)
+    throw new Error(`Installation failed: ${result[0].reason}`);
   }
   if (result[1].status === "rejected") {
     throw new Error(`Installation failed: ${result[1].reason}`);
@@ -98,11 +98,11 @@ async function installCommand(
     lastUpdateCheck: Date.now(),
   };
 
-  log.debug("Config: ", config)
+  log.debug("Config: ", config);
 
   await writeGlobalModuleConfig(configPath, config);
 
-  log.info(`Successfully installed ${bold(moduleName)} !`)
+  log.info(`Successfully installed ${bold(moduleName)} !`);
 }
 
 async function installModuleHandler(args: string[]): Promise<void> {
@@ -124,9 +124,9 @@ async function installModuleHandler(args: string[]): Promise<void> {
   const stderr = new TextDecoder("utf-8").decode(
     await installation.stderrOutput(),
   );
-  
-  log.debug("stdout: ", stdout)
-  log.debug("stderr: ", stderr)
+
+  log.debug("stdout: ", stdout);
+  log.debug("stderr: ", stderr);
 
   if (status.success === false || status.code !== 0) {
     throw new Error("Module handler installation failed.");
