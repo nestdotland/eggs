@@ -19,16 +19,21 @@ import {
   ensureCompleteConfig,
   readConfig,
 } from "../config.ts";
-
 import { getAPIKey } from "../keyfile.ts";
 import { version } from "../version.ts";
+import { setupLog } from "../log.ts";
+
+const nullConfig = {
+  name: "",
+  files: [""],
+};
 
 async function getConfig(): Promise<Config> {
   const configPath = defaultConfig();
   if (!configPath) {
-    log.critical("You don't have an egg.json file!");
+    log.error("You don't have an egg.json file!");
     log.info("You can create one running `eggs init`.");
-    Deno.exit(1);
+    return nullConfig;
   }
 
   let config: Partial<Config>;
@@ -40,14 +45,14 @@ async function getConfig(): Promise<Config> {
 
   if (!ensureCompleteConfig(config)) {
     if (!config.name) {
-      log.critical("Your module configuration must provide a module name.");
+      log.error("Your module configuration must provide a module name.");
     }
     if (!config.files) {
-      log.critical(
+      log.error(
         "Your module configuration must provide files to upload.",
       );
     }
-    Deno.exit(1);
+    return nullConfig;
   }
 
   if (!config.description) {
@@ -79,7 +84,7 @@ async function checkREADME(config: Config) {
         `You can change these to https://x.nest.land/${name}@VERSION`,
       );
     }
-  } catch (_) {
+  } catch {
     log.warning("Could not open the README for url checking...");
   }
 }
@@ -94,12 +99,6 @@ async function checkFmt(config: Config) {
   } else {
     log.error("`deno fmt` returned a non-zero code.");
   }
-}
-
-interface File {
-  fullPath: string;
-  path: string;
-  lstat: Deno.FileInfo;
 }
 
 function matchFiles(config: Config): File[] {
@@ -151,16 +150,22 @@ function checkEntry(config: Config, matched: File[]) {
   }
 }
 
-async function publishCommand({ dry }: { dry: boolean }) {
+async function publishCommand(options: Options) {
+  await setupLog(options.debug);
+
   let apiKey = await getAPIKey();
   if (!apiKey) {
-    log.critical(
-      "No API Key file found. You can add one using `eggs link --key <api key>. You can create one on https://nest.land",
+    log.error(
+      "No API Key file found. You can add one using `eggs link <api key>. You can create one on https://nest.land",
     );
-    Deno.exit(1);
+    return;
   }
 
   const egg = await getConfig();
+
+  if (egg === nullConfig) return;
+
+  log.debug("Config: ", egg);
 
   await checkREADME(egg);
   await checkFmt(egg);
@@ -175,10 +180,10 @@ async function publishCommand({ dry }: { dry: boolean }) {
   const nv = `${egg.name}@${egg.version}`;
 
   if (existing && existing.packageUploadNames.indexOf(nv) !== -1) {
-    log.critical(
+    log.error(
       "This version was already published. Please increment the version in your configuration.",
     );
-    Deno.exit(1);
+    return;
   }
 
   let latest = "0.0.0";
@@ -200,52 +205,64 @@ async function publishCommand({ dry }: { dry: boolean }) {
     latest: isLatest,
   };
 
-  if (dry) {
+  log.debug("Module: ", module);
+
+  if (options.dry) {
     log.info("This was a dry run, the resulting module is:");
     console.error(module);
     log.info("The matched file were:");
     matched.forEach((file) => {
       console.log(` - ${file.path}`);
     });
-    Deno.exit(1);
+    return;
   }
 
   const uploadResponse = await postPublishModule(apiKey, module);
   if (!uploadResponse) {
     // TODO(@qu4k): provide better error reporting
-    log.critical("Something broke when publishing... ");
-    Deno.exit(1);
+    throw new Error("Something broke when publishing... ");
   }
 
   const pieceResponse = await postPieces(uploadResponse.token, matchedContent);
 
   if (!pieceResponse) {
     // TODO(@qu4k): provide better error reporting
-    log.critical("Something broke when sending pieces... ");
-    Deno.exit(1);
+    throw new Error("Something broke when sending pieces... ");
   }
 
   log.info(`Successfully published ${bold(egg.name)}!`);
 
   log.info("Files uploaded: ");
   Object.entries(pieceResponse.files).forEach((el) => {
-    console.log(` - ${el[0]} -> ${bold(`${ENDPOINT}/${egg.name}${el[0]}`)}`);
+    log.info(` - ${el[0]} -> ${bold(`${ENDPOINT}/${egg.name}${el[0]}`)}`);
   });
 
   console.log();
-  console.log(
+  log.info(
     green(
       "You can now find your package on our registry at " +
         bold(`https://nest.land/package/${egg.name}\n`),
     ),
   );
-  console.log(
+  log.info(
     `Add this badge to your README to let everyone know:\n\n [![nest badge](https://nest.land/badge.svg)](https://nest.land/package/${egg.name})`,
   );
 }
 
-export const publish = new Command()
+export const publish = new Command<Options, Arguments>()
   .description("Publishes the current directory to the nest.land registry.")
   .version(version)
-  .option("-d, --dry [recursive:boolean]", "Do a dry run")
+  .option("-d, --dry", "Do a dry run")
   .action(publishCommand);
+
+type Options = {
+  debug: boolean;
+  dry: boolean;
+};
+type Arguments = [];
+
+interface File {
+  fullPath: string;
+  path: string;
+  lstat: Deno.FileInfo;
+}

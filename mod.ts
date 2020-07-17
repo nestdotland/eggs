@@ -8,7 +8,9 @@ import { upgrade } from "./src/commands/upgrade.ts";
 
 import { version } from "./src/version.ts";
 
-import { handleError } from "./src/log.ts";
+import { handleError, writeLogFile, setupLog } from "./src/log.ts";
+
+await setupLog()
 
 try {
   const eggs = new Command<Options, Arguments>()
@@ -19,6 +21,11 @@ try {
       "nest.land - A module registry and CDN for Deno, on the permaweb",
     )
     .option("-d, --debug", "Print additional information.", { global: true })
+    .option(
+      "-o, --output-log",
+      "Create a log file after command completion.",
+      { global: true },
+    )
     .action(() => {
       eggs.help();
     })
@@ -29,11 +36,18 @@ try {
     .command("publish", publish)
     .command("update", update)
     .command("install", install)
-    .command("upgrade", upgrade)
-  await eggs.parse(Deno.args);
+    .command("upgrade", upgrade);
+  const { options } = await eggs.parse(Deno.args);
+
+  if (options.outputLog) {
+    await writeLogFile()
+  }
 } catch (err) {
-  await handleError(err)
+  await handleError(err);
 }
 
-type Options = { debug: boolean };
+type Options = {
+  debug: boolean;
+  outputLog: boolean;
+};
 type Arguments = [];

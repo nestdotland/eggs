@@ -13,32 +13,9 @@ import {
   readGlobalModuleConfig,
   writeGlobalModuleConfig,
 } from "../global_module.ts";
+import { setupLog } from "../log.ts";
 
 const decoder = new TextDecoder("utf-8");
-
-/** What the constructed dependency objects should contain */
-interface ModuleToUpdate {
-  line: string;
-  versionURL: string;
-  latestRelease: string;
-}
-
-export const update = new Command<Options, Arguments>()
-  .description("Update your dependencies")
-  .arguments("[deps...:string]")
-  .option(
-    "--file <file:string>",
-    "Set dependency filename",
-    { default: "deps.ts" },
-  )
-  .option("-g, --global", "Update global modules")
-  .action(async (options: Options, requestedModules: string[] = []) => {
-    if (options.global) {
-      await updateGlobalModules(options, requestedModules);
-    } else {
-      await updateLocalModules(options, requestedModules);
-    }
-  });
 
 async function updateGlobalModules(
   options: Options,
@@ -46,6 +23,8 @@ async function updateGlobalModules(
 ): Promise<void> {
   const configPath = globalModulesConfigPath();
   const config = await readGlobalModuleConfig(configPath);
+
+  log.debug("Config: ", config);
 
   for (const execName in config) {
     const module = config[execName];
@@ -65,15 +44,17 @@ async function updateGlobalModules(
 
     // Basic safety net
     if (!module.version || !semver.valid(module.version)) {
+      log.debug("Invalid version", module.moduleName, module.version);
       continue;
     }
 
     if (!latestRelease || !semver.valid(latestRelease)) {
-      log.warning(`could not find the latest version of ${module.moduleName}.`);
+      log.warning(`Could not find the latest version of ${module.moduleName}.`);
       continue;
     }
 
     if (semver.eq(module.version, latestRelease)) {
+      log.debug(module.moduleName, "is already up to date!");
       continue;
     }
 
@@ -100,14 +81,23 @@ async function updateGlobalModules(
     const status = await installation.status();
     installation.close();
 
+    const stdout = new TextDecoder("utf-8").decode(await installation.output());
+    const stderr = new TextDecoder("utf-8").decode(
+      await installation.stderrOutput(),
+    );
+
+    log.debug("stdout: ", stdout);
+    log.debug("stderr: ", stderr);
+
     if (status.success === false || status.code !== 0) {
-      throw new Error(`Update failed for ${execName}`);
+      log.error(`Update failed for ${execName}`);
+      continue;
     }
 
     module.version = latestRelease;
 
-    console.log(
-      `${execName} (${module.moduleName}) ${yellow(module.version)} → ${
+    log.info(
+      `${execName} (${module.moduleName}) ${yellow(module.version)} -> ${
         green(latestRelease)
       }`,
     );
@@ -115,7 +105,7 @@ async function updateGlobalModules(
 
   await writeGlobalModuleConfig(configPath, config);
 
-  console.info("\nUpdated your dependencies!");
+  log.info("Updated your dependencies!");
 }
 
 async function updateLocalModules(
@@ -126,12 +116,12 @@ async function updateLocalModules(
   let pathToDepFile = "";
   try {
     pathToDepFile = Deno.realPathSync("./" + options.file);
-  } catch (err) {
+  } catch {
     // Dependency file doesn't exist
-    console.error(
-      "No dependency file was found in your current working directory. Exiting...",
+    log.warning(
+      "No dependency file was found in your current working directory.",
     );
-    Deno.exit(1);
+    return;
   }
 
   /** Creates an array of strings from each line inside the dependency file.
@@ -142,11 +132,13 @@ async function updateLocalModules(
     .filter((line) => line.indexOf("https://") > 0);
 
   if (dependencyFileContents.length === 0) {
-    console.warn(
-      "Your dependency file does not contain any imported modules. Exiting...",
+    log.warning(
+      "Your dependency file does not contain any imported modules.",
     );
-    Deno.exit(1);
+    return;
   }
+
+  log.debug("Dependency file contents: ", dependencyFileContents);
 
   /** For each import line in the users dependency file, collate the data ready to be re-written
    * if it can be updated.
@@ -163,6 +155,7 @@ async function updateLocalModules(
     if (
       requestedModules.length && requestedModules.indexOf(moduleName) === -1
     ) {
+      log.debug(moduleName, "was not requested.");
       continue;
     }
 
@@ -172,6 +165,7 @@ async function updateLocalModules(
     // Basic safety net
 
     if (!version || !semver.valid(version)) {
+      log.debug("Invalid version", moduleName, version);
       continue;
     }
 
@@ -183,6 +177,7 @@ async function updateLocalModules(
     }
 
     if (semver.eq(version, latestRelease)) {
+      log.debug(moduleName, "is already up to date!");
       continue;
     }
 
@@ -193,13 +188,13 @@ async function updateLocalModules(
       latestRelease,
     });
 
-    console.log(`${moduleName} ${yellow(version)} → ${green(latestRelease)}`);
+    log.info(`${moduleName} ${yellow(version)} → ${green(latestRelease)}`);
   }
 
   // If no modules are needed to update then exit
   if (dependenciesToUpdate.length === 0) {
-    console.info("\nYour dependencies are already up to date!");
-    return
+    log.info("Your dependencies are already up to date!");
+    return;
   }
 
   // Loop through the users dependency file, replacing the imported version with the latest release for each dep
@@ -217,12 +212,40 @@ async function updateLocalModules(
     new TextEncoder().encode(dependencyFile),
   );
 
-  console.info("\nUpdated your dependencies!");
+  log.info("Updated your dependencies!");
 }
 
-type Arguments = [string[]];
+export const update = new Command<Options, Arguments>()
+  .description("Update your dependencies")
+  .arguments("[deps...:string]")
+  .option(
+    "--file <file:string>",
+    "Set dependency filename",
+    { default: "deps.ts" },
+  )
+  .option("-g, --global", "Update global modules")
+  .action(async (options: Options, requestedModules: string[] = []) => {
+    await setupLog(options.debug);
+
+    log.debug("Options: ", options);
+
+    if (options.global) {
+      await updateGlobalModules(options, requestedModules);
+    } else {
+      await updateLocalModules(options, requestedModules);
+    }
+  });
 
 interface Options {
+  debug: boolean;
   file: string;
   global: boolean;
+}
+type Arguments = [string[]];
+
+/** What the constructed dependency objects should contain */
+interface ModuleToUpdate {
+  line: string;
+  versionURL: string;
+  latestRelease: string;
 }

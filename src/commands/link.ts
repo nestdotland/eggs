@@ -1,12 +1,16 @@
 import { Command, log } from "../../deps.ts";
 import { KEY_FILE, writeAPIKey } from "../keyfile.ts";
 import { version } from "../version.ts";
+import { setupLog } from "../log.ts";
 
 /** Link Command.
  * Provided a key, the `link` commands creates
  * a persistent file on the host os to save
  * the API key to. */
 async function linkCommand(options: Options, key: string) {
+  await setupLog(options.debug);
+
+  log.debug("Key: ", key)
   await writeAPIKey(key);
   log.info(`Successfully updated ${KEY_FILE} with your key!`);
 }
@@ -18,5 +22,4 @@ export const link = new Command<Options, Arguments>()
   .action(linkCommand);
 
 type Options = { debug: boolean };
-
 type Arguments = [string];

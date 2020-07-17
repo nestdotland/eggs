@@ -7,7 +7,6 @@ import {
   LogLevels,
   LogRecord,
   red,
-  reset,
   resolve,
   yellow,
 } from "../deps.ts";
@@ -15,6 +14,7 @@ import {
 import { version } from "./version.ts";
 
 let masterLogRecord = "";
+let detailedLog = false;
 
 class ConsoleHandler extends BaseHandler {
   format(record: LogRecord): string {
@@ -39,7 +39,13 @@ class ConsoleHandler extends BaseHandler {
         break;
     }
 
-    msg += ` ${reset(record.msg)}`;
+    msg += ` ${record.msg}`;
+
+    if (detailedLog) {
+      for (const arg of record.args) {
+        msg += ` ${Deno.inspect(arg)}`;
+      }
+    }
 
     return msg;
   }
@@ -76,11 +82,7 @@ class FileHandler extends BaseHandler {
     msg += ` ${stripANSII(record.msg)}`;
 
     for (const arg of record.args) {
-      if (arg instanceof Object) {
-        msg += `\n${JSON.stringify(arg)}`;
-      } else {
-        msg += ` ${stripANSII(String(arg))}`;
-      }
+      msg += ` ${stripANSII(Deno.inspect(arg))}`;
     }
 
     return msg;
@@ -96,6 +98,7 @@ class FileHandler extends BaseHandler {
 export async function setupLog(
   debugEnabled = false,
 ): Promise<void> {
+  detailedLog = debugEnabled;
   await log.setup({
     handlers: {
       console: new ConsoleHandler(debugEnabled ? "DEBUG" : "INFO"),
@@ -135,12 +138,14 @@ export async function handleError(err: any) {
   log.critical(`An unexpected error occurred: "${err.message}"`, err.stack);
   await writeLogFile();
   log.info(
-    `If you think this is a bug, please open a bug report with the information provided in \"${
-      resolve(Deno.cwd(), "./eggs-error.log")
-    }\".`,
+    `If you think this is a bug, please open a bug report with the information provided in ${
+      bold(resolve(Deno.cwd(), "./eggs-error.log"))
+    }.`,
   );
   log.info(
-    "Visit https://docs.nest.land/eggs/ for documentation about this command.",
+    `Visit ${
+      bold("https://docs.nest.land/eggs/")
+    } for documentation about this command.`,
   );
   Deno.exit(1);
 }

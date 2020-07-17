@@ -69,7 +69,11 @@ async function initCommand(options: Options) {
     files: (files.length === 0 ? currentConfig.files : files),
   };
 
+  log.debug("Config: ", config);
+
   await writeConfig(config, format as ConfigFormat);
+
+  log.info("Successfully created config file.", format);
 }
 
 export const init = new Command<Options, Arguments>()
