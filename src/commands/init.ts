@@ -24,7 +24,7 @@ import { setupLog } from "../log.ts";
 async function initCommand(options: Options) {
   await setupLog(options.debug);
 
-   let currentConfig: Partial<Config> = {};
+  let currentConfig: Partial<Config> = {};
 
   let configPath = defaultConfig();
   if (configPath) {
