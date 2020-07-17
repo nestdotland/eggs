@@ -4,7 +4,6 @@ import {
   Input,
   List,
   log,
-  Select,
   basename,
 } from "../../deps.ts";
 import {
@@ -46,10 +45,15 @@ async function initCommand() {
     message: "Is this a stable version?",
     default: currentConfig.stable,
   });
-  const files: string[] = await List.prompt(
-    "Enter the files and relative directories that nest.land will publish separated by a comma.",
-  );
-  const format: string = await Select.prompt({
+  const files: string[] = await List.prompt({
+    message:
+      "Enter the files and relative directories that nest.land will publish separated by a comma.",
+    default: currentConfig.files,
+  });
+
+  // BUG(@oganexon): Select.prompt does not work under Windows
+
+  /* const format: string = await Select.prompt({
     message: "Config format: ",
     default: (configPath ? configFormat(configPath) : ConfigFormat.JSON)
       .toUpperCase(),
@@ -57,6 +61,15 @@ async function initCommand() {
       { name: "YAML", value: ConfigFormat.YAML },
       { name: "JSON", value: ConfigFormat.JSON },
     ],
+  }); */
+
+  const format: string = await Input.prompt({
+    message:
+      "Config format (json / yaml / yml). Note that you can use a .eggignore file instead: ",
+    default: (configPath ? configFormat(configPath) : ConfigFormat.JSON)
+      .toUpperCase(),
+    minLength: 3,
+    maxLength: 4,
   });
 
   const config = {
