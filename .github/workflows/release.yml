@@ -1,7 +1,7 @@
-name: Ship Eggs
+name: Release Eggs
 
 on:
-  push: master
+  workflow_dispatch:
  
 jobs:
   release:
@@ -10,25 +10,26 @@ jobs:
       - name: Setup repo
         uses: actions/checkout@v2
 
-      # - name: Setup Deno
-      #   uses: denolib/setup-deno@master
-      #   with:
-      #     deno-version: nightly
+      - name: Setup Deno
+        uses: denolib/setup-deno@v2
 
-      # - name: Install eggs
-      #   run: |
-      #     echo "::add-path::/home/runner/.deno/bin"
-      #     deno-nigtly install -A -f --unstable -n eggs mod.ts
+      - name: Prepare for release
+        run: |
+          deno fmt
+          deno lint --unstable
+          deno test --unstable -A
 
-      # - name: Publish eggs
-      #   if: startsWith(github.ref, 'refs/tags/')
-      #   run: | # TODO(eggs@0.2.0): remove --key
-      #     eggs link --key ${{ secrets.NESTAPIKEY }}
-      #     eggs publish --bump ${{ github.ref }}
+      - name: Install eggs
+        run: deno install -A -f --unstable -n eggs mod.ts
 
-      # - name: Draft release
-      #   uses: release-drafter/release-drafter@v5.11.0
-      #   with:
-      #     config-name: release-template.yml
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Publish eggs
+        run: |
+          eggs link ${{ secrets.NESTAPIKEY }}
+          eggs publish
+
+      - name: Draft release
+        uses: release-drafter/release-drafter@v5
+        with:
+          config-name: release-template.yml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
