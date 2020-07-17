@@ -1,11 +1,19 @@
 name: Tests
 
-on: push
+on:
+  push:
+  schedule:
+    - cron: '0 9 * * *'
 
 jobs:
   stable:
     name: Deno Stable
-    runs-on: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macOS-latest, windows-latest, ubuntu-latest]
     steps:
     - name: Setup repo
       uses: actions/checkout@latest
@@ -18,7 +26,12 @@ jobs:
 
   nightly:
     name: Deno Nightly
-    runs-on: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macOS-latest, windows-latest, ubuntu-latest]
     steps:
     - name: Setup repo
       uses: actions/checkout@latest
