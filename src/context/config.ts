@@ -1,10 +1,11 @@
 import {
   existsSync,
   extname,
+  join,
   parseYaml,
   stringifyYaml,
   writeJson,
-} from "../deps.ts";
+} from "../../deps.ts";
 
 /** Supported configuration formats. */
 export enum ConfigFormat {
@@ -25,7 +26,7 @@ export interface Config {
   unlisted?: boolean;
   fmt?: boolean;
 
-  files: string[];
+  files?: string[];
 }
 
 /** Filenames of the default configs.
@@ -39,9 +40,9 @@ const DEFAULT_CONFIGS = [
 ];
 
 /** Get default config in cwd. */
-export function defaultConfig(): string | undefined {
+export function defaultConfig(wd: string = Deno.cwd()): string | undefined {
   return DEFAULT_CONFIGS.find((path) => {
-    return existsSync(path);
+    return existsSync(join(wd, path));
   });
 }
 
@@ -97,6 +98,5 @@ export function ensureCompleteConfig(
   config: Partial<Config>,
 ): config is Config {
   if (!config.name) return false;
-  if (!config.files) return false;
   return true;
 }

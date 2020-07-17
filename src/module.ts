@@ -30,6 +30,7 @@ export class Module implements IModule {
     function vn(n: string): string {
       return n.split("@")[1];
     }
+
     let latest: string | undefined;
 
     if (this.packageUploadNames.length > 0) {
