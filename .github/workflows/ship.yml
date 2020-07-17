@@ -1,11 +1,9 @@
 name: Ship
 
 on:
-  workflow_dispatch:
-    inputs:
-      tag:
-        description: 'Eggs version'     
-        required: true
+  push:
+    branches:
+      - master
  
 jobs:
   release:
@@ -35,8 +33,5 @@ jobs:
         uses: release-drafter/release-drafter@v5
         with:
           config-name: release-template.yml
-          name: ${{ github.event.inputs.tag }}
-          tag: ${{ github.event.inputs.tag }}
-          version: ${{ github.event.inputs.tag }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
