@@ -1,0 +1,21 @@
+name: Lint
+
+on: push
+
+jobs:
+  lint:
+    name: Lint source
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+    - name: Setup repo
+      uses: actions/checkout@v2
+      
+    - name: Setup Deno
+      uses: denolib/setup-deno@v2
+
+    - name: Check formatting
+      run: deno fmt --check
+    
+    - name: Run linter
+      run: deno lint --unstable
