@@ -1,4 +1,4 @@
-name: Release Eggs
+name: Ship Eggs
 
 on:
   workflow_dispatch:
