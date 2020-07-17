@@ -2,7 +2,7 @@
 <p align="center">
   <a href="https://github.com/nestdotland/nest.land">
     <img
-       src="https://github.com/nestdotland/nest.land/raw/master/web/src/assets/nest_light.png"
+       src="https://raw.githubusercontent.com/nestdotland/nest.land/master/public/images/nest.land/logo_light.svg"
        alt="logo"
        width="110"
     >
