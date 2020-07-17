@@ -136,7 +136,7 @@ export async function writeLogFile() {
   );
 }
 
-export async function handleError(err: any) {
+export async function handleError(err: Error) {
   log.critical(`An unexpected error occurred: "${err.message}"`, err.stack);
   await writeLogFile();
   log.info(
