@@ -230,7 +230,7 @@ async function publishCommand(options: Options) {
   log.debug("Module: ", module);
 
   if (options.dry) {
-    log.info(`This was a dry run, the resulting module is: ${module}`);
+    log.info(`This was a dry run, the resulting module is:`, module);
     log.info("The matched file were:");
     matched.forEach((file) => {
       log.info(` - ${file.path}`);
