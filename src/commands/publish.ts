@@ -61,9 +61,6 @@ async function getContext(): Promise<[Config | undefined, Ignore | undefined]> {
       "You haven't provided a description for your package, continuing without one...",
     );
   }
-  if (!config.version) {
-    log.warning("No version found. Generating a new version now...");
-  }
   return [config, ignore];
 }
 
@@ -186,7 +183,7 @@ async function publishCommand(options: Options) {
 
   const [egg, ignore] = await getContext();
 
-  if (egg === undefined || ignore == undefined) return;
+  if (egg === undefined || ignore === undefined) return;
 
   log.debug("Config: ", egg);
 
@@ -201,6 +198,19 @@ async function publishCommand(options: Options) {
 
   const existing = await fetchModule(egg.name);
 
+  let latest = "0.0.0";
+  if (existing) {
+    latest = existing.getLatestVersion();
+  }
+  if (options.bump && egg.version) {
+    egg.version = semver.inc(egg.version, options.bump) as string;
+  }
+  egg.version = egg.version || options.version;
+  if (!egg.version) {
+    log.warning("No version found. Generating a new version now...");
+    egg.version = semver.inc(latest, options.bump || "patch") as string;
+  }
+
   const nv = `${egg.name}@${egg.version}`;
 
   if (existing && existing.packageUploadNames.indexOf(nv) !== -1) {
@@ -209,13 +219,6 @@ async function publishCommand(options: Options) {
     );
     return;
   }
-
-  let latest = "0.0.0";
-  if (existing) {
-    latest = existing.getLatestVersion();
-  }
-
-  egg.version = egg.version || semver.inc(latest, "patch") as string;
 
   const isLatest = semver.compare(egg.version, latest) === 1;
 
@@ -232,7 +235,7 @@ async function publishCommand(options: Options) {
   log.debug("Module: ", module);
 
   if (options.dry) {
-    log.info(`This was a dry run, the resulting module is: ${module}`);
+    log.info(`This was a dry run, the resulting module is:`, module);
     log.info("The matched file were:");
     matched.forEach((file) => {
       log.info(` - ${file.path}`);
@@ -257,7 +260,11 @@ async function publishCommand(options: Options) {
 
   log.info("Files uploaded: ");
   Object.entries(pieceResponse.files).forEach((el) => {
-    log.info(` - ${el[0]} -> ${bold(`${ENDPOINT}/${egg.name}${el[0]}`)}`);
+    log.info(
+      ` - ${el[0]} -> ${
+        bold(`${ENDPOINT}/${egg.name}@${egg.version}${el[0]}`)
+      }`,
+    );
   });
 
   console.log();
@@ -278,11 +285,7 @@ async function publishCommand(options: Options) {
   );
 }
 
-interface Options extends DefaultOptions {
-  dry: boolean;
-}
-
-const releaseTypes = [
+const releases = [
   "patch",
   "minor",
   "major",
@@ -298,10 +301,10 @@ function releaseType(
   arg: IFlagArgument,
   value: string,
 ): string {
-  if (!releaseTypes.includes(value)) {
+  if (!(releases.includes(value))) {
     throw new Error(
       `Option --${option.name} must be a valid release type but got: ${value}.\nAccepted values are ${
-        releaseTypes.join(", ")
+        releases.join(", ")
       }.`,
     );
   }
@@ -319,6 +322,12 @@ function versionType(
     );
   }
   return value;
+}
+
+interface Options extends DefaultOptions {
+  dry: boolean;
+  bump: semver.ReleaseType;
+  version: string;
 }
 
 export const publish = new Command<Options, []>()
@@ -345,5 +354,5 @@ export const publish = new Command<Options, []>()
   .option("--preminor", "Bump the version up to the next minor version and down to a prerelease.", { conflicts: conflict("preminor") })
   .option("--premajor", "Bump the version up to the next major version and down to a prerelease.", { conflicts: conflict("premajor") })
   .option("--prerelease", "Increment the prerelease version or increment the patch version from a non-prerelease version.", { conflicts: conflict("prerelease") }) */
-  .action(() => {});
-// .action(publishCommand);
+  // .action(() => {});
+  .action(publishCommand);
