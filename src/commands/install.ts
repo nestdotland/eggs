@@ -212,4 +212,3 @@ export const install = new Command<DefaultOptions, Arguments>()
   /** Unknown options cannot be parsed */
   .useRawArgs()
   .action(installCommand);
-

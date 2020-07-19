@@ -23,4 +23,3 @@ export const link = new Command<DefaultOptions, Arguments>()
   .description("Links your nest.land API key to the CLI")
   .arguments("<key:string>")
   .action(linkCommand);
-

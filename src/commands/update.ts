@@ -223,11 +223,11 @@ async function updateLocalModules(
   log.info("Updated your dependencies!");
 }
 
-    interface Options extends DefaultOptions {
-      file: string;
-      global: boolean;
-    }
-    type Arguments = [string[]];
+interface Options extends DefaultOptions {
+  file: string;
+  global: boolean;
+}
+type Arguments = [string[]];
 
 export const update = new Command<Options, Arguments>()
   .description("Update your dependencies")

@@ -282,7 +282,7 @@ async function publishCommand(options: Options) {
 
 interface Options extends DefaultOptions {
   dry: boolean;
-};
+}
 
 export const publish = new Command<Options, []>()
   .description("Publishes the current directory to the nest.land registry.")
