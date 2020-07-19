@@ -46,7 +46,7 @@ class ConsoleHandler extends BaseHandler {
 
     msg += ` ${record.msg}`;
 
-    console.log(detailedLog)
+    console.log(detailedLog);
 
     if (record.level !== LogLevels.CRITICAL || detailedLog) {
       for (const arg of record.args) {
