@@ -10,6 +10,8 @@ import {
   resolve,
   semver,
   walkSync,
+  IFlagArgument,
+  IFlagOptions,
 } from "../../deps.ts";
 import { ENDPOINT } from "../api/common.ts";
 import { fetchModule } from "../api/fetch.ts";
@@ -179,6 +181,8 @@ async function publishCommand({ dry }: { dry: boolean }) {
 
   const [egg, ignore] = await getContext();
 
+  // TODO(@oganexon): change version according to --bump and --version
+
   await checkREADME(egg);
   await checkFmt(egg);
 
@@ -218,8 +222,7 @@ async function publishCommand({ dry }: { dry: boolean }) {
   };
 
   if (dry) {
-    log.info("This was a dry run, the resulting module is:");
-    console.error(module);
+    log.info(`This was a dry run, the resulting module is: ${module}`);
     log.info("The matched file were:");
     matched.forEach((file) => {
       console.log(` - ${file.path}`);
@@ -261,8 +264,66 @@ async function publishCommand({ dry }: { dry: boolean }) {
   );
 }
 
+const releaseTypes = [
+  "patch",
+  "minor",
+  "major",
+  "pre",
+  "prepatch",
+  "preminor",
+  "premajor",
+  "prerelease",
+];
+
+function releaseType(
+  option: IFlagOptions,
+  arg: IFlagArgument,
+  value: string,
+): string {
+  if (!releaseTypes.includes(value)) {
+    throw new Error(
+      `Option --${option.name} must be a valid release type but got: ${value}`,
+    );
+  }
+  return value;
+}
+
+function versionType(
+  option: IFlagOptions,
+  arg: IFlagArgument,
+  value: string,
+): string {
+  if (!semver.valid(value)) {
+    throw new Error(
+      `Option --${option.name} must be a valid version but got: ${value}`,
+    );
+  }
+  return value;
+}
+
 export const publish = new Command()
   .description("Publishes the current directory to the nest.land registry.")
   .version(version)
-  .option("-d, --dry [recursive:boolean]", "Do a dry run")
-  .action(publishCommand);
+  .type("release", releaseType)
+  .type("version", versionType)
+  .option("-d, --dry", "Do a dry run")
+  .option(
+    "--bump <value:release>",
+    "Increment the version by the release type.",
+    { conflicts: ["version"]}
+  )
+  .option(
+    "--version <value:version>",
+    "Update the given version.",
+    { conflicts: ["bump"] },
+  )
+  /* .option("--patch", "Bump the version up to the next patch version.", { conflicts: conflict("patch") })
+  .option("--minor", "Bump the version up to the next minor version.", { conflicts: conflict("minor") })
+  .option("--major", "Bump the version up to the next major version.", { conflicts: conflict("major") })
+  .option("--pre", "Increment the prerelease version.", { conflicts: conflict("pre") })
+  .option("--prepatch", "Bump the version up to the next patch version and down to a prerelease.", { conflicts: conflict("prepatch") })
+  .option("--preminor", "Bump the version up to the next minor version and down to a prerelease.", { conflicts: conflict("preminor") })
+  .option("--premajor", "Bump the version up to the next major version and down to a prerelease.", { conflicts: conflict("premajor") })
+  .option("--prerelease", "Increment the prerelease version or increment the patch version from a non-prerelease version.", { conflicts: conflict("prerelease") }) */
+  .action(() => {});
+// .action(publishCommand);
