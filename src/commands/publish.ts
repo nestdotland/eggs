@@ -282,7 +282,7 @@ function releaseType(
 ): string {
   if (!releaseTypes.includes(value)) {
     throw new Error(
-      `Option --${option.name} must be a valid release type but got: ${value}`,
+      `Option --${option.name} must be a valid release type but got: ${value}.\nAccepted values are ${releaseTypes.join(", ")}.`,
     );
   }
   return value;
@@ -295,7 +295,7 @@ function versionType(
 ): string {
   if (!semver.valid(value)) {
     throw new Error(
-      `Option --${option.name} must be a valid version but got: ${value}`,
+      `Option --${option.name} must be a valid version but got: ${value}.\nVersion must follow Semantic Versioning 2.0.0.`,
     );
   }
   return value;
@@ -314,7 +314,7 @@ export const publish = new Command()
   )
   .option(
     "--version <value:version>",
-    "Update the given version.",
+    "Update to the given version.",
     { conflicts: ["bump"] },
   )
   /* .option("--patch", "Bump the version up to the next patch version.", { conflicts: conflict("patch") })
