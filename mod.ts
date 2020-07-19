@@ -9,7 +9,12 @@ import { upgrade } from "./src/commands/upgrade.ts";
 
 import { version } from "./src/version.ts";
 
-import { handleError, writeLogFile, setupLog } from "./src/log.ts";
+import {
+  handleError,
+  writeLogFile,
+  setupLog,
+  errorOccurred,
+} from "./src/log.ts";
 
 await setupLog();
 
@@ -44,12 +49,17 @@ try {
   if (options.outputLog) {
     await writeLogFile();
   }
+  if (errorOccurred) {
+    Deno.exit(1);
+  }
+
+  Deno.exit();
 } catch (err) {
   if (err.message.match(/^(Unknown option:|Unknown command:|Option --)/)) {
     eggs.help();
     log.error(err.message);
-    Deno.exit(1);
   } else {
     await handleError(err);
   }
+  Deno.exit(1);
 }

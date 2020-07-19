@@ -2,7 +2,6 @@ import {
   BaseHandler,
   blue,
   bold,
-  green,
   log,
   LogLevels,
   LogRecord,
@@ -15,9 +14,10 @@ import {
 
 import { version } from "./version.ts";
 
-const logFile = "./eggs-debug.log";
+const DEBUG_LOG_FILE = "./eggs-debug.log";
 
-let masterLogRecord = "";
+export let masterLogRecord = "";
+export let errorOccurred = false;
 let detailedLog = false;
 
 class ConsoleHandler extends BaseHandler {
@@ -35,6 +35,7 @@ class ConsoleHandler extends BaseHandler {
         break;
       case LogLevels.ERROR:
         msg += red("[ERR]");
+        errorOccurred = true;
         break;
       case LogLevels.CRITICAL:
         msg += bold(red("[CRIT]"));
@@ -127,7 +128,7 @@ export async function writeLogFile() {
   const platform = `Platform:\n  ${Deno.build.target}\n\n`;
 
   await Deno.writeFile(
-    logFile,
+    DEBUG_LOG_FILE,
     encoder.encode(
       args +
         denoVersion +
@@ -145,7 +146,7 @@ export async function handleError(err: Error) {
     `If you think this is a bug, please open a bug report at ${
       underline(bold("https://github.com/nestdotland/eggs/issues/new/choose"))
     } with the information provided in ${
-      underline(bold(resolve(Deno.cwd(), logFile)))
+      underline(bold(resolve(Deno.cwd(), DEBUG_LOG_FILE)))
     }`,
   );
   log.info(
@@ -153,7 +154,6 @@ export async function handleError(err: Error) {
       underline(bold("https://docs.nest.land/eggs/"))
     } for documentation about this command.`,
   );
-  Deno.exit(1);
 }
 
 const colorRegex = /\x1B[[(?);]{0,2}(;?\d)*./g;

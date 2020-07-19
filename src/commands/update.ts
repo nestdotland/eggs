@@ -32,6 +32,8 @@ async function updateGlobalModules(
   const configPath = globalModulesConfigPath();
   const config = await readGlobalModuleConfig(configPath);
 
+  if (config === undefined) return;
+
   log.debug("Config: ", config);
 
   for (const execName in config) {

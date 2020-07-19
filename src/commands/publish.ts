@@ -9,6 +9,7 @@ import {
   relative,
   resolve,
   semver,
+  underline,
   walkSync,
 } from "../../deps.ts";
 import { DefaultOptions } from "../commands.ts";
@@ -30,35 +31,25 @@ interface File {
   lstat: Deno.FileInfo;
 }
 
-const nullConfig = {
-  name: "",
-  files: [""],
-};
-
-const nullIgnore = {
-  accepts: [],
-  denies: [],
-};
-
-async function getContext(): Promise<[Config, Ignore]> {
+async function getContext(): Promise<[Config | undefined, Ignore | undefined]> {
   const context = await gatherContext();
   const { config, ignore } = context;
 
   if (!config) {
     log.error("You don't have an egg.json file!");
     log.info("You can create one running `eggs init`.");
-    return [nullConfig, nullIgnore];
+    return [undefined, undefined];
   }
 
   if (!ensureCompleteConfig(config)) {
     if (!config.name) {
       log.error("Your module configuration must provide a module name.");
     }
-    return [nullConfig, nullIgnore];
+    return [undefined, undefined];
   }
 
   if (!config.files && !ignore) {
-    log.critical(
+    log.error(
       "Your module configuration must provide files to upload in the form of a `files` field in the config or in an .eggignore file.",
     );
   }
@@ -193,7 +184,7 @@ async function publishCommand(options: Options) {
 
   const [egg, ignore] = await getContext();
 
-  if (egg === nullConfig) return;
+  if (egg === undefined || ignore == undefined) return;
 
   log.debug("Config: ", egg);
 
@@ -239,11 +230,10 @@ async function publishCommand(options: Options) {
   log.debug("Module: ", module);
 
   if (options.dry) {
-    log.info("This was a dry run, the resulting module is:");
-    console.error(module);
+    log.info(`This was a dry run, the resulting module is: ${module}`);
     log.info("The matched file were:");
     matched.forEach((file) => {
-      console.log(` - ${file.path}`);
+      log.info(` - ${file.path}`);
     });
     return;
   }
@@ -276,7 +266,13 @@ async function publishCommand(options: Options) {
     ),
   );
   log.info(
-    `Add this badge to your README to let everyone know:\n\n [![nest badge](https://nest.land/badge.svg)](https://nest.land/package/${egg.name})`,
+    `Add this badge to your README to let everyone know:\n\n ${
+      underline(
+        bold(
+          `[![nest badge](https://nest.land/badge.svg)](https://nest.land/package/${egg.name})`,
+        ),
+      )
+    }`,
   );
 }
 

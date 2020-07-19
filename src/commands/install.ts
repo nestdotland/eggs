@@ -85,9 +85,11 @@ async function installCommand(
   args[args.findIndex((arg) => arg.match(/https:\/\//))] = versionURL;
 
   const configExists = await exists(configPath);
-  const config: GlobalModuleConfig = configExists
+  const config: GlobalModuleConfig | undefined = configExists
     ? await readGlobalModuleConfig(configPath)
     : {};
+
+  if (config === undefined) return;
 
   config[execName] = {
     registry,

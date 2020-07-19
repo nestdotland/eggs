@@ -16,12 +16,12 @@ export interface GlobalModuleConfig {
 
 export async function readGlobalModuleConfig(
   path: string,
-): Promise<GlobalModuleConfig> {
+): Promise<GlobalModuleConfig | undefined> {
   try {
     return await readJson(path) as GlobalModuleConfig;
   } catch {
-    log.critical("config file doesn't exist.");
-    Deno.exit(1);
+    log.error("Config file doesn't exist.");
+    return;
   }
 }
 
