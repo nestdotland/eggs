@@ -8,7 +8,9 @@ import {
   LogRecord,
   red,
   resolve,
+  underline,
   yellow,
+  gray,
 } from "../deps.ts";
 
 import { version } from "./version.ts";
@@ -23,7 +25,7 @@ class ConsoleHandler extends BaseHandler {
     let msg = "";
     switch (record.level) {
       case LogLevels.DEBUG:
-        msg += green("[DEBUG]");
+        msg += gray("[DEBUG]");
         break;
       case LogLevels.INFO:
         msg += blue("[INFO]");
@@ -140,13 +142,15 @@ export async function handleError(err: Error) {
   log.critical(`An unexpected error occurred: "${err.message}"`, err.stack);
   await writeLogFile();
   log.info(
-    `If you think this is a bug, please open a bug report with the information provided in ${
-      bold(resolve(Deno.cwd(), logFile))
-    }.`,
+    `If you think this is a bug, please open a bug report at ${
+      underline(bold("https://github.com/nestdotland/eggs/issues/new/choose"))
+    } with the information provided in ${
+      underline(bold(resolve(Deno.cwd(), logFile)))
+    }`,
   );
   log.info(
     `Visit ${
-      bold("https://docs.nest.land/eggs/")
+      underline(bold("https://docs.nest.land/eggs/"))
     } for documentation about this command.`,
   );
   Deno.exit(1);

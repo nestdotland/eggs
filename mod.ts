@@ -1,4 +1,5 @@
-import { Command, HelpCommand, CompletionsCommand } from "./deps.ts";
+import { Command, HelpCommand, CompletionsCommand, log } from "./deps.ts";
+import { DefaultOptions } from "./src/commands.ts"
 import { link } from "./src/commands/link.ts";
 import { init } from "./src/commands/init.ts";
 import { publish } from "./src/commands/publish.ts";
@@ -12,8 +13,7 @@ import { handleError, writeLogFile, setupLog } from "./src/log.ts";
 
 await setupLog();
 
-try {
-  const eggs = new Command<Options, Arguments>()
+const eggs = new Command<DefaultOptions, []>()
     .throwErrors()
     .name("eggs")
     .version(version)
@@ -37,17 +37,19 @@ try {
     .command("update", update)
     .command("install", install)
     .command("upgrade", upgrade);
+
+try {
   const { options } = await eggs.parse(Deno.args);
 
   if (options.outputLog) {
     await writeLogFile();
   }
 } catch (err) {
-  await handleError(err);
+  if (err.message.match(/^(Unknown option:|Unknown command:|Option --)/)) {
+    eggs.help()
+    log.error(err.message)
+    Deno.exit(1)
+  } else {
+    await handleError(err);
+  }
 }
-
-type Options = {
-  debug: boolean;
-  outputLog: boolean;
-};
-type Arguments = [];

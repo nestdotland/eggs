@@ -28,14 +28,15 @@ export {
 export { BaseHandler } from "https://deno.land/std@v0.61.0/log/handlers.ts";
 
 export {
-  setColorEnabled,
-  reset,
-  bold,
-  green,
   blue,
-  yellow,
-  red,
+  bold,
   gray,
+  green,
+  red,
+  reset,
+  setColorEnabled,
+  underline,
+  yellow,
 } from "https://deno.land/std@v0.61.0/fmt/colors.ts";
 
 export {

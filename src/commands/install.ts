@@ -15,6 +15,7 @@ import {
   readGlobalModuleConfig,
   writeGlobalModuleConfig,
 } from "../global_module.ts";
+import { DefaultOptions } from "../commands.ts";
 import { version } from "../version.ts";
 import { setupLog } from "../log.ts";
 
@@ -23,7 +24,7 @@ const installPrefix = "eggs--";
 const configPath = globalModulesConfigPath();
 
 async function installCommand(
-  options: Options,
+  options: DefaultOptions,
   ...args: string[]
 ): Promise<void> {
   await setupLog(options.debug);
@@ -178,7 +179,9 @@ The installation root is determined, in order of precedence:
 
 These must be added to the path manually if required.`;
 
-export const install = new Command<Options, Arguments>()
+type Arguments = string[];
+
+export const install = new Command<DefaultOptions, Arguments>()
   .version(version)
   .description(desc)
   .arguments("[options...:string]")
@@ -210,5 +213,3 @@ export const install = new Command<Options, Arguments>()
   .useRawArgs()
   .action(installCommand);
 
-type Options = { debug: boolean };
-type Arguments = string[];

@@ -9,11 +9,19 @@ import {
   versionSubstitute,
   yellow,
 } from "../../deps.ts";
+import { DefaultOptions } from "../commands.ts";
 import {
   readGlobalModuleConfig,
   writeGlobalModuleConfig,
 } from "../global_module.ts";
 import { setupLog } from "../log.ts";
+
+/** What the constructed dependency objects should contain */
+interface ModuleToUpdate {
+  line: string;
+  versionURL: string;
+  latestRelease: string;
+}
 
 const decoder = new TextDecoder("utf-8");
 
@@ -215,6 +223,12 @@ async function updateLocalModules(
   log.info("Updated your dependencies!");
 }
 
+    interface Options extends DefaultOptions {
+      file: string;
+      global: boolean;
+    }
+    type Arguments = [string[]];
+
 export const update = new Command<Options, Arguments>()
   .description("Update your dependencies")
   .arguments("[deps...:string]")
@@ -235,17 +249,3 @@ export const update = new Command<Options, Arguments>()
       await updateLocalModules(options, requestedModules);
     }
   });
-
-interface Options {
-  debug: boolean;
-  file: string;
-  global: boolean;
-}
-type Arguments = [string[]];
-
-/** What the constructed dependency objects should contain */
-interface ModuleToUpdate {
-  line: string;
-  versionURL: string;
-  latestRelease: string;
-}

@@ -15,13 +15,14 @@ import {
   readConfig,
   writeConfig,
 } from "../context/config.ts";
+import { DefaultOptions } from "../commands.ts";
 import { version } from "../version.ts";
 import { setupLog } from "../log.ts";
 
 /** Init Command.
  * `init` creates (or overrides) configuration in
  * the cwd with an interactive prompt. */
-async function initCommand(options: Options) {
+async function initCommand(options: DefaultOptions) {
   await setupLog(options.debug);
 
   let currentConfig: Partial<Config> = {};
@@ -76,10 +77,7 @@ async function initCommand(options: Options) {
   log.info("Successfully created config file.", format);
 }
 
-export const init = new Command<Options, Arguments>()
+export const init = new Command<DefaultOptions, []>()
   .version(version)
   .description("Initiates a new module for the nest.land registry.")
   .action(initCommand);
-
-type Options = { debug: boolean };
-type Arguments = [];

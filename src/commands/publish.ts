@@ -11,6 +11,7 @@ import {
   semver,
   walkSync,
 } from "../../deps.ts";
+import { DefaultOptions } from "../commands.ts";
 import { ENDPOINT } from "../api/common.ts";
 import { fetchModule } from "../api/fetch.ts";
 import { postPieces, postPublishModule, PublishModule } from "../api/post.ts";
@@ -22,6 +23,12 @@ import { Ignore } from "../context/ignore.ts";
 import { getAPIKey } from "../keyfile.ts";
 import { version } from "../version.ts";
 import { setupLog } from "../log.ts";
+
+interface File {
+  fullPath: string;
+  path: string;
+  lstat: Deno.FileInfo;
+}
 
 const nullConfig = {
   name: "",
@@ -273,20 +280,12 @@ async function publishCommand(options: Options) {
   );
 }
 
-export const publish = new Command<Options, Arguments>()
+interface Options extends DefaultOptions {
+  dry: boolean;
+};
+
+export const publish = new Command<Options, []>()
   .description("Publishes the current directory to the nest.land registry.")
   .version(version)
   .option("-d, --dry", "Do a dry run")
   .action(publishCommand);
-
-type Options = {
-  debug: boolean;
-  dry: boolean;
-};
-type Arguments = [];
-
-interface File {
-  fullPath: string;
-  path: string;
-  lstat: Deno.FileInfo;
-}
