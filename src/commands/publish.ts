@@ -9,10 +9,12 @@ import {
   relative,
   resolve,
   semver,
+  underline,
   walkSync,
   IFlagArgument,
   IFlagOptions,
 } from "../../deps.ts";
+import { DefaultOptions } from "../commands.ts";
 import { ENDPOINT } from "../api/common.ts";
 import { fetchModule } from "../api/fetch.ts";
 import { postPieces, postPublishModule, PublishModule } from "../api/post.ts";
@@ -23,26 +25,33 @@ import { Ignore } from "../context/ignore.ts";
 
 import { getAPIKey } from "../keyfile.ts";
 import { version } from "../version.ts";
+import { setupLog } from "../log.ts";
 
-async function getContext(): Promise<[Config, Ignore]> {
+interface File {
+  fullPath: string;
+  path: string;
+  lstat: Deno.FileInfo;
+}
+
+async function getContext(): Promise<[Config | undefined, Ignore | undefined]> {
   const context = await gatherContext();
   const { config, ignore } = context;
 
   if (!config) {
-    log.critical("You don't have an egg.json file!");
+    log.error("You don't have an egg.json file!");
     log.info("You can create one running `eggs init`.");
-    Deno.exit(1);
+    return [undefined, undefined];
   }
 
   if (!ensureCompleteConfig(config)) {
     if (!config.name) {
-      log.critical("Your module configuration must provide a module name.");
+      log.error("Your module configuration must provide a module name.");
     }
-    Deno.exit(1);
+    return [undefined, undefined];
   }
 
   if (!config.files && !ignore) {
-    log.critical(
+    log.error(
       "Your module configuration must provide files to upload in the form of a `files` field in the config or in an .eggignore file.",
     );
   }
@@ -76,7 +85,7 @@ async function checkREADME(config: Config) {
         `You can change these to https://x.nest.land/${name}@VERSION`,
       );
     }
-  } catch (_) {
+  } catch {
     log.warning("Could not open the README for url checking...");
   }
 }
@@ -91,12 +100,6 @@ async function checkFmt(config: Config) {
   } else {
     log.error("`deno fmt` returned a non-zero code.");
   }
-}
-
-interface File {
-  fullPath: string;
-  path: string;
-  lstat: Deno.FileInfo;
 }
 
 function matchFiles(config: Config, ignore: Ignore): File[] {
@@ -163,25 +166,29 @@ function checkEntry(config: Config, matched: File[]) {
     );
   }
   if (!matched.find((e) => e.path === config.entry || "/mod.ts")) {
-    log.critical(
+    log.error(
       `No ${config.entry || "/mod.ts"} found. This file is required.`,
     );
-    Deno.exit(1);
+    return true;
   }
 }
 
-async function publishCommand({ dry }: { dry: boolean }) {
+async function publishCommand(options: Options) {
+  await setupLog(options.debug);
+
   let apiKey = await getAPIKey();
   if (!apiKey) {
-    log.critical(
-      "No API Key file found. You can add one using `eggs link --key <api key>. You can create one on https://nest.land",
+    log.error(
+      "No API Key file found. You can add one using `eggs link <api key>. You can create one on https://nest.land",
     );
-    Deno.exit(1);
+    return;
   }
 
   const [egg, ignore] = await getContext();
 
-  // TODO(@oganexon): change version according to --bump and --version
+  if (egg === undefined || ignore == undefined) return;
+
+  log.debug("Config: ", egg);
 
   await checkREADME(egg);
   await checkFmt(egg);
@@ -189,17 +196,18 @@ async function publishCommand({ dry }: { dry: boolean }) {
   const matched = matchFiles(egg, ignore);
   const matchedContent = readFiles(matched);
 
-  checkEntry(egg, matched);
+  const noEntryFile = checkEntry(egg, matched);
+  if (noEntryFile) return;
 
   const existing = await fetchModule(egg.name);
 
   const nv = `${egg.name}@${egg.version}`;
 
   if (existing && existing.packageUploadNames.indexOf(nv) !== -1) {
-    log.critical(
+    log.error(
       "This version was already published. Please increment the version in your configuration.",
     );
-    Deno.exit(1);
+    return;
   }
 
   let latest = "0.0.0";
@@ -221,47 +229,57 @@ async function publishCommand({ dry }: { dry: boolean }) {
     latest: isLatest,
   };
 
-  if (dry) {
+  log.debug("Module: ", module);
+
+  if (options.dry) {
     log.info(`This was a dry run, the resulting module is: ${module}`);
     log.info("The matched file were:");
     matched.forEach((file) => {
-      console.log(` - ${file.path}`);
+      log.info(` - ${file.path}`);
     });
-    Deno.exit(1);
+    return;
   }
 
   const uploadResponse = await postPublishModule(apiKey, module);
   if (!uploadResponse) {
     // TODO(@qu4k): provide better error reporting
-    log.critical("Something broke when publishing... ");
-    Deno.exit(1);
+    throw new Error("Something broke when publishing... ");
   }
 
   const pieceResponse = await postPieces(uploadResponse.token, matchedContent);
 
   if (!pieceResponse) {
     // TODO(@qu4k): provide better error reporting
-    log.critical("Something broke when sending pieces... ");
-    Deno.exit(1);
+    throw new Error("Something broke when sending pieces... ");
   }
 
   log.info(`Successfully published ${bold(egg.name)}!`);
 
   log.info("Files uploaded: ");
   Object.entries(pieceResponse.files).forEach((el) => {
-    console.log(` - ${el[0]} -> ${bold(`${ENDPOINT}/${egg.name}${el[0]}`)}`);
+    log.info(` - ${el[0]} -> ${bold(`${ENDPOINT}/${egg.name}${el[0]}`)}`);
   });
 
   console.log();
-  console.log(
+  log.info(
     green(
       "You can now find your package on our registry at " +
         bold(`https://nest.land/package/${egg.name}\n`),
     ),
   );
-  console.log(
-    `Add this badge to your README to let everyone know:\n\n [![nest badge](https://nest.land/badge.svg)](https://nest.land/package/${egg.name})`,
+  log.info(
+    `Add this badge to your README to let everyone know:\n\n ${
+      underline(
+        bold(
+          `[![nest badge](https://nest.land/badge.svg)](https://nest.land/package/${egg.name})`,
+        ),
+      )
+    }`,
   );
+}
+
+interface Options extends DefaultOptions {
+  dry: boolean;
 }
 
 const releaseTypes = [
@@ -282,7 +300,9 @@ function releaseType(
 ): string {
   if (!releaseTypes.includes(value)) {
     throw new Error(
-      `Option --${option.name} must be a valid release type but got: ${value}.\nAccepted values are ${releaseTypes.join(", ")}.`,
+      `Option --${option.name} must be a valid release type but got: ${value}.\nAccepted values are ${
+        releaseTypes.join(", ")
+      }.`,
     );
   }
   return value;
@@ -301,7 +321,7 @@ function versionType(
   return value;
 }
 
-export const publish = new Command()
+export const publish = new Command<Options, []>()
   .description("Publishes the current directory to the nest.land registry.")
   .version(version)
   .type("release", releaseType)
@@ -310,7 +330,7 @@ export const publish = new Command()
   .option(
     "--bump <value:release>",
     "Increment the version by the release type.",
-    { conflicts: ["version"]}
+    { conflicts: ["version"] },
   )
   .option(
     "--version <value:version>",

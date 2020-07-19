@@ -4,3 +4,4 @@ git-ignore
 .vscode/
 
 nestkey.json
+eggs-debug.log

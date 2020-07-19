@@ -22,19 +22,21 @@ export { LogRecord } from "https://deno.land/std@v0.61.0/log/logger.ts";
 
 export {
   LogLevels,
+  LevelName,
 } from "https://deno.land/std@v0.61.0/log/levels.ts";
 
 export { BaseHandler } from "https://deno.land/std@v0.61.0/log/handlers.ts";
 
 export {
-  setColorEnabled,
-  reset,
-  bold,
-  green,
   blue,
-  yellow,
-  red,
+  bold,
   gray,
+  green,
+  red,
+  reset,
+  setColorEnabled,
+  underline,
+  yellow,
 } from "https://deno.land/std@v0.61.0/fmt/colors.ts";
 
 export {
@@ -61,7 +63,10 @@ export {
   List,
 } from "https://x.nest.land/cliffy@0.11.1/packages/prompt/mod.ts";
 
-export { IFlagArgument, IFlagOptions } from 'https://x.nest.land/cliffy@0.11.1/flags.ts';
+export {
+  IFlagArgument,
+  IFlagOptions,
+} from "https://x.nest.land/cliffy@0.11.1/flags.ts";
 
 export * as semver from "https://deno.land/x/semver@v1.0.0/mod.ts";
 
