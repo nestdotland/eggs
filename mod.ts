@@ -55,7 +55,11 @@ try {
 
   Deno.exit();
 } catch (err) {
-  if (err.message.match(/^(Unknown option:|Unknown command:|Option --|Missing value for option:|Missing argument\(s\):)/)) {
+  if (
+    err.message.match(
+      /^(Unknown option:|Unknown command:|Option --|Missing value for option:|Missing argument\(s\):)/,
+    )
+  ) {
     eggs.help();
     log.error(err.message);
   } else {
