@@ -27,11 +27,11 @@ const desc = `A simple wrapper around the ${
 } command to handle global script updates.
 
 Installs a script as an executable in the installation root's bin directory.
-  eggs install --allow-net --allow-read https://deno.land/std/http/file_server.ts
-  eggs install https://deno.land/std/examples/colors.ts
+  eggs install --allow-net --allow-read https://x.nest.land/std/http/file_server.ts
+  eggs install https://x.nest.land/std/examples/colors.ts
 
 To change the executable name, use -n/--name:
-  eggs install --allow-net --allow-read -n serve https://deno.land/std/http/file_server.ts
+  eggs install --allow-net --allow-read -n serve https://x.nest.land/std/http/file_server.ts
 
 The executable name is inferred by default:
   - Attempt to take the file stem of the URL path. The above example would
@@ -41,7 +41,7 @@ The executable name is inferred by default:
     settle with the generic name.
 
 To change the installation root, use --root:
-  eggs install --allow-net --allow-read --root /usr/local https://deno.land/std/http/file_server.ts
+  eggs install --allow-net --allow-read --root /usr/local https://x.nest.land/std/http/file_server.ts
 
 The installation root is determined, in order of precedence:
   - --root option

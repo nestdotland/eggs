@@ -1,4 +1,4 @@
-export * as path from "https://deno.land/std@v0.61.0/path/mod.ts";
+export * as path from "https://x.nest.land/std@v0.61.0/path/mod.ts";
 
 export {
   existsSync,
@@ -6,25 +6,25 @@ export {
   writeJson,
   readJson,
   exists,
-} from "https://deno.land/std@v0.61.0/fs/mod.ts";
+} from "https://x.nest.land/std@v0.61.0/fs/mod.ts";
 
 export {
   bold,
   green,
   yellow,
   red,
-} from "https://deno.land/std@v0.61.0/fmt/colors.ts";
+} from "https://x.nest.land/std@v0.61.0/fmt/colors.ts";
 
 export {
   assertEquals,
   assertMatch,
   assert,
-} from "https://deno.land/std@v0.61.0/testing/asserts.ts";
+} from "https://x.nest.land/std@v0.61.0/testing/asserts.ts";
 
 export {
   parse,
   stringify,
-} from "https://deno.land/std@0.61.0/encoding/yaml.ts";
+} from "https://x.nest.land/std@0.61.0/encoding/yaml.ts";
 
 export {
   Command,
