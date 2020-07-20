@@ -1,9 +1,9 @@
 <br />
 <p align="center">
-  <a href="https://github.com/nestdotland/nest.land">
+  <a href="https://nest.land/">
     <img
-       src="https://github.com/nestdotland/nest.land/raw/master/web/src/assets/nest_light.png"
-       alt="logo"
+       src="https://github.com/nestdotland/nest.land/raw/master/public/images/nest.land/logo_light.svg"
+       alt="nest.land logo (light version)"
        width="110"
     >
   </a>
