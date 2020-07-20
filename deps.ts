@@ -22,19 +22,21 @@ export { LogRecord } from "https://deno.land/std@v0.61.0/log/logger.ts";
 
 export {
   LogLevels,
+  LevelName,
 } from "https://deno.land/std@v0.61.0/log/levels.ts";
 
 export { BaseHandler } from "https://deno.land/std@v0.61.0/log/handlers.ts";
 
 export {
-  setColorEnabled,
-  reset,
-  bold,
-  green,
   blue,
-  yellow,
-  red,
+  bold,
   gray,
+  green,
+  red,
+  reset,
+  setColorEnabled,
+  underline,
+  yellow,
 } from "https://deno.land/std@v0.61.0/fmt/colors.ts";
 
 export {

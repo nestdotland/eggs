@@ -1,4 +1,7 @@
+git-ignore
+
 .idea/
 .vscode/
 
 nestkey.json
+eggs-debug.log
