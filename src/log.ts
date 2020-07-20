@@ -144,14 +144,14 @@ export async function handleError(err: Error) {
   await writeLogFile();
   log.info(
     `If you think this is a bug, please open a bug report at ${
-      underline(bold("https://github.com/nestdotland/eggs/issues/new/choose"))
+      highlight("https://github.com/nestdotland/eggs/issues/new/choose")
     } with the information provided in ${
-      underline(bold(resolve(Deno.cwd(), DEBUG_LOG_FILE)))
+      highlight(resolve(Deno.cwd(), DEBUG_LOG_FILE))
     }`,
   );
   log.info(
     `Visit ${
-      underline(bold("https://docs.nest.land/eggs/"))
+      highlight("https://docs.nest.land/eggs/")
     } for documentation about this command.`,
   );
 }
@@ -160,4 +160,8 @@ const colorRegex = /\x1B[[(?);]{0,2}(;?\d)*./g;
 
 export function stripANSII(msg: string) {
   return msg.replace(colorRegex, "");
+}
+
+export function highlight(msg: string) {
+  return underline(bold(msg));
 }

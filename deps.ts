@@ -35,6 +35,7 @@ export {
   red,
   reset,
   setColorEnabled,
+  italic,
   underline,
   yellow,
 } from "https://deno.land/std@v0.61.0/fmt/colors.ts";

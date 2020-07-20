@@ -5,11 +5,11 @@ import {
   existsSync,
   expandGlobSync,
   green,
+  italic,
   log,
   relative,
   resolve,
   semver,
-  underline,
   walkSync,
   IFlagArgument,
   IFlagOptions,
@@ -25,7 +25,7 @@ import { Ignore } from "../context/ignore.ts";
 
 import { getAPIKey } from "../keyfile.ts";
 import { version } from "../version.ts";
-import { setupLog } from "../log.ts";
+import { setupLog, highlight } from "../log.ts";
 
 interface File {
   fullPath: string;
@@ -76,10 +76,14 @@ async function checkREADME(config: Config) {
     readme = readme.toLowerCase();
     if (readme.includes(`://deno.land/x/${name}`)) {
       log.warning(
-        `Your readme contains old import URLs from your project using deno.land/x/${name}.`,
+        `Your readme contains old import URLs from your project using ${
+          highlight(`deno.land/x/${name}`)
+        }.`,
       );
       log.warning(
-        `You can change these to https://x.nest.land/${name}@VERSION`,
+        `You can change these to ${
+          highlight("https://x.nest.land/${name}@VERSION")
+        }`,
       );
     }
   } catch {
@@ -95,7 +99,7 @@ async function checkFmt(config: Config) {
   if (formatStatus.success) {
     log.info("Formatted your code.");
   } else {
-    log.error("`deno fmt` returned a non-zero code.");
+    log.error(`${italic("deno fmt")} returned a non-zero code.`);
   }
 }
 
@@ -176,7 +180,9 @@ async function publishCommand(options: Options) {
   let apiKey = await getAPIKey();
   if (!apiKey) {
     log.error(
-      "No API Key file found. You can add one using `eggs link <api key>. You can create one on https://nest.land",
+      `No API Key file found. You can add one using eggs ${
+        italic("link <api key>")
+      }. You can create one on ${highlight("https://nest.land")}`,
     );
     return;
   }
@@ -271,15 +277,13 @@ async function publishCommand(options: Options) {
   log.info(
     green(
       "You can now find your package on our registry at " +
-        bold(`https://nest.land/package/${egg.name}\n`),
+        highlight(`https://nest.land/package/${egg.name}\n`),
     ),
   );
   log.info(
     `Add this badge to your README to let everyone know:\n\n ${
-      underline(
-        bold(
-          `[![nest badge](https://nest.land/badge.svg)](https://nest.land/package/${egg.name})`,
-        ),
+      highlight(
+        `[![nest badge](https://nest.land/badge.svg)](https://nest.land/package/${egg.name})`,
       )
     }`,
   );
@@ -346,13 +350,4 @@ export const publish = new Command<Options, []>()
     "Update to the given version.",
     { conflicts: ["bump"] },
   )
-  /* .option("--patch", "Bump the version up to the next patch version.", { conflicts: conflict("patch") })
-  .option("--minor", "Bump the version up to the next minor version.", { conflicts: conflict("minor") })
-  .option("--major", "Bump the version up to the next major version.", { conflicts: conflict("major") })
-  .option("--pre", "Increment the prerelease version.", { conflicts: conflict("pre") })
-  .option("--prepatch", "Bump the version up to the next patch version and down to a prerelease.", { conflicts: conflict("prepatch") })
-  .option("--preminor", "Bump the version up to the next minor version and down to a prerelease.", { conflicts: conflict("preminor") })
-  .option("--premajor", "Bump the version up to the next major version and down to a prerelease.", { conflicts: conflict("premajor") })
-  .option("--prerelease", "Increment the prerelease version or increment the patch version from a non-prerelease version.", { conflicts: conflict("prerelease") }) */
-  // .action(() => {});
   .action(publishCommand);
