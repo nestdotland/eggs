@@ -5,12 +5,14 @@ import {
   existsSync,
   expandGlobSync,
   green,
+  italic,
   log,
   relative,
   resolve,
   semver,
-  underline,
   walkSync,
+  IFlagArgument,
+  IFlagOptions,
 } from "../../deps.ts";
 import { DefaultOptions } from "../commands.ts";
 import { ENDPOINT } from "../api/common.ts";
@@ -23,7 +25,7 @@ import { Ignore } from "../context/ignore.ts";
 
 import { getAPIKey } from "../keyfile.ts";
 import { version } from "../version.ts";
-import { setupLog } from "../log.ts";
+import { setupLog, highlight } from "../log.ts";
 
 interface File {
   fullPath: string;
@@ -59,9 +61,6 @@ async function getContext(): Promise<[Config | undefined, Ignore | undefined]> {
       "You haven't provided a description for your package, continuing without one...",
     );
   }
-  if (!config.version) {
-    log.warning("No version found. Generating a new version now...");
-  }
   return [config, ignore];
 }
 
@@ -77,10 +76,14 @@ async function checkREADME(config: Config) {
     readme = readme.toLowerCase();
     if (readme.includes(`://deno.land/x/${name}`)) {
       log.warning(
-        `Your readme contains old import URLs from your project using deno.land/x/${name}.`,
+        `Your readme contains old import URLs from your project using ${
+          highlight(`deno.land/x/${name}`)
+        }.`,
       );
       log.warning(
-        `You can change these to https://x.nest.land/${name}@VERSION`,
+        `You can change these to ${
+          highlight("https://x.nest.land/${name}@VERSION")
+        }`,
       );
     }
   } catch {
@@ -96,7 +99,7 @@ async function checkFmt(config: Config) {
   if (formatStatus.success) {
     log.info("Formatted your code.");
   } else {
-    log.error("`deno fmt` returned a non-zero code.");
+    log.error(`${italic("deno fmt")} returned a non-zero code.`);
   }
 }
 
@@ -177,14 +180,16 @@ async function publishCommand(options: Options) {
   let apiKey = await getAPIKey();
   if (!apiKey) {
     log.error(
-      "No API Key file found. You can add one using `eggs link <api key>. You can create one on https://nest.land",
+      `No API Key file found. You can add one using eggs ${
+        italic("link <api key>")
+      }. You can create one on ${highlight("https://nest.land")}`,
     );
     return;
   }
 
   const [egg, ignore] = await getContext();
 
-  if (egg === undefined || ignore == undefined) return;
+  if (egg === undefined || ignore === undefined) return;
 
   log.debug("Config: ", egg);
 
@@ -199,6 +204,19 @@ async function publishCommand(options: Options) {
 
   const existing = await fetchModule(egg.name);
 
+  let latest = "0.0.0";
+  if (existing) {
+    latest = existing.getLatestVersion();
+  }
+  if (options.bump && egg.version) {
+    egg.version = semver.inc(egg.version, options.bump) as string;
+  }
+  egg.version = egg.version || options.version;
+  if (!egg.version) {
+    log.warning("No version found. Generating a new version now...");
+    egg.version = semver.inc(latest, options.bump || "patch") as string;
+  }
+
   const nv = `${egg.name}@${egg.version}`;
 
   if (existing && existing.packageUploadNames.indexOf(nv) !== -1) {
@@ -207,13 +225,6 @@ async function publishCommand(options: Options) {
     );
     return;
   }
-
-  let latest = "0.0.0";
-  if (existing) {
-    latest = existing.getLatestVersion();
-  }
-
-  egg.version = egg.version || semver.inc(latest, "patch") as string;
 
   const isLatest = semver.compare(egg.version, latest) === 1;
 
@@ -255,33 +266,88 @@ async function publishCommand(options: Options) {
 
   log.info("Files uploaded: ");
   Object.entries(pieceResponse.files).forEach((el) => {
-    log.info(` - ${el[0]} -> ${bold(`${ENDPOINT}/${egg.name}${el[0]}`)}`);
+    log.info(
+      ` - ${el[0]} -> ${
+        bold(`${ENDPOINT}/${egg.name}@${egg.version}${el[0]}`)
+      }`,
+    );
   });
 
   console.log();
   log.info(
     green(
       "You can now find your package on our registry at " +
-        bold(`https://nest.land/package/${egg.name}\n`),
+        highlight(`https://nest.land/package/${egg.name}\n`),
     ),
   );
   log.info(
     `Add this badge to your README to let everyone know:\n\n ${
-      underline(
-        bold(
-          `[![nest badge](https://nest.land/badge.svg)](https://nest.land/package/${egg.name})`,
-        ),
+      highlight(
+        `[![nest badge](https://nest.land/badge.svg)](https://nest.land/package/${egg.name})`,
       )
     }`,
   );
 }
 
+const releases = [
+  "patch",
+  "minor",
+  "major",
+  "pre",
+  "prepatch",
+  "preminor",
+  "premajor",
+  "prerelease",
+];
+
+function releaseType(
+  option: IFlagOptions,
+  arg: IFlagArgument,
+  value: string,
+): string {
+  if (!(releases.includes(value))) {
+    throw new Error(
+      `Option --${option.name} must be a valid release type but got: ${value}.\nAccepted values are ${
+        releases.join(", ")
+      }.`,
+    );
+  }
+  return value;
+}
+
+function versionType(
+  option: IFlagOptions,
+  arg: IFlagArgument,
+  value: string,
+): string {
+  if (!semver.valid(value)) {
+    throw new Error(
+      `Option --${option.name} must be a valid version but got: ${value}.\nVersion must follow Semantic Versioning 2.0.0.`,
+    );
+  }
+  return value;
+}
+
 interface Options extends DefaultOptions {
   dry: boolean;
+  bump: semver.ReleaseType;
+  version: string;
 }
 
 export const publish = new Command<Options, []>()
   .description("Publishes the current directory to the nest.land registry.")
   .version(version)
+  .type("release", releaseType)
+  .type("version", versionType)
   .option("-d, --dry", "Do a dry run")
+  .option(
+    "--bump <value:release>",
+    "Increment the version by the release type.",
+    { conflicts: ["version"] },
+  )
+  .option(
+    "--version <value:version>",
+    "Update to the given version.",
+    { conflicts: ["bump"] },
+  )
   .action(publishCommand);
