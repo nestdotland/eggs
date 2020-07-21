@@ -10,7 +10,7 @@
 
   <h3 align="center">Eggs CLI</h3>
 <p align="center">
-    The CLI used to publish and update packages in nest.land.
+    The CLI used to publish and update modules in nest.land.
   </p>
   <p align="center">
     <a href="https://nest.land/package/eggs">

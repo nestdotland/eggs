@@ -50,10 +50,15 @@ async function initCommand(options: DefaultOptions) {
     message: "Is this a stable version?",
     default: currentConfig.stable,
   });
-  const files: string[] = await List.prompt(
-    "Enter the files and relative directories that nest.land will publish separated by a comma.",
-  );
-  const format: string = await Select.prompt({
+  const files: string[] = await List.prompt({
+    message:
+      "Enter the files and relative directories that nest.land will publish separated by a comma.",
+    default: currentConfig.files,
+  });
+
+  // BUG(@oganexon): Select.prompt does not work under Windows
+
+  /* const format: string = await Select.prompt({
     message: "Config format: ",
     default: (configPath ? configFormat(configPath) : ConfigFormat.JSON)
       .toUpperCase(),
@@ -61,6 +66,15 @@ async function initCommand(options: DefaultOptions) {
       { name: "YAML", value: ConfigFormat.YAML },
       { name: "JSON", value: ConfigFormat.JSON },
     ],
+  }); */
+
+  const format: string = await Input.prompt({
+    message:
+      "Config format (json / yaml / yml). Note that you can use a .eggignore file instead: ",
+    default: (configPath ? configFormat(configPath) : ConfigFormat.JSON)
+      .toUpperCase(),
+    minLength: 3,
+    maxLength: 4,
   });
 
   const config = {
@@ -70,11 +84,11 @@ async function initCommand(options: DefaultOptions) {
     files: (files.length === 0 ? currentConfig.files : files),
   };
 
-  log.debug("Config: ", config);
+  log.debug("Config: ", config, format);
 
   await writeConfig(config, format as ConfigFormat);
 
-  log.info("Successfully created config file.", format);
+  log.info("Successfully created config file.");
 }
 
 export const init = new Command<DefaultOptions, []>()
