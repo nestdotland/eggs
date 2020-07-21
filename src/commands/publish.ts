@@ -333,13 +333,16 @@ interface Options extends DefaultOptions {
   bump: semver.ReleaseType;
   version: string;
 }
+type Arguments = [string]
 
-export const publish = new Command<Options, []>()
+export const publish = new Command<Options, Arguments>()
   .description("Publishes the current directory to the nest.land registry.")
   .version(version)
   .type("release", releaseType)
   .type("version", versionType)
+  .arguments("[name: string]")
   .option("-d, --dry", "Do a dry run")
+  .option("--entry", "Do a dry run", { default: "mod.ts"})
   .option(
     "--bump <value:release>",
     "Increment the version by the release type.",
@@ -350,4 +353,8 @@ export const publish = new Command<Options, []>()
     "Update to the given version.",
     { conflicts: ["bump"] },
   )
-  .action(publishCommand);
+  .option("--unstable", "Flag this version as unstable.")
+  .option("--unlisted", "Hide this module/version on the gallery.")
+  .option("--fmt", "Automatically format your code before publishing to the blockchain.")
+  .action(() => {})
+  // .action(publishCommand);
