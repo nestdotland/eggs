@@ -70,9 +70,9 @@ async function initCommand(options: DefaultOptions) {
 
   const format: string = await Input.prompt({
     message:
-      "Config format (json / yaml / yml). Note that you can use a .eggignore file instead: ",
+      "Config format (json / yml). Note that you can use a .eggignore file instead: ",
     default: (configPath ? configFormat(configPath) : ConfigFormat.JSON)
-      .toUpperCase(),
+      .toLowerCase(),
     minLength: 3,
     maxLength: 4,
   });
