@@ -2,7 +2,9 @@ export {
   join,
   extname,
   relative,
+  resolve,
   basename,
+  globToRegExp,
 } from "https://deno.land/std@v0.61.0/path/mod.ts";
 
 export {
@@ -11,6 +13,7 @@ export {
   writeJson,
   readJson,
   exists,
+  walkSync,
 } from "https://deno.land/std@v0.61.0/fs/mod.ts";
 
 export * as log from "https://deno.land/std@v0.61.0/log/mod.ts";
@@ -19,19 +22,22 @@ export { LogRecord } from "https://deno.land/std@v0.61.0/log/logger.ts";
 
 export {
   LogLevels,
+  LevelName,
 } from "https://deno.land/std@v0.61.0/log/levels.ts";
 
 export { BaseHandler } from "https://deno.land/std@v0.61.0/log/handlers.ts";
 
 export {
-  setColorEnabled,
-  reset,
-  bold,
-  green,
   blue,
-  yellow,
-  red,
+  bold,
   gray,
+  green,
+  red,
+  reset,
+  setColorEnabled,
+  italic,
+  underline,
+  yellow,
 } from "https://deno.land/std@v0.61.0/fmt/colors.ts";
 
 export {
@@ -57,6 +63,11 @@ export {
   Select,
   List,
 } from "https://x.nest.land/cliffy@0.11.1/packages/prompt/mod.ts";
+
+export {
+  IFlagArgument,
+  IFlagOptions,
+} from "https://x.nest.land/cliffy@0.11.1/flags.ts";
 
 export * as semver from "https://deno.land/x/semver@v1.0.0/mod.ts";
 

@@ -15,12 +15,143 @@ import {
   readGlobalModuleConfig,
   writeGlobalModuleConfig,
 } from "../global_module.ts";
-
+import { DefaultOptions } from "../commands.ts";
 import { version } from "../version.ts";
+import { setupLog } from "../log.ts";
 
 const installPrefix = "eggs--";
 
 const configPath = globalModulesConfigPath();
+
+async function installCommand(
+  options: DefaultOptions,
+  ...args: string[]
+): Promise<void> {
+  await setupLog(options.debug);
+
+  /** help option need to be parsed manually */
+  if (["-h", "--help", "help"].includes(args[0])) {
+    install.help();
+    return;
+  }
+
+  const indexOfURL = args.findIndex((arg) => arg.match(/https:\/\//));
+  const indexOfName = args.indexOf("-n");
+
+  if (indexOfURL < 0) {
+    log.error("You need to pass in a module URL.");
+    return;
+  }
+
+  const url = args[indexOfURL];
+  let { moduleName, versionURL, registry, owner, version } = analyzeURL(url);
+  let installName: string;
+
+  log.debug("Module info: ", moduleName, versionURL, registry, owner, version);
+
+  const currentVersion = semver.valid(version) ??
+    await getLatestVersion(registry, moduleName, owner);
+
+  if (!currentVersion || !semver.valid(currentVersion)) {
+    log.warning(`Could not find the latest version of ${moduleName}.`);
+    await installModuleWithoutUpdates(args);
+    return;
+  }
+
+  /** If no exec name is given, provide one */
+  if (indexOfName < 0) {
+    args.splice(indexOfURL, 0, installPrefix + moduleName);
+    args.splice(indexOfURL, 0, "-n");
+    installName = moduleName;
+  } else {
+    installName = args[indexOfName + 1];
+    args[indexOfName + 1] = installPrefix + installName;
+  }
+
+  const execName = installPrefix + installName;
+
+  const result = await Promise.allSettled(
+    [installUpdateHandler(installName, execName), installModuleHandler(args)],
+  );
+
+  if (result[0].status === "rejected") {
+    throw new Error(`Installation failed: ${result[0].reason}`);
+  }
+  if (result[1].status === "rejected") {
+    throw new Error(`Installation failed: ${result[1].reason}`);
+  }
+
+  /** After installation, the URL is ready to be updated */
+  args[args.findIndex((arg) => arg.match(/https:\/\//))] = versionURL;
+
+  const configExists = await exists(configPath);
+  const config: GlobalModuleConfig | undefined = configExists
+    ? await readGlobalModuleConfig(configPath)
+    : {};
+
+  if (config === undefined) return;
+
+  config[execName] = {
+    registry,
+    moduleName,
+    installName,
+    owner,
+    version: currentVersion,
+    args,
+    lastUpdateCheck: Date.now(),
+  };
+
+  log.debug("Config: ", config);
+
+  await writeGlobalModuleConfig(configPath, config);
+
+  log.info(`Successfully installed ${bold(moduleName)} !`);
+}
+
+async function installModuleHandler(args: string[]): Promise<void> {
+  const installation = Deno.run({
+    cmd: [
+      "deno",
+      "install",
+      "-f",
+      ...args,
+    ],
+    stdout: "piped",
+    stderr: "piped",
+  });
+
+  const status = await installation.status();
+  installation.close();
+
+  const stdout = new TextDecoder("utf-8").decode(await installation.output());
+  const stderr = new TextDecoder("utf-8").decode(
+    await installation.stderrOutput(),
+  );
+
+  log.debug("stdout: ", stdout);
+  log.debug("stderr: ", stderr);
+
+  if (status.success === false || status.code !== 0) {
+    throw new Error("Module handler installation failed.");
+  }
+}
+
+async function installModuleWithoutUpdates(args: string[]): Promise<void> {
+  const installation = Deno.run({
+    cmd: [
+      "deno",
+      "install",
+      ...args,
+    ],
+  });
+
+  const status = await installation.status();
+  installation.close();
+
+  if (status.success === false || status.code !== 0) {
+    throw new Error("Module installation failed.");
+  }
+}
 
 const desc = `A simple wrapper around the ${
   bold("deno install")
@@ -50,7 +181,9 @@ The installation root is determined, in order of precedence:
 
 These must be added to the path manually if required.`;
 
-export const install = new Command()
+type Arguments = string[];
+
+export const install = new Command<DefaultOptions, Arguments>()
   .version(version)
   .description(desc)
   .arguments("[options...:string]")
@@ -80,115 +213,4 @@ export const install = new Command()
   .option("--unstable", "Enable unstable APIs")
   /** Unknown options cannot be parsed */
   .useRawArgs()
-  .action(installModule);
-
-async function installModule(_: unknown, ...args: string[]): Promise<void> {
-  /** help option need to be parsed manually */
-  if (["-h", "--help", "help"].includes(args[0])) {
-    Deno.stdout.writeSync(new TextEncoder().encode(install.getHelp()));
-    Deno.exit();
-  }
-
-  const indexOfURL = args.findIndex((arg) => arg.match(/https:\/\//));
-  const indexOfName = args.indexOf("-n");
-
-  if (indexOfURL < 0) {
-    console.error(red("You need to pass in a module URL."));
-    Deno.exit(1);
-  }
-
-  const url = args[indexOfURL];
-  let { moduleName, versionURL, registry, owner, version } = analyzeURL(url);
-  let installName: string;
-
-  const currentVersion = semver.valid(version) ??
-    await getLatestVersion(registry, moduleName, owner);
-
-  if (!currentVersion || !semver.valid(currentVersion)) {
-    log.warning(`Could not find the latest version of ${moduleName}.`);
-    await installModuleWithoutUpdates(args);
-    Deno.exit();
-  }
-
-  /** If no exec name is given, provide one */
-  if (indexOfName < 0) {
-    args.splice(indexOfURL, 0, installPrefix + moduleName);
-    args.splice(indexOfURL, 0, "-n");
-    installName = moduleName;
-  } else {
-    installName = args[indexOfName + 1];
-    args[indexOfName + 1] = installPrefix + installName;
-  }
-
-  const execName = installPrefix + installName;
-
-  const result = await Promise.allSettled(
-    [installUpdateHandler(installName, execName), installModuleHandler(args)],
-  );
-
-  if (result[0].status === "rejected") {
-    console.error(red(`Installation failed: ${result[0].reason}`));
-    Deno.exit(1);
-  }
-  if (result[1].status === "rejected") {
-    console.error(red(`Installation failed: ${result[1].reason}`));
-    Deno.exit(1);
-  }
-
-  /** After installation, the URL is ready to be updated */
-  args[args.findIndex((arg) => arg.match(/https:\/\//))] = versionURL;
-
-  const configExists = await exists(configPath);
-  const config: GlobalModuleConfig = configExists
-    ? await readGlobalModuleConfig(configPath)
-    : {};
-
-  config[execName] = {
-    registry,
-    moduleName,
-    installName,
-    owner,
-    version: currentVersion,
-    args,
-    lastUpdateCheck: Date.now(),
-  };
-
-  await writeGlobalModuleConfig(configPath, config);
-}
-
-async function installModuleHandler(args: string[]): Promise<void> {
-  const installation = Deno.run({
-    cmd: [
-      "deno",
-      "install",
-      "-f",
-      ...args,
-    ],
-    stdout: "null",
-    stderr: "null",
-  });
-
-  const status = await installation.status();
-  installation.close();
-
-  if (status.success === false || status.code !== 0) {
-    throw new Error("Module handler installation failed.");
-  }
-}
-
-async function installModuleWithoutUpdates(args: string[]): Promise<void> {
-  const installation = Deno.run({
-    cmd: [
-      "deno",
-      "install",
-      ...args,
-    ],
-  });
-
-  const status = await installation.status();
-  installation.close();
-
-  if (status.success === false || status.code !== 0) {
-    throw new Error("Module installation failed.");
-  }
-}
+  .action(installCommand);

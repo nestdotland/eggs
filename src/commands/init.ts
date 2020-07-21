@@ -1,10 +1,11 @@
 import {
+  basename,
   Command,
   Confirm,
   Input,
   List,
   log,
-  basename,
+  Select,
 } from "../../deps.ts";
 import {
   Config,
@@ -13,16 +14,20 @@ import {
   defaultConfig,
   readConfig,
   writeConfig,
-} from "../config.ts";
+} from "../context/config.ts";
+import { DefaultOptions } from "../commands.ts";
 import { version } from "../version.ts";
+import { setupLog } from "../log.ts";
 
 /** Init Command.
  * `init` creates (or overrides) configuration in
  * the cwd with an interactive prompt. */
-async function initCommand() {
+async function initCommand(options: DefaultOptions) {
+  await setupLog(options.debug);
+
   let currentConfig: Partial<Config> = {};
 
-  let configPath = defaultConfig();
+  let configPath = await defaultConfig();
   if (configPath) {
     log.warning("An egg config file already exists...");
     const override = await Confirm.prompt("Do you want to override it?");
@@ -79,10 +84,14 @@ async function initCommand() {
     files: (files.length === 0 ? currentConfig.files : files),
   };
 
+  log.debug("Config: ", config, format);
+
   await writeConfig(config, format as ConfigFormat);
+
+  log.info("Successfully created config file.");
 }
 
-export const init = new Command()
+export const init = new Command<DefaultOptions, []>()
   .version(version)
   .description("Initiates a new module for the nest.land registry.")
   .action(initCommand);
