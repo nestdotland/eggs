@@ -158,7 +158,7 @@ async function updateLocalModules(
     let { moduleName, versionURL, registry, owner, version } = analyzeURL(line);
 
     // TODO(@qu4k): edge case: dependency isn't a module, for example: from
-    //  "https://deno.land/std@version/version.ts";, will return -> "version.ts";
+    //  "https://x.nest.land/std@version/version.ts";, will return -> "version.ts";
     // Issue: "Mandarine.TS" is a module while "version.ts" isn't
 
     // Now we have the name, ignore dependency if requested dependencies are set and it isn't one requested

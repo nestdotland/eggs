@@ -5,7 +5,7 @@ export {
   resolve,
   basename,
   globToRegExp,
-} from "https://deno.land/std@v0.61.0/path/mod.ts";
+} from "https://x.nest.land/std@0.61.0/path/mod.ts";
 
 export {
   existsSync,
@@ -14,18 +14,18 @@ export {
   readJson,
   exists,
   walkSync,
-} from "https://deno.land/std@v0.61.0/fs/mod.ts";
+} from "https://x.nest.land/std@0.61.0/fs/mod.ts";
 
-export * as log from "https://deno.land/std@v0.61.0/log/mod.ts";
+export * as log from "https://x.nest.land/std@0.61.0/log/mod.ts";
 
-export { LogRecord } from "https://deno.land/std@v0.61.0/log/logger.ts";
+export { LogRecord } from "https://x.nest.land/std@0.61.0/log/logger.ts";
 
 export {
   LogLevels,
   LevelName,
-} from "https://deno.land/std@v0.61.0/log/levels.ts";
+} from "https://x.nest.land/std@0.61.0/log/levels.ts";
 
-export { BaseHandler } from "https://deno.land/std@v0.61.0/log/handlers.ts";
+export { BaseHandler } from "https://x.nest.land/std@0.61.0/log/handlers.ts";
 
 export {
   blue,
@@ -38,18 +38,18 @@ export {
   italic,
   underline,
   yellow,
-} from "https://deno.land/std@v0.61.0/fmt/colors.ts";
+} from "https://x.nest.land/std@0.61.0/fmt/colors.ts";
 
 export {
   assertEquals,
   assertMatch,
   assert,
-} from "https://deno.land/std@v0.61.0/testing/asserts.ts";
+} from "https://x.nest.land/std@0.61.0/testing/asserts.ts";
 
 export {
   parse as parseYaml,
   stringify as stringifyYaml,
-} from "https://deno.land/std@v0.61.0/encoding/yaml.ts";
+} from "https://x.nest.land/std@0.61.0/encoding/yaml.ts";
 
 export {
   Command,
