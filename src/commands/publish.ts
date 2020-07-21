@@ -264,14 +264,15 @@ async function publishCommand(options: Options) {
 
   log.info(`Successfully published ${bold(egg.name)}!`);
 
-  log.info("Files uploaded: ");
-  Object.entries(pieceResponse.files).forEach((el) => {
-    log.info(
-      ` - ${el[0]} -> ${
-        bold(`${ENDPOINT}/${egg.name}@${egg.version}${el[0]}`)
-      }`,
-    );
-  });
+  const files = Object.entries(pieceResponse.files).reduce(
+    (previous, current) => {
+      return `${previous}\n        - ${current[0]} -> ${
+        bold(`${ENDPOINT}/${egg.name}@${egg.version}${current[0]}`)
+      }`;
+    },
+    "Files uploaded: ",
+  );
+  log.info(files);
 
   console.log();
   log.info(
