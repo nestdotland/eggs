@@ -9,10 +9,7 @@ categories:
   - title: '🐛 Bug Fixes'
     labels: 'type: bugfix'
 
-#  - title: '🧰 Chores'
-#    label: ['type: chore', 'meta: documentation']
-
-change-template: '- [#$NUMBER]($URL) $TITLE (@$AUTHOR)'
+change-template: '- #$NUMBER $TITLE (@$AUTHOR)'
 
 version-resolver:
   major:
@@ -30,7 +27,7 @@ version-resolver:
   default: patch
 
 template: |
-  ## $RESOLVED_VERSION Changelog
+  ## CHANGELOG
 
   $CHANGES
 
@@ -45,5 +42,5 @@ template: |
   **Using eggs**
 
   ```sh
-  eggs upgrade --version $RESOLVED_VERSION
+  eggs upgrade
   ```
