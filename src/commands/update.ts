@@ -1,19 +1,17 @@
 import {
-  analyzeURL,
   Command,
   getLatestVersion,
   globalModulesConfigPath,
   green,
   log,
+  parseURL,
+  readGlobalModuleConfig,
   semver,
   versionSubstitute,
   yellow,
+  writeGlobalModuleConfig,
 } from "../../deps.ts";
 import { DefaultOptions } from "../commands.ts";
-import {
-  readGlobalModuleConfig,
-  writeGlobalModuleConfig,
-} from "../global_module.ts";
 import { setupLog } from "../log.ts";
 
 /** What the constructed dependency objects should contain */
@@ -30,17 +28,17 @@ async function updateGlobalModules(
   requestedModules: string[],
 ): Promise<void> {
   const configPath = globalModulesConfigPath();
-  const config = await readGlobalModuleConfig(configPath);
+  const config = await readGlobalModuleConfig();
 
   if (config === undefined) return;
 
   log.debug("Config: ", config);
 
-  for (const execName in config) {
-    const module = config[execName];
+  for (const executable in config) {
+    const module = config[executable];
 
     if (
-      requestedModules.length && requestedModules.indexOf(execName) === -1
+      requestedModules.length && requestedModules.indexOf(executable) === -1
     ) {
       continue;
     }
@@ -48,32 +46,32 @@ async function updateGlobalModules(
     // Get latest release
     const latestRelease = await getLatestVersion(
       module.registry,
-      module.moduleName,
+      module.name,
       module.owner,
     );
 
     // Basic safety net
     if (!module.version || !semver.valid(module.version)) {
-      log.debug("Invalid version", module.moduleName, module.version);
+      log.debug("Invalid version", module.name, module.version);
       continue;
     }
 
     if (!latestRelease || !semver.valid(latestRelease)) {
-      log.warning(`Could not find the latest version of ${module.moduleName}.`);
+      log.warning(`Could not find the latest version of ${module.name}.`);
       continue;
     }
 
     if (semver.eq(module.version, latestRelease)) {
-      log.debug(module.moduleName, "is already up to date!");
+      log.debug(module.name, "is already up to date!");
       continue;
     }
 
     // Update the dependency
-    const indexOfURL = module.args.findIndex((arg: string) =>
+    const indexOfURL = module.arguments.findIndex((arg: string) =>
       arg.match(/https:\/\//)
     );
 
-    const newArgs = module.args.slice();
+    const newArgs = module.arguments.slice();
     newArgs[indexOfURL] = newArgs[indexOfURL].replace(
       versionSubstitute,
       latestRelease,
@@ -100,20 +98,20 @@ async function updateGlobalModules(
     log.debug("stderr: ", stderr);
 
     if (status.success === false || status.code !== 0) {
-      log.error(`Update failed for ${execName}`);
+      log.error(`Update failed for ${executable}`);
       continue;
     }
 
     module.version = latestRelease;
 
     log.info(
-      `${execName} (${module.moduleName}) ${yellow(module.version)} -> ${
+      `${executable} (${module.name}) ${yellow(module.version)} -> ${
         green(latestRelease)
       }`,
     );
   }
 
-  await writeGlobalModuleConfig(configPath, config);
+  await writeGlobalModuleConfig(config);
 
   log.info("Updated your dependencies!");
 }
@@ -155,7 +153,7 @@ async function updateLocalModules(
    * Skips the dependency if it is not versioned (no need to try to update it) */
   const dependenciesToUpdate: Array<ModuleToUpdate> = [];
   for (const line of dependencyFileContents) {
-    let { moduleName, versionURL, registry, owner, version } = analyzeURL(line);
+    let { name, parsedURL, registry, owner, version } = parseURL(line);
 
     // TODO(@qu4k): edge case: dependency isn't a module, for example: from
     //  "https://x.nest.land/std@version/version.ts";, will return -> "version.ts";
@@ -163,42 +161,42 @@ async function updateLocalModules(
 
     // Now we have the name, ignore dependency if requested dependencies are set and it isn't one requested
     if (
-      requestedModules.length && requestedModules.indexOf(moduleName) === -1
+      requestedModules.length && requestedModules.indexOf(name) === -1
     ) {
-      log.debug(moduleName, "was not requested.");
+      log.debug(name, "was not requested.");
       continue;
     }
 
     // Get latest release
-    const latestRelease = await getLatestVersion(registry, moduleName, owner);
+    const latestRelease = await getLatestVersion(registry, name, owner);
 
     // Basic safety net
 
     if (!version || !semver.valid(version)) {
-      log.debug("Invalid version", moduleName, version);
+      log.debug("Invalid version", name, version);
       continue;
     }
 
     if (!latestRelease || !semver.valid(latestRelease)) {
       log.warning(
-        `Warning: could not find the latest version of ${moduleName}.`,
+        `Warning: could not find the latest version of ${name}.`,
       );
       continue;
     }
 
     if (semver.eq(version, latestRelease)) {
-      log.debug(moduleName, "is already up to date!");
+      log.debug(name, "is already up to date!");
       continue;
     }
 
     // Collate the dependency
     dependenciesToUpdate.push({
       line,
-      versionURL,
+      versionURL: parsedURL,
       latestRelease,
     });
 
-    log.info(`${moduleName} ${yellow(version)} → ${green(latestRelease)}`);
+    log.info(`${name} ${yellow(version)} → ${green(latestRelease)}`);
   }
 
   // If no modules are needed to update then exit

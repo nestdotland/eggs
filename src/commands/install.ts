@@ -1,25 +1,23 @@
 import {
-  analyzeURL,
   bold,
   Command,
   exists,
   getLatestVersion,
+  GlobalModuleConfig,
   globalModulesConfigPath,
   installUpdateHandler,
   log,
-  red,
-  semver,
-} from "../../deps.ts";
-import {
-  GlobalModuleConfig,
+  parseURL,
   readGlobalModuleConfig,
+  semver,
   writeGlobalModuleConfig,
-} from "../global_module.ts";
+} from "../../deps.ts";
 import { DefaultOptions } from "../commands.ts";
 import { version } from "../version.ts";
 import { setupLog } from "../log.ts";
 
 const installPrefix = "eggs--";
+const oneDay = 1000 * 60 * 60 * 24;
 
 const configPath = globalModulesConfigPath();
 
@@ -44,92 +42,79 @@ async function installCommand(
   }
 
   const url = args[indexOfURL];
-  let { moduleName, versionURL, registry, owner, version } = analyzeURL(url);
-  let installName: string;
+  let { name, parsedURL, registry, owner, version } = parseURL(url);
+  let alias: string;
 
-  log.debug("Module info: ", moduleName, versionURL, registry, owner, version);
+  log.debug("Module info: ", name, parsedURL, registry, owner, version);
 
   const currentVersion = semver.valid(version) ??
-    await getLatestVersion(registry, moduleName, owner);
+    await getLatestVersion(registry, name, owner);
 
   if (!currentVersion || !semver.valid(currentVersion)) {
-    log.warning(`Could not find the latest version of ${moduleName}.`);
+    log.warning(`Could not find the latest version of ${name}.`);
     await installModuleWithoutUpdates(args);
     return;
   }
 
   /** If no exec name is given, provide one */
   if (indexOfName < 0) {
-    args.splice(indexOfURL, 0, installPrefix + moduleName);
+    args.splice(indexOfURL, 0, installPrefix + name);
     args.splice(indexOfURL, 0, "-n");
-    installName = moduleName;
+    alias = name;
   } else {
-    installName = args[indexOfName + 1];
-    args[indexOfName + 1] = installPrefix + installName;
+    alias = args[indexOfName + 1];
+    args[indexOfName + 1] = installPrefix + alias;
   }
 
-  const execName = installPrefix + installName;
+  const executable = installPrefix + alias;
 
-  const result = await Promise.allSettled(
-    [installUpdateHandler(installName, execName), installModuleHandler(args)],
-  );
-
-  if (result[0].status === "rejected") {
-    throw new Error(`Installation failed: ${result[0].reason}`);
-  }
-  if (result[1].status === "rejected") {
-    throw new Error(`Installation failed: ${result[1].reason}`);
-  }
+  await installModuleHandler(args);
+  await installUpdateHandler(alias, executable);
 
   /** After installation, the URL is ready to be updated */
-  args[args.findIndex((arg) => arg.match(/https:\/\//))] = versionURL;
+  args[args.findIndex((arg) => arg.match(/https:\/\//))] = parsedURL;
 
   const configExists = await exists(configPath);
-  const config: GlobalModuleConfig | undefined = configExists
-    ? await readGlobalModuleConfig(configPath)
-    : {};
+  let config: GlobalModuleConfig | undefined;
+  try {
+    config = configExists ? await readGlobalModuleConfig() : {};
 
-  if (config === undefined) return;
+    if (config === undefined) return;
+  } catch (err) {
+    log.error(err);
+    return;
+  }
 
-  config[execName] = {
+  config[executable] = {
     registry,
-    moduleName,
-    installName,
+    name,
+    alias,
     owner,
     version: currentVersion,
-    args,
+    arguments: args,
     lastUpdateCheck: Date.now(),
   };
 
   log.debug("Config: ", config);
 
-  await writeGlobalModuleConfig(configPath, config);
+  await writeGlobalModuleConfig(config);
 
-  log.info(`Successfully installed ${bold(moduleName)} !`);
+  log.info(`Successfully installed ${bold(name)} !`);
 }
 
 async function installModuleHandler(args: string[]): Promise<void> {
+  const options = args.filter((x) => x !== "-f");
   const installation = Deno.run({
     cmd: [
       "deno",
       "install",
       "-f",
-      ...args,
+      ...options,
     ],
-    stdout: "piped",
-    stderr: "piped",
   });
 
   const status = await installation.status();
   installation.close();
-
-  const stdout = new TextDecoder("utf-8").decode(await installation.output());
-  const stderr = new TextDecoder("utf-8").decode(
-    await installation.stderrOutput(),
-  );
-
-  log.debug("stdout: ", stdout);
-  log.debug("stderr: ", stderr);
 
   if (status.success === false || status.code !== 0) {
     throw new Error("Module handler installation failed.");
