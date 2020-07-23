@@ -76,11 +76,19 @@ export * as base64 from "https://denopkg.com/chiefbiiko/base64@v0.2.0/mod.ts";
 export {
   installUpdateHandler,
   globalModulesConfigPath,
-} from "https://x.nest.land/hatcher@0.6.2/mod.ts";
+} from "https://x.nest.land/hatcher@0.7.3/mod.ts";
 
 export {
-  getLatestVersionFromNestRegistry,
+  GlobalModuleConfig,
+  readGlobalModuleConfig,
+  writeGlobalModuleConfig,
+} from "https://x.nest.land/hatcher@0.7.3/lib/config.ts";
+
+export { versionSubstitute } from "https://x.nest.land/hatcher@0.7.3/lib/utils.ts";
+
+export {
   getLatestVersion,
-  analyzeURL,
-  versionSubstitute,
-} from "https://x.nest.land/hatcher@0.6.2/lib/registries.ts";
+  parseURL,
+} from "https://x.nest.land/hatcher@0.7.3/lib/registries.ts";
+
+export { Nest } from "https://x.nest.land/hatcher@0.7.3/lib/registries/nest.ts";
