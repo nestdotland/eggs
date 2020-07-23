@@ -77,12 +77,14 @@ async function updateGlobalModules(
       latestRelease,
     );
 
+    const options = newArgs.filter((x) => x !== "-f");
+
     const installation = Deno.run({
       cmd: [
         "deno",
         "install",
         "-f",
-        ...newArgs,
+        ...options,
       ],
     });
 
