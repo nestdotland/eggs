@@ -1,6 +1,7 @@
 {
     "name": "eggs",
     "description": "The CLI used to publish and update packages in nest.land.",
+    "version": "0.2.1",
     "stable": true,
     "unlisted": false,
     "repository": "https://github.com/nestdotland/nest.land"
