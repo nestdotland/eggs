@@ -328,21 +328,41 @@ function versionType(
   return value;
 }
 
+function urlType(
+  option: IFlagOptions,
+  arg: IFlagArgument,
+  value: string,
+): string {
+  const urlRegex = /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()!@:%_\+.~#?&\/\/=]*)/
+  if (!value.match(urlRegex)) {
+    throw new Error(
+      `Option --${option.name} must be a valid url but got: ${value}.`,
+    );
+  }
+  return value;
+}
+
 interface Options extends DefaultOptions {
   dry: boolean;
   bump: semver.ReleaseType;
   version: string;
 }
-type Arguments = [string]
+type Arguments = [string];
 
 export const publish = new Command<Options, Arguments>()
   .description("Publishes the current directory to the nest.land registry.")
   .version(version)
   .type("release", releaseType)
   .type("version", versionType)
+  .type("url", urlType)
   .arguments("[name: string]")
-  .option("-d, --dry", "Do a dry run")
-  .option("--entry", "Do a dry run", { default: "mod.ts"})
+  .option("-d, --dry", "Do a dry run.")
+  .option("--entry", "The main file of your project.", { default: "mod.ts" })
+  .option("--description", "A description of your module that will appear on the gallery.")
+  .option(
+    "--repository <value:url>",
+    "A link to your repository.",
+  )
   .option(
     "--bump <value:release>",
     "Increment the version by the release type.",
@@ -350,11 +370,18 @@ export const publish = new Command<Options, Arguments>()
   )
   .option(
     "--version <value:version>",
-    "Update to the given version.",
+    "Set the version.",
     { conflicts: ["bump"] },
   )
   .option("--unstable", "Flag this version as unstable.")
   .option("--unlisted", "Hide this module/version on the gallery.")
-  .option("--fmt", "Automatically format your code before publishing to the blockchain.")
-  .action(() => {})
-  // .action(publishCommand);
+  .option(
+    "--fmt",
+    "Automatically format your code before publishing to the blockchain.",
+  )
+  .option(
+    "--files <value...:string>",
+    "All the files that should be uploaded to nest.land. Supports file globbing.",
+  )
+  .action((options) => {console.log(options)});
+// .action(publishCommand);
