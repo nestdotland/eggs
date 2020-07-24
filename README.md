@@ -40,7 +40,7 @@
 **Note: You need to upgrade to Deno v1.2.0 or newer in order to use our CLI.**
 
 ```shell script
-deno install -A -f --unstable -n eggs https://x.nest.land/eggs@0.2.0/mod.ts
+deno install -A -f --unstable -n eggs https://x.nest.land/eggs@0.2.1/mod.ts
 ```
 
 For more information, see the [documentation](https://docs.nest.land/).
@@ -147,7 +147,7 @@ After `eggs update`:
 ```ts
 import * as colors from "https://deno.land/std@0.58.0/fmt/colors.ts";
 import * as bcrypt from "https://deno.land/x/bcrypt@v0.2.1/mod.ts"
-import * as eggs from "https://x.nest.land/eggs@0.1.3/mod.ts"
+import * as eggs from "https://x.nest.land/eggs@0.2.1/mod.ts"
 import * as http from "https://deno.land/std/http/mod.ts"
 ```
 
