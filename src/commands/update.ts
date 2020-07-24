@@ -1,19 +1,18 @@
 import {
-  analyzeURL,
   Command,
   getLatestVersion,
   globalModulesConfigPath,
   green,
+  log,
+  parseURL,
+  readGlobalModuleConfig,
   semver,
   versionSubstitute,
   yellow,
-} from "../../deps.ts";
-import {
-  readGlobalModuleConfig,
   writeGlobalModuleConfig,
-} from "../global_module.ts";
-
-const decoder = new TextDecoder("utf-8");
+} from "../../deps.ts";
+import { DefaultOptions } from "../commands.ts";
+import { setupLog } from "../log.ts";
 
 /** What the constructed dependency objects should contain */
 interface ModuleToUpdate {
@@ -22,35 +21,24 @@ interface ModuleToUpdate {
   latestRelease: string;
 }
 
-export const update = new Command<Options, Arguments>()
-  .description("Update your dependencies")
-  .arguments("[deps...:string]")
-  .option(
-    "--file <file:string>",
-    "Set dependency filename",
-    { default: "deps.ts" },
-  )
-  .option("-g, --global", "Update global modules")
-  .action(async (options: Options, requestedModules: string[] = []) => {
-    if (options.global) {
-      await updateGlobalModules(options, requestedModules);
-    } else {
-      await updateLocalModules(options, requestedModules);
-    }
-  });
+const decoder = new TextDecoder("utf-8");
 
 async function updateGlobalModules(
   options: Options,
   requestedModules: string[],
 ): Promise<void> {
   const configPath = globalModulesConfigPath();
-  const config = await readGlobalModuleConfig(configPath);
+  const config = await readGlobalModuleConfig();
 
-  for (const execName in config) {
-    const module = config[execName];
+  if (config === undefined) return;
+
+  log.debug("Config: ", config);
+
+  for (const executable in config) {
+    const module = config[executable];
 
     if (
-      requestedModules.length && requestedModules.indexOf(execName) === -1
+      requestedModules.length && requestedModules.indexOf(executable) === -1
     ) {
       continue;
     }
@@ -58,68 +46,76 @@ async function updateGlobalModules(
     // Get latest release
     const latestRelease = await getLatestVersion(
       module.registry,
-      module.moduleName,
+      module.name,
       module.owner,
     );
 
     // Basic safety net
     if (!module.version || !semver.valid(module.version)) {
+      log.debug("Invalid version", module.name, module.version);
       continue;
     }
 
     if (!latestRelease || !semver.valid(latestRelease)) {
-      console.log(
-        yellow(
-          `Warning: could not find the latest version of ${module.moduleName}.`,
-        ),
-      );
+      log.warning(`Could not find the latest version of ${module.name}.`);
       continue;
     }
 
     if (semver.eq(module.version, latestRelease)) {
+      log.debug(module.name, "is already up to date!");
       continue;
     }
 
     // Update the dependency
-    const indexOfURL = module.args.findIndex((arg: string) =>
+    const indexOfURL = module.arguments.findIndex((arg: string) =>
       arg.match(/https:\/\//)
     );
 
-    const newArgs = module.args.slice();
+    const newArgs = module.arguments.slice();
     newArgs[indexOfURL] = newArgs[indexOfURL].replace(
       versionSubstitute,
       latestRelease,
     );
+
+    const options = newArgs.filter((x) => x !== "-f");
 
     const installation = Deno.run({
       cmd: [
         "deno",
         "install",
         "-f",
-        ...newArgs,
+        ...options,
       ],
     });
 
     const status = await installation.status();
     installation.close();
 
+    const stdout = new TextDecoder("utf-8").decode(await installation.output());
+    const stderr = new TextDecoder("utf-8").decode(
+      await installation.stderrOutput(),
+    );
+
+    log.debug("stdout: ", stdout);
+    log.debug("stderr: ", stderr);
+
     if (status.success === false || status.code !== 0) {
-      throw new Error(`Update failed for ${execName}`);
+      log.error(`Update failed for ${executable}`);
+      continue;
     }
 
     module.version = latestRelease;
 
-    console.log(
-      `${execName} (${module.moduleName}) ${yellow(module.version)} → ${
+    log.info(
+      `${executable} (${module.name}) ${yellow(module.version)} -> ${
         green(latestRelease)
       }`,
     );
   }
 
-  await writeGlobalModuleConfig(configPath, config);
+  await writeGlobalModuleConfig(config);
 
-  console.info("\nUpdated your dependencies!");
-  Deno.exit();
+  log.info("Updated your dependencies!");
 }
 
 async function updateLocalModules(
@@ -130,12 +126,12 @@ async function updateLocalModules(
   let pathToDepFile = "";
   try {
     pathToDepFile = Deno.realPathSync("./" + options.file);
-  } catch (err) {
+  } catch {
     // Dependency file doesn't exist
-    console.error(
-      "No dependency file was found in your current working directory. Exiting...",
+    log.warning(
+      "No dependency file was found in your current working directory.",
     );
-    Deno.exit(1);
+    return;
   }
 
   /** Creates an array of strings from each line inside the dependency file.
@@ -146,64 +142,69 @@ async function updateLocalModules(
     .filter((line) => line.indexOf("https://") > 0);
 
   if (dependencyFileContents.length === 0) {
-    console.warn(
-      "Your dependency file does not contain any imported modules. Exiting...",
+    log.warning(
+      "Your dependency file does not contain any imported modules.",
     );
-    Deno.exit(1);
+    return;
   }
+
+  log.debug("Dependency file contents: ", dependencyFileContents);
 
   /** For each import line in the users dependency file, collate the data ready to be re-written
    * if it can be updated.
    * Skips the dependency if it is not versioned (no need to try to update it) */
   const dependenciesToUpdate: Array<ModuleToUpdate> = [];
   for (const line of dependencyFileContents) {
-    let { moduleName, versionURL, registry, owner, version } = analyzeURL(line);
+    let { name, parsedURL, registry, owner, version } = parseURL(line);
 
     // TODO(@qu4k): edge case: dependency isn't a module, for example: from
-    //  "https://deno.land/std@version/version.ts";, will return -> "version.ts";
+    //  "https://x.nest.land/std@version/version.ts";, will return -> "version.ts";
     // Issue: "Mandarine.TS" is a module while "version.ts" isn't
 
     // Now we have the name, ignore dependency if requested dependencies are set and it isn't one requested
     if (
-      requestedModules.length && requestedModules.indexOf(moduleName) === -1
+      requestedModules.length && requestedModules.indexOf(name) === -1
     ) {
+      log.debug(name, "was not requested.");
       continue;
     }
 
     // Get latest release
-    const latestRelease = await getLatestVersion(registry, moduleName, owner);
+    const latestRelease = await getLatestVersion(registry, name, owner);
 
     // Basic safety net
 
     if (!version || !semver.valid(version)) {
+      log.debug("Invalid version", name, version);
       continue;
     }
 
     if (!latestRelease || !semver.valid(latestRelease)) {
-      console.log(
-        yellow(`Warning: could not find the latest version of ${moduleName}.`),
+      log.warning(
+        `Warning: could not find the latest version of ${name}.`,
       );
       continue;
     }
 
     if (semver.eq(version, latestRelease)) {
+      log.debug(name, "is already up to date!");
       continue;
     }
 
     // Collate the dependency
     dependenciesToUpdate.push({
       line,
-      versionURL,
+      versionURL: parsedURL,
       latestRelease,
     });
 
-    console.log(`${moduleName} ${yellow(version)} → ${green(latestRelease)}`);
+    log.info(`${name} ${yellow(version)} → ${green(latestRelease)}`);
   }
 
   // If no modules are needed to update then exit
   if (dependenciesToUpdate.length === 0) {
-    console.info("\nYour dependencies are already up to date!");
-    Deno.exit();
+    log.info("Your dependencies are already up to date!");
+    return;
   }
 
   // Loop through the users dependency file, replacing the imported version with the latest release for each dep
@@ -221,13 +222,32 @@ async function updateLocalModules(
     new TextEncoder().encode(dependencyFile),
   );
 
-  console.info("\nUpdated your dependencies!");
-  Deno.exit();
+  log.info("Updated your dependencies!");
 }
 
-type Arguments = [string[]];
-
-interface Options {
+interface Options extends DefaultOptions {
   file: string;
   global: boolean;
 }
+type Arguments = [string[]];
+
+export const update = new Command<Options, Arguments>()
+  .description("Update your dependencies")
+  .arguments("[deps...:string]")
+  .option(
+    "--file <file:string>",
+    "Set dependency filename",
+    { default: "deps.ts" },
+  )
+  .option("-g, --global", "Update global modules")
+  .action(async (options: Options, requestedModules: string[] = []) => {
+    await setupLog(options.debug);
+
+    log.debug("Options: ", options);
+
+    if (options.global) {
+      await updateGlobalModules(options, requestedModules);
+    } else {
+      await updateLocalModules(options, requestedModules);
+    }
+  });

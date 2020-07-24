@@ -2,7 +2,7 @@
 <p align="center">
   <a href="https://github.com/nestdotland/nest.land">
     <img
-       src="https://github.com/nestdotland/nest.land/raw/master/web/src/assets/nest_light.png"
+       src="https://raw.githubusercontent.com/nestdotland/nest.land/master/public/images/nest.land/logo_light.svg"
        alt="logo"
        width="110"
     >
@@ -10,7 +10,7 @@
 
   <h3 align="center">Eggs CLI</h3>
 <p align="center">
-    The CLI used to publish and update packages in nest.land.
+    The CLI used to publish and update modules in nest.land.
   </p>
   <p align="center">
     <a href="https://nest.land/package/eggs">
@@ -40,7 +40,7 @@
 **Note: You need to upgrade to Deno v1.2.0 or newer in order to use our CLI.**
 
 ```shell script
-deno install -A -f --unstable -n eggs https://x.nest.land/eggs@0.1.10/mod.ts
+deno install -A -f --unstable -n eggs https://x.nest.land/eggs@0.2.0/mod.ts
 ```
 
 For more information, see the [documentation](https://docs.nest.land/).
