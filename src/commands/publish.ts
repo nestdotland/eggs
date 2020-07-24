@@ -348,7 +348,7 @@ export const publish = new Command<Options, []>()
   )
   .option(
     "--version <value:version>",
-    "Update to the given version.",
+    "Set the version.",
     { conflicts: ["bump"] },
   )
   .action(publishCommand);
