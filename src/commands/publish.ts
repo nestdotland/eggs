@@ -1,18 +1,22 @@
 import {
   base64,
-  bold,
+  basename,
   Command,
+  Confirm,
   existsSync,
   expandGlobSync,
-  green,
+  Input,
+  IFlagArgument,
+  IFlagOptions,
   italic,
+  List,
   log,
   relative,
   resolve,
   semver,
+  Select,
+  Toggle,
   walkSync,
-  IFlagArgument,
-  IFlagOptions,
 } from "../../deps.ts";
 import { DefaultOptions } from "../commands.ts";
 import { ENDPOINT } from "../api/common.ts";
@@ -21,7 +25,7 @@ import { postPieces, postPublishModule, PublishModule } from "../api/post.ts";
 
 import { Config, ensureCompleteConfig } from "../context/config.ts";
 import { gatherContext } from "../context/context.ts";
-import { Ignore } from "../context/ignore.ts";
+import { Ignore, parseIgnore } from "../context/ignore.ts";
 
 import { getAPIKey } from "../keyfile.ts";
 import { version } from "../version.ts";
@@ -174,7 +178,125 @@ function checkEntry(config: Config, matched: File[]) {
   }
 }
 
-async function publishCommand(options: Options) {
+async function interactiveMode(
+  options: Options,
+  module?: string,
+) {
+  const name = module || await Input.prompt({
+    message: "Module name:",
+    default: basename(Deno.cwd()),
+    minLength: 2,
+    maxLength: 40,
+  });
+  const entry = await Input.prompt({
+    message: "Entry file:",
+    default: options.entry,
+    minLength: 4,
+    maxLength: 40,
+  });
+  const description = options.description || await Input.prompt({
+    message: "Module description:",
+    maxLength: 4294967295,
+  });
+  const repository = options.repository || await Input.prompt({
+    message: "Module repository:",
+    maxLength: 4294967295,
+    validate: validateURL,
+  });
+  let bump: semver.ReleaseType | undefined;
+  let version: string | undefined;
+  if (options.version || options.bump) {
+    bump = options.bump;
+    version = options.version;
+  } else {
+    const semver = await Toggle.prompt({
+      message: "Semver increment or version",
+      active: "Semver",
+      inactive: "version",
+      keys: {
+        active: ["right", "6", "r"],
+        inactive: ["left", "4", "l"],
+      },
+    });
+    if (semver) {
+      bump = await Select.prompt({
+        message: "Semver increment:",
+        options: [
+          { name: "patch", value: "patch" },
+          { name: "minor", value: "minor" },
+          { name: "major", value: "major" },
+          Select.separator("--------"),
+          { name: "pre", value: "pre" },
+          { name: "prepatch", value: "prepatch" },
+          { name: "preminor", value: "preminor" },
+          { name: "premajor", value: "premajor" },
+          { name: "prerelease", value: "prerelease" },
+        ],
+        keys: {
+          previous: ["up", "8", "u"],
+          next: ["down", "2", "d"],
+        },
+      }) as semver.ReleaseType;
+    } else {
+      version = await Input.prompt({
+        message: "Module version (semver):",
+        maxLength: 4294967295,
+        validate: validateVersion,
+      });
+    }
+  }
+  const stable = !options.unstable ||
+    await Confirm.prompt("Is your module stable?");
+  const unlisted = options.unlisted ||
+    await Confirm.prompt("Hide module from gallery?");
+  const fmt = options.fmt ||
+    await Confirm.prompt("Format code before publishing?");
+  let files: string[] | undefined;
+  let ignoredFiles: string[] | undefined;
+  if (options.files || options.ignore) {
+    files = options.files;
+    ignoredFiles = options.ignore;
+  } else {
+    const select = await Toggle.prompt({
+      message: "File upload type",
+      active: "select",
+      inactive: "ignore",
+      keys: {
+        active: ["right", "6", "r"],
+        inactive: ["left", "4", "l"],
+      },
+    });
+    if (select) {
+      files = await List.prompt({
+        message:
+          "Enter the files and relative directories that nest.land will publish separated by a comma.",
+      });
+    } else {
+      ignoredFiles = await List.prompt({
+        message:
+          "Enter the files and relative directories that nest.land will not publish separated by a comma.",
+      });
+    }
+  }
+  const config: Config = {
+    name,
+    entry,
+    description,
+    repository,
+    version,
+    stable,
+    unlisted,
+    fmt,
+    files,
+  };
+  const ignore: Ignore = ignoredFiles ? parseIgnore(ignoredFiles?.join()) : {
+    accepts: [],
+    denies: [],
+  };
+  return [config, ignore]
+}
+
+async function publishCommand(options: Options, name: string) {
   await setupLog(options.debug);
 
   let apiKey = await getAPIKey();
@@ -187,7 +309,39 @@ async function publishCommand(options: Options) {
     return;
   }
 
-  const [egg, ignore] = await getContext();
+  if (options.interactive) {
+    await interactiveMode(options);
+  }
+
+  /*   const {
+    entry,
+    description,
+    repository,
+    version,
+    unstable,
+    unlisted,
+    fmt,
+    files,
+  } = options;
+
+  let egg: Config | undefined;
+  let ignore: Ignore | undefined;
+
+  if (name) {
+    egg = {
+      name,
+      entry,
+      description,
+      repository,
+      version,
+      stable: !unstable,
+      unlisted,
+      fmt,
+      files,
+    };
+  } else {
+    [egg, ignore] = await getContext();
+  }
 
   if (egg === undefined || ignore === undefined) return;
 
@@ -264,7 +418,7 @@ async function publishCommand(options: Options) {
 
   log.info(`Successfully published ${bold(egg.name)}!`);
 
-  const files = Object.entries(pieceResponse.files).reduce(
+  const ffiles = Object.entries(pieceResponse.files).reduce(
     (previous, current) => {
       return `${previous}\n        - ${current[0]} -> ${
         bold(`${ENDPOINT}/${egg.name}@${egg.version}${current[0]}`)
@@ -272,9 +426,7 @@ async function publishCommand(options: Options) {
     },
     "Files uploaded: ",
   );
-  log.info(files);
-
-  console.log();
+  log.info(ffiles, "\n");
   log.info(
     green(
       "You can now find your package on our registry at " +
@@ -287,7 +439,7 @@ async function publishCommand(options: Options) {
         `[![nest badge](https://nest.land/badge.svg)](https://nest.land/package/${egg.name})`,
       )
     }`,
-  );
+  ); */
 }
 
 const releases = [
@@ -316,6 +468,10 @@ function releaseType(
   return value;
 }
 
+function validateVersion(value: string): boolean {
+  return !!semver.valid(value);
+}
+
 function versionType(
   option: IFlagOptions,
   arg: IFlagArgument,
@@ -329,12 +485,18 @@ function versionType(
   return value;
 }
 
+function validateURL(value: string): boolean {
+  const urlRegex =
+    /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()!@:%_\+.~#?&\/\/=]*)/;
+  return value === "" || !!value.match(urlRegex);
+}
 function urlType(
   option: IFlagOptions,
   arg: IFlagArgument,
   value: string,
 ): string {
-  const urlRegex = /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()!@:%_\+.~#?&\/\/=]*)/
+  const urlRegex =
+    /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()!@:%_\+.~#?&\/\/=]*)/;
   if (!value.match(urlRegex)) {
     throw new Error(
       `Option --${option.name} must be a valid url but got: ${value}.`,
@@ -344,9 +506,18 @@ function urlType(
 }
 
 interface Options extends DefaultOptions {
-  dry: boolean;
-  bump: semver.ReleaseType;
-  version: string;
+  dry?: boolean;
+  interactive?: boolean;
+  description?: string;
+  bump?: semver.ReleaseType;
+  version?: string;
+  entry: string;
+  unstable?: boolean;
+  unlisted?: boolean;
+  fmt?: boolean;
+  repository?: string;
+  files?: string[];
+  ignore?: string[];
 }
 type Arguments = [string];
 
@@ -358,11 +529,10 @@ export const publish = new Command<Options, Arguments>()
   .type("url", urlType)
   .arguments("[name: string]")
   .option("-d, --dry", "Do a dry run.")
-  .option("--entry", "The main file of your project.", { default: "mod.ts" })
-  .option("--description", "A description of your module that will appear on the gallery.")
+  .option("-i, --interactive", "Interactive UI mode.")
   .option(
-    "--repository <value:url>",
-    "A link to your repository.",
+    "--description <value:string>",
+    "A description of your module that will appear on the gallery.",
   )
   .option(
     "--bump <value:release>",
@@ -374,6 +544,11 @@ export const publish = new Command<Options, Arguments>()
     "Set the version.",
     { conflicts: ["bump"] },
   )
+  .option(
+    "--entry <value:string>",
+    "The main file of your project.",
+    { default: "mod.ts" },
+  )
   .option("--unstable", "Flag this version as unstable.")
   .option("--unlisted", "Hide this module/version on the gallery.")
   .option(
@@ -381,8 +556,21 @@ export const publish = new Command<Options, Arguments>()
     "Automatically format your code before publishing to the blockchain.",
   )
   .option(
-    "--files <value...:string>",
-    "All the files that should be uploaded to nest.land. Supports file globbing.",
+    "--repository <value:url>",
+    "A link to your repository.",
   )
-  .action((options) => {console.log(options)});
-// .action(publishCommand);
+  .option(
+    "--files <values...:string>",
+    "All the files that should be uploaded to nest.land. Supports file globbing.",
+    { conflicts: ["ignore"] },
+  )
+  .option(
+    "--ignore <values...:string>",
+    "All the files that should be ignored when uploading to nest.land. Supports file globbing.",
+    { conflicts: ["files"] },
+  )
+  /* .action((options, name) => {
+    console.log(options);
+    console.log(name);
+  }); */
+  .action(publishCommand);
