@@ -1,4 +1,4 @@
-export {
+export { 
   join,
   extname,
   relative,
@@ -92,3 +92,6 @@ export {
 } from "https://x.nest.land/hatcher@0.7.3/lib/registries.ts";
 
 export { Nest } from "https://x.nest.land/hatcher@0.7.3/lib/registries/nest.ts";
+
+// TODO(@divy-work): Change import to nest.land when published.
+export { Yolk, publishModule, Module, Upload } from "https://raw.github.com/nestdotland/yolk/feat/api-change/mod.ts";

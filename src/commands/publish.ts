@@ -13,6 +13,8 @@ import {
   walkSync,
   IFlagArgument,
   IFlagOptions,
+  Yolk,
+  publishModule,
 } from "../../deps.ts";
 import { DefaultOptions } from "../commands.ts";
 import { ENDPOINT } from "../api/common.ts";
@@ -174,6 +176,7 @@ function checkEntry(config: Config, matched: File[]) {
   }
 }
 
+// TODO(divy, john): use yolk.
 async function publishCommand(options: Options) {
   await setupLog(options.debug);
 
@@ -219,7 +222,7 @@ async function publishCommand(options: Options) {
 
   const nv = `${egg.name}@${egg.version}`;
 
-  if (existing && existing.packageUploadNames.indexOf(nv) !== -1) {
+  if (existing && existing.uploads?.indexOf({ name: nv }) !== -1) {
     log.error(
       "This version was already published. Please increment the version in your configuration.",
     );
