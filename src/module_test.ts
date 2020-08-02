@@ -10,10 +10,10 @@ Deno.test({
       description: "The CLI used to publish and update packages in nest.land.",
       latestVersion: undefined,
       latestStableVersion: "eggs@0.1.8",
-      packageUploadNames: [
-        "eggs@0.1.7",
-        "eggs@0.1.8",
-        "eggs@0.1.9-rc1",
+      uploads: [
+        { name: "eggs@0.1.7" },
+        { name: "eggs@0.1.8" },
+        { name: "eggs@0.1.9-rc1" },
       ],
     });
 
@@ -23,9 +23,9 @@ Deno.test({
       description: "A module for generating mazes",
       latestVersion: "maze_generator@0.1.0-alpha.0",
       latestStableVersion: undefined,
-      packageUploadNames: [
-        "maze_generator@0.0.8",
-        "maze_generator@0.1.0-alpha.0",
+      uploads: [
+        { name: "maze_generator@0.0.8" },
+        { name: "maze_generator@0.1.0-alpha.0" },
       ],
     });
 

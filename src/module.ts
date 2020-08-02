@@ -7,7 +7,7 @@ export class Module {
   latestVersion?: string | null;
   latestStableVersion?: string | null;
   uploads?: YolkUpload[];
-  
+
   constructor(module: YolkModule) {
     this.name = module.name;
     this.owner = module.owner;
@@ -23,15 +23,16 @@ export class Module {
     }
 
     let latest: string | undefined;
-    if(!this.uploads) return "0.0.0";
+    if (!this.uploads) return "0.0.0";
     if (this.uploads.length > 0) {
       function cmp(a: YolkUpload, b: YolkUpload): number {
-        if (!a.version || !b.version) return 1;
+        if (!a.version || !b.version) return 0;
         return -(semver.compare(vn(a.version), vn(b.version)));
       }
 
       const sorted = this.uploads.sort(cmp);
-      latest = vn(sorted[0].version || "0.0.0");
+      if (sorted[0].name) latest = vn(sorted[0].name);
+      console.log(latest);
     }
 
     if (!latest && this.latestVersion) {
