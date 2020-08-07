@@ -234,6 +234,7 @@ async function publishCommand(options: Options) {
     repository: egg.repository,
     version: egg.version,
     unlisted: egg.unlisted,
+    entry: egg.entry,
     upload: true,
     latest: isLatest,
   };
