@@ -256,27 +256,16 @@ async function publishCommand(options: Options) {
     return;
   }
 
-  const uploadResponse: any = await postPublishModule(module, matchedContent);
-  console.log(uploadResponse);
-  if (uploadResponse.code !== 200) {
-    // TODO(@qu4k): provide better error reporting
-    throw new Error(
-      "Something broke when publishing... Status code " + uploadResponse.code,
-    );
-  }
+  await postPublishModule(module, matchedContent);
 
   log.info(`Successfully published ${bold(egg.name)}!`);
-
-  const files = Object.entries(matchedContent.files).reduce(
-    (previous, current) => {
-      return `${previous}\n        - ${current[0]} -> ${
-        bold(
-          `${ENDPOINT}/${egg.name}@${egg.version}${current[0]}`,
-        )
-      }`;
-    },
-    "Files uploaded: ",
-  );
+  const files = Object.entries(matchedContent).reduce((previous, current) => {
+    return `${previous}\n        - ${current[0]} -> ${
+      bold(
+        `${"https://x.nest.land"}/${egg.name}@${egg.version}${current[0]}`,
+      )
+    }`;
+  }, "Files uploaded: ");
   log.info(files);
 
   console.log();

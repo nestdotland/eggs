@@ -14,7 +14,7 @@ const yolk = new Yolk(ENDPOINT);
 export async function fetchModule(name: string): Promise<Module | undefined> {
   let module = await yolk.moduleByName(name);
   if (!module.data) return undefined;
-  // This will be fixed in yolk
+  // This will be fixed in yolk.
   // @ts-ignore
   return new Module(module.data.module);
 }
