@@ -29,6 +29,8 @@ import { getAPIKey } from "../keyfile.ts";
 import { version } from "../version.ts";
 import { setupLog, highlight } from "../log.ts";
 
+const yolk = new Yolk("http://localhost:8080");
+
 interface File {
   fullPath: string;
   path: string;

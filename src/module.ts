@@ -26,13 +26,15 @@ export class Module {
     if (!this.uploads) return "0.0.0";
     if (this.uploads.length > 0) {
       function cmp(a: YolkUpload, b: YolkUpload): number {
-        if (!a.version || !b.version) return 0;
-        return -(semver.compare(vn(a.version), vn(b.version)));
+        if (!a.name?.split("@")[1] || !b.name?.split("@")[1]) return 0;
+        return -(semver.compare(
+          a.name.split("@")[1],
+          b.name.split("@")[1],
+        ));
       }
 
       const sorted = this.uploads.sort(cmp);
       if (sorted[0].name) latest = vn(sorted[0].name);
-      console.log(latest);
     }
 
     if (!latest && this.latestVersion) {
