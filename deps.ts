@@ -96,7 +96,8 @@ export { Nest } from "https://x.nest.land/hatcher@0.7.3/lib/registries/nest.ts";
 // TODO(@divy-work): Change import to nest.land when published.
 export {
   Yolk,
-  publishModule,
+  publish,
+  PublishModule,
   Module,
   Upload,
-} from "https://raw.github.com/nestdotland/yolk/master/mod.ts";
+} from "https://raw.github.com/nestdotland/yolk/x/mod.ts";

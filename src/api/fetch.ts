@@ -1,27 +1,20 @@
 import { Module } from "../module.ts";
-import { apiFetch, ENDPOINT } from "./common.ts";
+import { ENDPOINT } from "./common.ts";
 import { Yolk, Module as YolkModule } from "../../deps.ts";
 
 /**
  * Create a new Yolk instance.
  */
-// TODO(@divy-work): change url when deployed.
-const yolk = new Yolk("http://localhost:8080");
+const yolk = new Yolk(ENDPOINT);
 
-export async function fetchResource<T>(query: string): Promise<T | undefined> {
-  // TODO(@qu4k): add test resource
-  try {
-    const response = await apiFetch(`${ENDPOINT}${query}`);
-    if (!response || !response.ok) return undefined;
-    const value = await response.json();
-    return value as T;
-  } catch {
-    return undefined;
-  }
-}
-
+/**
+ * Fetch a module by its name
+ * @param name Name of the module to retrieve
+ */
 export async function fetchModule(name: string): Promise<Module | undefined> {
   let module = await yolk.moduleByName(name);
   if (!module.data) return undefined;
-  return new Module(module.data[0]);
+  // This will be fixed in yolk
+  // @ts-ignore
+  return new Module(module.data.module);
 }
