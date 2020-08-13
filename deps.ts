@@ -99,4 +99,4 @@ export {
   publishModule,
   Module,
   Upload,
-} from "https://raw.github.com/nestdotland/yolk/feat/api-change/mod.ts";
+} from "https://raw.github.com/nestdotland/yolk/master/mod.ts";
