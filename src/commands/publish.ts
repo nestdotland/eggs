@@ -80,14 +80,14 @@ async function checkREADME(config: Config) {
     readme = readme.toLowerCase();
     if (readme.includes(`://deno.land/x/${name}`)) {
       log.warning(
-        `Your readme contains old import URLs from your project using ${
-          highlight(`deno.land/x/${name}`)
-        }.`,
+        `Your readme contains old import URLs from your project using ${highlight(
+          `deno.land/x/${name}`,
+        )}.`,
       );
       log.warning(
-        `You can change these to ${
-          highlight("https://x.nest.land/${name}@VERSION")
-        }`,
+        `You can change these to ${highlight(
+          "https://x.nest.land/${name}@VERSION",
+        )}`,
       );
     }
   } catch {
@@ -116,12 +116,11 @@ function matchFiles(config: Config, ignore: Ignore): File[] {
           root: Deno.cwd(),
           extended: true,
         }),
-      ]
-        .map((file) => ({
-          fullPath: file.path.replace(/\\/g, "/"),
-          path: "/" + relative(Deno.cwd(), file.path).replace(/\\/g, "/"),
-          lstat: Deno.lstatSync(file.path),
-        }));
+      ].map(file => ({
+        fullPath: file.path.replace(/\\/g, "/"),
+        path: "/" + relative(Deno.cwd(), file.path).replace(/\\/g, "/"),
+        lstat: Deno.lstatSync(file.path),
+      }));
       matched.push(...matches);
     }
   } else {
@@ -138,10 +137,10 @@ function matchFiles(config: Config, ignore: Ignore): File[] {
     }
   }
 
-  matched = matched.filter((file) => file.lstat.isFile);
-  matched = matched.filter((file) => {
-    if (ignore.denies.some((rgx) => rgx.test(file.path.substr(1)))) {
-      return ignore.accepts.some((rgx) => rgx.test(file.path.substr(1)));
+  matched = matched.filter(file => file.lstat.isFile);
+  matched = matched.filter(file => {
+    if (ignore.denies.some(rgx => rgx.test(file.path.substr(1)))) {
+      return ignore.accepts.some(rgx => rgx.test(file.path.substr(1)));
     }
     return true;
   });
@@ -155,25 +154,22 @@ function readFiles(matched: File[]): { [x: string]: string } {
     return base64.fromUint8Array(data);
   }
 
-  return matched.map((el) =>
-    [el, readFileBtoa(el.fullPath)] as [typeof el, string]
-  ).reduce((p, c) => {
-    p[c[0].path] = c[1];
-    return p;
-  }, {} as { [x: string]: string });
+  return matched
+    .map(el => [el, readFileBtoa(el.fullPath)] as [typeof el, string])
+    .reduce((p, c) => {
+      p[c[0].path] = c[1];
+      return p;
+    }, {} as { [x: string]: string });
 }
 
 function checkEntry(config: Config, matched: File[]) {
   if (config.entry) {
-    config.entry = config.entry?.replace(/^[.]/, "").replace(
-      /^[^/]/,
-      (s: string) => `/${s}`,
-    );
+    config.entry = config.entry
+      ?.replace(/^[.]/, "")
+      .replace(/^[^/]/, (s: string) => `/${s}`);
   }
-  if (!matched.find((e) => e.path === config.entry || "/mod.ts")) {
-    log.error(
-      `No ${config.entry || "/mod.ts"} found. This file is required.`,
-    );
+  if (!matched.find(e => e.path === config.entry || "/mod.ts")) {
+    log.error(`No ${config.entry || "/mod.ts"} found. This file is required.`);
     return true;
   }
 }
@@ -185,9 +181,9 @@ async function publishCommand(options: Options) {
   let apiKey = await getAPIKey();
   if (!apiKey) {
     log.error(
-      `No API Key file found. You can add one using eggs ${
-        italic("link <api key>")
-      }. You can create one on ${highlight("https://nest.land")}`,
+      `No API Key file found. You can add one using eggs ${italic(
+        "link <api key>",
+      )}. You can create one on ${highlight("https://nest.land")}`,
     );
     return;
   }
@@ -248,7 +244,7 @@ async function publishCommand(options: Options) {
   if (options.dry) {
     log.info(`This was a dry run, the resulting module is:`, module);
     log.info("The matched file were:");
-    matched.forEach((file) => {
+    matched.forEach(file => {
       log.info(` - ${file.path}`);
     });
     return;
@@ -271,9 +267,9 @@ async function publishCommand(options: Options) {
 
   const files = Object.entries(pieceResponse.files).reduce(
     (previous, current) => {
-      return `${previous}\n        - ${current[0]} -> ${
-        bold(`${ENDPOINT}/${egg.name}@${egg.version}${current[0]}`)
-      }`;
+      return `${previous}\n        - ${current[0]} -> ${bold(
+        `${ENDPOINT}/${egg.name}@${egg.version}${current[0]}`,
+      )}`;
     },
     "Files uploaded: ",
   );
@@ -287,11 +283,9 @@ async function publishCommand(options: Options) {
     ),
   );
   log.info(
-    `Add this badge to your README to let everyone know:\n\n ${
-      highlight(
-        `[![nest badge](https://nest.land/badge.svg)](https://nest.land/package/${egg.name})`,
-      )
-    }`,
+    `Add this badge to your README to let everyone know:\n\n ${highlight(
+      `[![nest badge](https://nest.land/badge.svg)](https://nest.land/package/${egg.name})`,
+    )}`,
   );
 }
 
@@ -311,11 +305,13 @@ function releaseType(
   arg: IFlagArgument,
   value: string,
 ): string {
-  if (!(releases.includes(value))) {
+  if (!releases.includes(value)) {
     throw new Error(
-      `Option --${option.name} must be a valid release type but got: ${value}.\nAccepted values are ${
-        releases.join(", ")
-      }.`,
+      `Option --${
+        option.name
+      } must be a valid release type but got: ${value}.\nAccepted values are ${releases.join(
+        ", ",
+      )}.`,
     );
   }
   return value;
@@ -351,9 +347,7 @@ export const publish = new Command<Options, []>()
     "Increment the version by the release type.",
     { conflicts: ["version"] },
   )
-  .option(
-    "--version <value:version>",
-    "Set the version.",
-    { conflicts: ["bump"] },
-  )
+  .option("--version <value:version>", "Set the version.", {
+    conflicts: ["bump"],
+  })
   .action(publishCommand);
