@@ -200,7 +200,7 @@ async function publishCommand(options: Options) {
     );
     return;
   }
-  let wallet = (await getWallet(options.wallet)) || null;
+  let wallet = options.wallet ? await getWallet(options.wallet) : null;
   const [egg, ignore] = await getContext();
 
   if (egg === undefined || ignore === undefined) return;
