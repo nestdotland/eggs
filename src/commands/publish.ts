@@ -175,6 +175,8 @@ function checkEntry(config: Config, matched: File[]) {
   }
 }
 
+async function getWallet() {}
+
 async function publishCommand(options: Options) {
   await setupLog(options.debug);
 
@@ -238,7 +240,7 @@ async function publishCommand(options: Options) {
     version: egg.version,
     unlisted: egg.unlisted || false,
     upload: true,
-    wallet: null,
+    wallet: options.wallet || null,
     locked: false,
     malicious: false,
     apiKey,
@@ -325,10 +327,24 @@ function versionType(
   return value;
 }
 
+function walletType(
+  option: IFlagOptions,
+  arg: IFlagArgument,
+  value: string,
+): string {
+  if (!value.endsWith(".json")) {
+    throw new Error(
+      `Option --${option.name} must be a valid keyfile but got: ${value}.\nKeyfile must end with .json`,
+    );
+  }
+  return value;
+}
+
 interface Options extends DefaultOptions {
   dry: boolean;
   bump: semver.ReleaseType;
   version: string;
+  wallet: string;
 }
 
 export const publish = new Command<Options, []>()
@@ -336,6 +352,7 @@ export const publish = new Command<Options, []>()
   .version(version)
   .type("release", releaseType)
   .type("version", versionType)
+  .type("wallet", walletType)
   .option("-d, --dry", "Do a dry run")
   .option(
     "--bump <value:release>",
@@ -345,4 +362,8 @@ export const publish = new Command<Options, []>()
   .option("--version <value:version>", "Set the version.", {
     conflicts: ["bump"],
   })
+  .option(
+    "-w, --wallet <value:wallet>",
+    "Use an arweave wallet for the transaction",
+  )
   .action(publishCommand);
