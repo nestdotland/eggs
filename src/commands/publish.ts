@@ -14,6 +14,7 @@ import {
   IFlagArgument,
   IFlagOptions,
   PublishModule,
+  JWKInterface,
 } from "../../deps.ts";
 import { DefaultOptions } from "../commands.ts";
 import { ENDPOINT } from "../api/common.ts";
@@ -175,11 +176,10 @@ function checkEntry(config: Config, matched: File[]) {
   }
 }
 
-// TODO(@divy-work): return the yolk jwk interface
-async function getWallet(walletLoc: string): Promise<object> {
+async function getWallet(walletLoc: string): Promise<JWKInterface> {
   const wallet = await Deno.readTextFile(walletLoc);
   try {
-    let jwk = JSON.parse(wallet);
+    let jwk: JWKInterface = JSON.parse(wallet);
     return jwk;
   } catch (error) {
     throw new Error(`${walletLoc} is not a valid Arweave keyfile.`);
