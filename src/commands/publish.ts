@@ -175,7 +175,16 @@ function checkEntry(config: Config, matched: File[]) {
   }
 }
 
-async function getWallet() {}
+// TODO(@divy-work): return the yolk jwk interface
+async function getWallet(walletLoc: string): Promise<object> {
+  const wallet = await Deno.readTextFile(walletLoc);
+  try {
+    let jwk = JSON.parse(wallet);
+    return jwk;
+  } catch (error) {
+    throw new Error(`${walletLoc} is not a valid Arweave keyfile.`);
+  }
+}
 
 async function publishCommand(options: Options) {
   await setupLog(options.debug);
@@ -191,7 +200,7 @@ async function publishCommand(options: Options) {
     );
     return;
   }
-
+  let wallet = (await getWallet(options.wallet)) || null;
   const [egg, ignore] = await getContext();
 
   if (egg === undefined || ignore === undefined) return;
@@ -240,7 +249,7 @@ async function publishCommand(options: Options) {
     version: egg.version,
     unlisted: egg.unlisted || false,
     upload: true,
-    wallet: options.wallet || null,
+    wallet: wallet,
     locked: false,
     malicious: false,
     apiKey,
@@ -336,6 +345,8 @@ function walletType(
     throw new Error(
       `Option --${option.name} must be a valid keyfile but got: ${value}.\nKeyfile must end with .json`,
     );
+  } else if (!existsSync(value)) {
+    throw new Error(`Given keyfile ${value} does not exist`);
   }
   return value;
 }
