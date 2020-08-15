@@ -16,6 +16,8 @@ import {
   errorOccurred,
 } from "./src/log.ts";
 
+const commands = { link, init, publish, update, install, upgrade };
+
 await setupLog();
 
 const eggs = new Command<DefaultOptions, []>()
@@ -60,7 +62,12 @@ try {
       /^(Unknown option:|Unknown command:|Option --|Missing value for option:|Missing argument\(s\):)/,
     )
   ) {
-    eggs.help();
+    const command = Deno.args[0] as keyof typeof commands;
+    if (command in commands) {
+      commands[command].help();
+    } else {
+      eggs.help();
+    }
     log.error(err.message);
   } else {
     await handleError(err);
