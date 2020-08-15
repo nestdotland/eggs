@@ -233,7 +233,10 @@ async function publishCommand(options: Options) {
 
   const nv = `${egg.name}@${egg.version}`;
 
-  if (existing && existing.uploads?.indexOf({ name: nv }) !== -1) {
+  if (
+    existing && existing.uploads &&
+    existing.uploads?.indexOf({ name: nv }) !== -1
+  ) {
     log.error(
       "This version was already published. Please increment the version in your configuration.",
     );
@@ -253,6 +256,8 @@ async function publishCommand(options: Options) {
     locked: false,
     malicious: false,
     apiKey,
+    latest: isLatest,
+    stable: egg.stable || true,
     entry: egg.entry || "/mod.ts",
   };
 

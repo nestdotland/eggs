@@ -100,4 +100,5 @@ export {
   PublishModule,
   Module,
   Upload,
+  JWKInterface
 } from "https://raw.github.com/nestdotland/yolk/x/mod.ts";
