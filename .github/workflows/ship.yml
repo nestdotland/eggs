@@ -1,9 +1,13 @@
 name: Ship
 
 on:
-  push:
-    branches: [master]
- 
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version"
+        required: true
+
+
 jobs:
   release:
     runs-on: ubuntu-latest
@@ -14,10 +18,10 @@ jobs:
       - name: Setup Deno
         uses: denolib/setup-deno@v2
 
-      - name: Publish eggs
+      - name: Publish module
         run: |
-          deno run -A --unstable mod.ts link ${{ secrets.NESTAPIKEY }}
-          deno run -A --unstable mod.ts publish
+          deno run -A --unstable https://x.nest.land/eggs@0.2.1/mod.ts link ${{ secrets.NESTAPIKEY }}
+          deno run -A --unstable https://x.nest.land/eggs@0.2.1/mod.ts publish --version ${{ github.event.inputs.version }}
 
       - name: Draft release
         uses: release-drafter/release-drafter@v5
