@@ -174,6 +174,10 @@ function checkEntry(config: Config, matched: File[]) {
   }
 }
 
+function isVersionStable(v: string) {
+  return !!((semver.major(v) === 0) || semver.prerelease(v));
+}
+
 async function publishCommand(options: Options) {
   await setupLog(options.debug);
 
@@ -236,6 +240,7 @@ async function publishCommand(options: Options) {
     unlisted: egg.unlisted,
     entry: egg.entry,
     upload: true,
+    stable: egg.stable || isVersionStable(egg.version),
     latest: isLatest,
   };
 
