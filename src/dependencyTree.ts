@@ -3,7 +3,7 @@ import { fromFileUrl, isAbsolute, resolve, tree } from "../deps.ts";
 const decoder = new TextDecoder("utf-8");
 
 export function fileURL(path: string, url: string = "") {
-  if (url.match(/file:\/\/\//) && (!isAbsolute(path))) {
+  if (url.match(/^file:\/\/\//) && (!isAbsolute(path))) {
     return new URL(path, url).href;
   }
   let resolvedPath = resolve(path).replace(/\\/g, "/");
@@ -20,17 +20,17 @@ export function fileURL(path: string, url: string = "") {
 }
 
 export function resolveURL(path: string, url: string = "") {
-  if (path.match(/https?:\/\//)) {
+  if (path.match(/^https?:\/\//)) {
     return path;
   }
-  if (url.match(/https?:\/\//)) {
+  if (url.match(/^https?:\/\//)) {
     return new URL(path, url).href;
   }
   return fileURL(path, url);
 }
 
 async function fetchData(url: string) {
-  if (url.match(/https?:\/\//)) {
+  if (url.match(/^https?:\/\//)) {
     const data = await fetch(url);
     return data.text();
   }

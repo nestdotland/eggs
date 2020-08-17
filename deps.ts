@@ -29,19 +29,7 @@ export {
 
 export { BaseHandler } from "https://x.nest.land/std@0.61.0/log/handlers.ts";
 
-export {
-  blue,
-  bold,
-  cyan,
-  gray,
-  green,
-  red,
-  reset,
-  setColorEnabled,
-  italic,
-  underline,
-  yellow,
-} from "https://x.nest.land/std@0.61.0/fmt/colors.ts";
+export * from "https://x.nest.land/std@0.61.0/fmt/colors.ts";
 
 export {
   assertEquals,
