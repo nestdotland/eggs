@@ -1,10 +1,10 @@
-import { fromFileUrl, resolve, tree } from "../deps.ts";
+import { fromFileUrl, isAbsolute, resolve, tree } from "../deps.ts";
 
 const decoder = new TextDecoder("utf-8");
 
 export function fileURL(path: string, url: string = "") {
-  if (url.match(/file:\/\/\//))  {
-    return new URL(path, url).href
+  if (url.match(/file:\/\/\//) && (!isAbsolute(path))) {
+    return new URL(path, url).href;
   }
   let resolvedPath = resolve(path).replace(/\\/g, "/");
 
@@ -19,12 +19,12 @@ export function fileURL(path: string, url: string = "") {
   );
 }
 
-export function toURL(path: string, url: string = "") {
+export function resolveURL(path: string, url: string = "") {
   if (path.match(/https?:\/\//)) {
     return path;
-  } 
+  }
   if (url.match(/https?:\/\//)) {
-    return new URL(path, url).href
+    return new URL(path, url).href;
   }
   return fileURL(path, url);
 }
@@ -38,39 +38,54 @@ async function fetchData(url: string) {
   return decoder.decode(data);
 }
 
-export type DependencyTree = Map<string, DependencyTree>;
-
-let j = 0;
-
-const markedDependencies = new Set<string>()
+export type DependencyTree = Array<{
+  path: string;
+  imports: DependencyTree;
+}>;
 
 export async function dependencyTree(url: string): Promise<DependencyTree> {
-  if (url === "") return new Map();
-  const src = await fetchData(url);
+  const markedDependencies = new Set<string>();
 
-  const dependencies: string[] = tree("", src).map((dep: string) =>
-    toURL(dep, url)
-  );
+  async function dependencyTree_(url: string): Promise<DependencyTree> {
+    if (url === "") return [];
 
-  markedDependencies.add(url)
+    markedDependencies.add(url);
 
-  const resolvedDependencies = dependencies
-    .map((dep) => markedDependencies.has(dep) ? "" : dep)
-    .map((dep) => dependencyTree(dep));
-  const settledDependencies = await Promise.allSettled(resolvedDependencies);
+    const src = await fetchData(url);
 
-  const depTree: DependencyTree = new Map<string, DependencyTree>();
+    const dependencies: string[] = tree("", src).map((dep: string) =>
+      resolveURL(dep, url)
+    );
 
-  for (let i = 0; i < dependencies.length; i++) {
-    console.log(j++);
-    const dep = settledDependencies[i];
+    const resolvedDependencies = dependencies
+      .map((dep) => markedDependencies.has(dep) ? "" : dep)
+      .map((dep) => dependencyTree_(dep));
+    const settledDependencies = await Promise.allSettled(resolvedDependencies);
 
-    if (dep.status === "fulfilled") {
-      depTree.set(dependencies[i], dep.value);
-    } else {
-      depTree.set(dependencies[i], new Map());
+    const depTree: DependencyTree = [];
+
+    for (let i = 0; i < dependencies.length; i++) {
+      const subDepTree = settledDependencies[i];
+
+      if (subDepTree.status === "fulfilled") {
+        depTree.push({
+          path: dependencies[i],
+          imports: subDepTree.value,
+        });
+      } else {
+        depTree.push({
+          path: dependencies[i],
+          imports: [{
+            path: "",
+            imports: [],
+          }],
+        });
+      }
     }
+
+    return depTree;
   }
 
-  return depTree;
+  const dependencies = await dependencyTree_(url);
+  return dependencies;
 }

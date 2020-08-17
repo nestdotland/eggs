@@ -2,6 +2,7 @@ export {
   join,
   extname,
   fromFileUrl,
+  isAbsolute,
   relative,
   resolve,
   basename,

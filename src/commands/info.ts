@@ -1,7 +1,16 @@
-import { parseURL, cyan, green, blue, gray, bold, italic } from "../../deps.ts";
-import { dependencyTree, toURL, DependencyTree } from "../dependencyTree.ts";
+import {
+  parseURL,
+  cyan,
+  green,
+  blue,
+  gray,
+  bold,
+  red,
+  italic,
+} from "../../deps.ts";
+import { dependencyTree, resolveURL, DependencyTree } from "../dependencyTree.ts";
 
-const deps = await dependencyTree(toURL("./init.ts"));
+const deps = await dependencyTree(resolveURL("./init.ts"));
 
 function prettyTree(
   name: string,
@@ -20,17 +29,16 @@ function prettyTree(
 
   console.log(line + beautifyDependency(name));
 
-  const unfoldedMap: Array<[string, DependencyTree]> = [];
-  for (const value of tree) {
-    unfoldedMap.push(value);
-  }
-  for (let i = 0; i < unfoldedMap.length; i++) {
-    const [dep, subtree] = unfoldedMap[i];
-    prettyTree(dep, subtree, indent, i === unfoldedMap.length - 1);
+  for (let i = 0; i < tree.length; i++) {
+    const { path, imports } = tree[i];
+    prettyTree(path, imports, indent, i === tree.length - 1);
   }
 }
 
 function beautifyDependency(dep: string) {
+  if (dep === "") {
+    return red("Unable to resolve dependencies.");
+  }
   try {
     const { registry, name, version, owner, relativePath } = parseURL(dep);
     switch (registry) {
@@ -45,15 +53,15 @@ function beautifyDependency(dep: string) {
         }`;
 
       case "raw.githubusercontent.com":
-        return `${blue("Github")} ${bold(`${owner}/${name}`)} ${italic(version)} ${
-          gray(italic(relativePath))
-        }`;
-      
+        return `${blue("Github")} ${bold(`${owner}/${name}`)} ${
+          italic(version)
+        } ${gray(italic(relativePath))}`;
+
       case "denopkg.com":
-        return `${blue("Denopkg.com")} ${bold(`${owner}/${name}`)} ${italic(version)} ${
-          gray(italic(relativePath))
-        }`;
-      
+        return `${blue("Denopkg.com")} ${bold(`${owner}/${name}`)} ${
+          italic(version)
+        } ${gray(italic(relativePath))}`;
+
       default:
         return dep;
     }
@@ -62,4 +70,4 @@ function beautifyDependency(dep: string) {
   }
 }
 
-console.log(prettyTree(toURL("./init.ts"), deps, "", true));
+prettyTree(resolveURL("./init.ts"), deps, "", true);
