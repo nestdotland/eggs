@@ -11,12 +11,17 @@ import {
   cyan,
   green,
   blue,
+  rgb24,
   gray,
   bold,
   red,
   italic,
 } from "../../deps.ts";
-import { dependencyTree, resolveURL, DependencyTree } from "../dependencyTree.ts";
+import {
+  dependencyTree,
+  resolveURL,
+  DependencyTree,
+} from "../dependencyTree.ts";
 import { DefaultOptions } from "../commands.ts";
 import { version } from "../version.ts";
 import { setupLog } from "../log.ts";
@@ -25,11 +30,16 @@ import { setupLog } from "../log.ts";
 async function infoCommand(options: DefaultOptions, file: string) {
   await setupLog(options.debug);
 
-  const path = file.match(/https?:\/\//) ? file : resolve(Deno.cwd(), file)
-  const url = resolveURL(path)
+  const path = file.match(/https?:\/\//) ? file : resolve(Deno.cwd(), file);
 
-  const deps = await dependencyTree(url);
-  prettyTree(url, deps, "", true);
+  const deps = await dependencyTree(path);
+  prettyTree(deps.tree[0].path, deps.tree[0].imports, "", true);
+
+  console.log(deps.count);
+  console.log(deps.circular);
+  /* for (const dep of deps.iterator) {
+    console.log(dep);
+  } */
 }
 
 function prettyTree(
@@ -57,27 +67,38 @@ function prettyTree(
 
 function formatVersion(version: string) {
   if (version === "" || version === undefined) {
-    return red(italic("latest"))
+    return red(italic("latest"));
   }
-  return italic(version)
+  return italic(version);
 }
 
 function formatPath(path: string) {
-  return gray(italic(path))
+  return gray(italic(path));
 }
 
+const nestdotland = rgb24("N", 0x43c0ad) + rgb24("e", 0x52c0a2) +
+  rgb24("s", 0x62bf97) + rgb24("t", 0x6cbf90) + rgb24(".", 0x80be83) +
+  rgb24("l", 0x91be77) + rgb24("a", 0xa9bd67) + rgb24("n", 0xc9bc50) +
+  rgb24("d", 0xd7bc47);
+
 function beautifyDependency(dep: string) {
-  if (dep === "") {
-    return red("Unable to resolve dependencies.");
+  if (dep.match(/^\[Error/)) {
+    return red(dep);
+  }
+  if (dep.match(/^\[Redundant/)) {
+    return gray("...");
+  }
+  if (dep.match(/^\[Circular/)) {
+    return red("Circular import");
   }
   if (dep.match(/^file:\/\/\//)) {
-    return `${bold("Local")} ${gray(italic(dep.split("file:///")[1]))}`
+    return `${bold("Local")} ${gray(italic(dep.split("file:///")[1]))}`;
   }
   try {
     const { registry, name, version, owner, relativePath } = parseURL(dep);
     switch (registry) {
       case "x.nest.land":
-        return `${green("Nest.land")} ${bold(name)} ${formatVersion(version)} ${
+        return `${nestdotland} ${bold(name)} ${formatVersion(version)} ${
           formatPath(relativePath)
         }`;
 

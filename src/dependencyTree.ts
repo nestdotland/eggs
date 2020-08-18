@@ -1,6 +1,106 @@
-import { fromFileUrl, isAbsolute, resolve, tree } from "../deps.ts";
+import {
+  fromFileUrl,
+  isAbsolute,
+  resolve,
+  tree as extractDependencies,
+} from "../deps.ts";
 
 const decoder = new TextDecoder("utf-8");
+
+export type DependencyTree = Array<{
+  path: string;
+  imports: DependencyTree;
+}>;
+
+interface IDependencyTree {
+  tree: DependencyTree;
+  circular: boolean;
+  count: number;
+  iterator: IterableIterator<string>
+}
+
+interface Options {
+  fullTree: boolean;
+}
+
+export async function dependencyTree(
+  path: string,
+  options: Options = { fullTree: false },
+): Promise<IDependencyTree> {
+  const markedDependencies = new Map<string, DependencyTree>();
+
+  const { fullTree } = options;
+
+  let circular = false;
+  let count = 0;
+
+  async function createTree(
+    url: string,
+    parents: string[] = [],
+  ): Promise<DependencyTree> {
+    if (url.match(/^\[(Circular|Error|Redundant)/)) {
+      return [{
+        path: url,
+        imports: [],
+      }];
+    }
+
+    const depTree: DependencyTree = [];
+    markedDependencies.set(url, depTree);
+
+    const src = await fetchData(url);
+
+    const dependencies: string[] = extractDependencies("", src)
+      .map((dep: string) => resolveURL(dep, url));
+
+    const resolvedDependencies = dependencies
+      .map((dep) => {
+        if (parents.includes(dep)) {
+          circular = true;
+          return "[Circular]";
+        }
+        return dep;
+      })
+      .map((dep) => {
+        if (markedDependencies.has(dep)) {
+          return fullTree
+            ? Promise.resolve(markedDependencies.get(dep) as DependencyTree)
+            : createTree("[Redundant]");
+        }
+        count++;
+        return createTree(dep, [url, ...parents]);
+      });
+    const settledDependencies = await Promise.allSettled(resolvedDependencies);
+
+    for (let i = 0; i < dependencies.length; i++) {
+      const subTree = settledDependencies[i];
+
+      if (subTree.status === "fulfilled") {
+        depTree.push({
+          path: dependencies[i],
+          imports: subTree.value,
+        });
+      } else {
+        depTree.push({
+          path: dependencies[i],
+          imports: [{
+            path: `[Error: ${subTree.reason}`,
+            imports: [],
+          }],
+        });
+      }
+    }
+
+    return depTree;
+  }
+
+  const url = resolveURL(path)
+  const tree = [{
+    path: url,
+    imports: await createTree(url)
+  }]
+  return { tree, circular, count, iterator: markedDependencies.keys() };
+}
 
 export function fileURL(path: string, url: string = "") {
   if (url.match(/^file:\/\/\//) && (!isAbsolute(path))) {
@@ -38,54 +138,12 @@ async function fetchData(url: string) {
   return decoder.decode(data);
 }
 
-export type DependencyTree = Array<{
-  path: string;
-  imports: DependencyTree;
-}>;
+/* const tree = await dependencyTree("./tree/foo.ts", { fullTree: true });
 
-export async function dependencyTree(url: string): Promise<DependencyTree> {
-  const markedDependencies = new Set<string>();
+console.log(
+  Deno.inspect(tree, { depth: 100 }),
+);
 
-  async function dependencyTree_(url: string): Promise<DependencyTree> {
-    if (url === "") return [];
-
-    markedDependencies.add(url);
-
-    const src = await fetchData(url);
-
-    const dependencies: string[] = tree("", src).map((dep: string) =>
-      resolveURL(dep, url)
-    );
-
-    const resolvedDependencies = dependencies
-      .map((dep) => markedDependencies.has(dep) ? "" : dep)
-      .map((dep) => dependencyTree_(dep));
-    const settledDependencies = await Promise.allSettled(resolvedDependencies);
-
-    const depTree: DependencyTree = [];
-
-    for (let i = 0; i < dependencies.length; i++) {
-      const subDepTree = settledDependencies[i];
-
-      if (subDepTree.status === "fulfilled") {
-        depTree.push({
-          path: dependencies[i],
-          imports: subDepTree.value,
-        });
-      } else {
-        depTree.push({
-          path: dependencies[i],
-          imports: [{
-            path: "",
-            imports: [],
-          }],
-        });
-      }
-    }
-
-    return depTree;
-  }
-
-  const dependencies = await dependencyTree_(url);
-  return dependencies;
-}
+for (const dep of tree.iterator) {
+  console.log(dep);
+} */
