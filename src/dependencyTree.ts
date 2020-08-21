@@ -12,20 +12,22 @@ export type DependencyTree = Array<{
   imports: DependencyTree;
 }>;
 
-interface IDependencyTree {
+export interface IDependencyTree {
   tree: DependencyTree;
   circular: boolean;
   count: number;
-  iterator: IterableIterator<string>
+  iterator: IterableIterator<string>;
 }
 
-interface Options {
+export interface TreeOptions {
   fullTree: boolean;
 }
 
+/** Build a dependency tree from a relative path or remote HTTP URL.
+ * Analyses simultaneously the constructed tree. */
 export async function dependencyTree(
   path: string,
-  options: Options = { fullTree: false },
+  options: TreeOptions = { fullTree: false },
 ): Promise<IDependencyTree> {
   const markedDependencies = new Map<string, DependencyTree>();
 
@@ -84,7 +86,7 @@ export async function dependencyTree(
         depTree.push({
           path: dependencies[i],
           imports: [{
-            path: `[Error: ${subTree.reason}`,
+            path: `[Error: ${subTree.reason}]`,
             imports: [],
           }],
         });
@@ -94,15 +96,16 @@ export async function dependencyTree(
     return depTree;
   }
 
-  const url = resolveURL(path)
+  const url = resolveURL(path);
   const tree = [{
     path: url,
-    imports: await createTree(url)
-  }]
+    imports: await createTree(url),
+  }];
   return { tree, circular, count, iterator: markedDependencies.keys() };
 }
 
-export function fileURL(path: string, url: string = "") {
+/* Converts a path string to a file URL. */
+export function fileURL(path: string, url = "") {
   if (url.match(/^file:\/\/\//) && (!isAbsolute(path))) {
     return new URL(path, url).href;
   }
@@ -119,16 +122,18 @@ export function fileURL(path: string, url: string = "") {
   );
 }
 
-export function resolveURL(path: string, url: string = "") {
+/* Resolves any path, relative or HTTP url. */
+export function resolveURL(path: string, base = "") {
   if (path.match(/^https?:\/\//)) {
     return path;
   }
-  if (url.match(/^https?:\/\//)) {
-    return new URL(path, url).href;
+  if (base.match(/^https?:\/\//)) {
+    return new URL(path, base).href;
   }
-  return fileURL(path, url);
+  return fileURL(path, base);
 }
 
+/* Fetch data from file: or https: urls */
 async function fetchData(url: string) {
   if (url.match(/^https?:\/\//)) {
     const data = await fetch(url);
@@ -137,13 +142,3 @@ async function fetchData(url: string) {
   const data = await Deno.readFile(resolve(fromFileUrl(url)));
   return decoder.decode(data);
 }
-
-/* const tree = await dependencyTree("./tree/foo.ts", { fullTree: true });
-
-console.log(
-  Deno.inspect(tree, { depth: 100 }),
-);
-
-for (const dep of tree.iterator) {
-  console.log(dep);
-} */
