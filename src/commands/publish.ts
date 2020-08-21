@@ -19,7 +19,7 @@ import { ENDPOINT } from "../api/common.ts";
 import { fetchModule } from "../api/fetch.ts";
 import { postPieces, postPublishModule, PublishModule } from "../api/post.ts";
 
-import { Config, ensureCompleteConfig } from "../context/config.ts";
+import { Config } from "../context/config.ts";
 import { gatherContext } from "../context/context.ts";
 import { Ignore } from "../context/ignore.ts";
 
@@ -33,27 +33,24 @@ interface File {
   lstat: Deno.FileInfo;
 }
 
-async function getContext(): Promise<[Config | undefined, Ignore | undefined]> {
-  const context = await gatherContext();
-  const { config, ignore } = context;
+function ensureCompleteConfig(config: Partial<Config>): config is Config {
+  let isConfigComplete = true;
 
-  if (!config) {
-    log.error("You don't have an egg.json file!");
-    log.info("You can create one running `eggs init`.");
-    return [undefined, undefined];
+  if (!config.name) {
+    log.error("Your module configuration must provide a module name.");
+    isConfigComplete = false;
   }
 
-  if (!ensureCompleteConfig(config)) {
-    if (!config.name) {
-      log.error("Your module configuration must provide a module name.");
-    }
-    return [undefined, undefined];
+  if (!config.version) {
+    log.error("Your module configuration must provide a version.");
+    isConfigComplete = false;
   }
 
-  if (!config.files && !ignore) {
+  if (!config.files && !config.ignore) {
     log.error(
       "Your module configuration must provide files to upload in the form of a `files` field in the config or in an .eggignore file.",
     );
+    isConfigComplete = false;
   }
 
   if (!config.description) {
@@ -61,7 +58,7 @@ async function getContext(): Promise<[Config | undefined, Ignore | undefined]> {
       "You haven't provided a description for your package, continuing without one...",
     );
   }
-  return [config, ignore];
+  return isConfigComplete;
 }
 
 async function checkREADME(config: Config) {
@@ -103,7 +100,7 @@ async function checkFmt(config: Config) {
   }
 }
 
-function matchFiles(config: Config, ignore: Ignore): File[] {
+function matchFiles(config: Config): File[] {
   let matched: File[] = [];
   if (config.files) {
     for (let file of config.files) {
@@ -136,8 +133,8 @@ function matchFiles(config: Config, ignore: Ignore): File[] {
 
   matched = matched.filter((file) => file.lstat.isFile);
   matched = matched.filter((file) => {
-    if (ignore.denies.some((rgx) => rgx.test(file.path.substr(1)))) {
-      return ignore.accepts.some((rgx) => rgx.test(file.path.substr(1)));
+    if (config?.ignore?.denies.some((rgx) => rgx.test(file.path.substr(1)))) {
+      return config.ignore.accepts.some((rgx) => rgx.test(file.path.substr(1)));
     }
     return true;
   });
@@ -191,16 +188,16 @@ async function publishCommand(options: Options) {
     return;
   }
 
-  const [egg, ignore] = await getContext();
+  const egg = await gatherContext();
 
-  if (egg === undefined || ignore === undefined) return;
+  if (!ensureCompleteConfig(egg)) return;
 
   log.debug("Config: ", egg);
 
   await checkREADME(egg);
   await checkFmt(egg);
 
-  const matched = matchFiles(egg, ignore);
+  const matched = matchFiles(egg);
   const matchedContent = readFiles(matched);
 
   const noEntryFile = checkEntry(egg, matched);

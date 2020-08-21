@@ -6,6 +6,7 @@ import {
   stringifyYaml,
   writeJson,
 } from "../../deps.ts";
+import { Ignore} from "./ignore.ts";
 
 /** Supported configuration formats. */
 export enum ConfigFormat {
@@ -21,12 +22,13 @@ export interface Config {
   entry?: string;
   description?: string;
   repository?: string;
-  version?: string;
+  version: string;
   stable?: boolean;
   unlisted?: boolean;
   fmt?: boolean;
 
   files?: string[];
+  ignore?: Ignore;
 }
 
 /** Filenames of the default configs.
@@ -89,14 +91,7 @@ export function parseConfig(
   format: ConfigFormat,
 ): Partial<Config> {
   if (format == ConfigFormat.YAML) {
-    return (parseYaml(data) ?? {}) as Config;
+    return (parseYaml(data) ?? {}) as Partial<Config>;
   }
-  return JSON.parse(data) as Config;
-}
-
-export function ensureCompleteConfig(
-  config: Partial<Config>,
-): config is Config {
-  if (!config.name) return false;
-  return true;
+  return JSON.parse(data) as Partial<Config>;
 }
