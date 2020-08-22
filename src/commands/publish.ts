@@ -11,17 +11,16 @@ import {
   resolve,
   semver,
   walkSync,
-  IFlagArgument,
-  IFlagOptions,
 } from "../../deps.ts";
 import { DefaultOptions } from "../commands.ts";
+import { releaseType, urlType, versionType } from "../types.ts";
 import { ENDPOINT } from "../api/common.ts";
 import { fetchModule } from "../api/fetch.ts";
 import { postPieces, postPublishModule, PublishModule } from "../api/post.ts";
 
-import { Config } from "../context/config.ts";
+import { Config, defaultConfig, configFormat, writeConfig } from "../context/config.ts";
 import { gatherContext } from "../context/context.ts";
-import { Ignore } from "../context/ignore.ts";
+import { Ignore, parseIgnore } from "../context/ignore.ts";
 
 import { getAPIKey } from "../keyfile.ts";
 import { version } from "../version.ts";
@@ -41,21 +40,23 @@ function ensureCompleteConfig(config: Partial<Config>): config is Config {
     isConfigComplete = false;
   }
 
-  if (!config.version) {
-    log.error("Your module configuration must provide a version.");
+  if (!config.version && !config.bump) {
+    log.error(
+      "Your module configuration must provide a version or release type.",
+    );
     isConfigComplete = false;
   }
 
   if (!config.files && !config.ignore) {
     log.error(
-      "Your module configuration must provide files to upload in the form of a `files` field in the config or in an .eggignore file.",
+      "Your module configuration must provide files to upload in the form of a `files` field and/or `ignore` field in the config or in an .eggignore file.",
     );
     isConfigComplete = false;
   }
 
   if (!config.description) {
     log.warning(
-      "You haven't provided a description for your package, continuing without one...",
+      "You haven't provided a description for your module, continuing without one...",
     );
   }
   return isConfigComplete;
@@ -156,26 +157,38 @@ function readFiles(matched: File[]): { [x: string]: string } {
   }, {} as { [x: string]: string });
 }
 
-function checkEntry(config: Config, matched: File[]) {
-  if (config.entry) {
-    config.entry = config.entry?.replace(/^[.]/, "").replace(
-      /^[^/]/,
-      (s: string) => `/${s}`,
-    );
+function ensureEntryFile(config: Config, matched: File[]): boolean {
+  config.entry = (config.entry || "/mod.ts")
+    ?.replace(/^[.]/, "")
+    .replace(/^[^/]/, (s: string) => `/${s}`);
+
+  if (!matched.find((e) => e.path === config.entry)) {
+    log.error(`No ${config.entry} found. This file is required.`);
+    return false;
   }
-  if (!matched.find((e) => e.path === config.entry || "/mod.ts")) {
-    log.error(
-      `No ${config.entry || "/mod.ts"} found. This file is required.`,
-    );
-    return true;
-  }
+  return true;
 }
 
-function isVersionStable(v: string) {
-  return !!((semver.major(v) === 0) || semver.prerelease(v));
+function isVersionUnstable(v: string) {
+  return !((semver.major(v) === 0) || semver.prerelease(v));
 }
 
-async function publishCommand(options: Options) {
+function gatherOptions(options: Options, name: string) {
+  return {
+    name,
+    version: options.version,
+    bump: options.bump,
+    description: options.description,
+    entry: options.entry,
+    unstable: options.unstable,
+    unlisted: options.unlisted,
+    repository: options.repository,
+    files: options.files,
+    ignore: options.ignore ? parseIgnore(options.ignore.join()) : undefined,
+  };
+}
+
+async function publishCommand(options: Options, name: string) {
   await setupLog(options.debug);
 
   let apiKey = await getAPIKey();
@@ -188,20 +201,23 @@ async function publishCommand(options: Options) {
     return;
   }
 
-  const egg = await gatherContext();
-
-  if (!ensureCompleteConfig(egg)) return;
+  const egg = {
+    ...await gatherContext(),
+    ...gatherOptions(options, name),
+  };
 
   log.debug("Config: ", egg);
 
+  if (!ensureCompleteConfig(egg)) return;
+
   await checkREADME(egg);
-  await checkFmt(egg);
+
+  await checkFmt(egg); // TODO(@oganexon): move this to `eggs prepublish`
 
   const matched = matchFiles(egg);
   const matchedContent = readFiles(matched);
 
-  const noEntryFile = checkEntry(egg, matched);
-  if (noEntryFile) return;
+  if (!ensureEntryFile(egg, matched)) return;
 
   const existing = await fetchModule(egg.name);
 
@@ -209,18 +225,15 @@ async function publishCommand(options: Options) {
   if (existing) {
     latest = existing.getLatestVersion();
   }
-  if (options.bump && egg.version) {
-    egg.version = semver.inc(egg.version, options.bump) as string;
+  if (egg.bump) {
+    if ((egg.version && semver.eq(latest, egg.version)) || !egg.version) {
+      egg.version = semver.inc(latest, egg.bump) as string;
+    }
   }
-  egg.version = egg.version || options.version;
-  if (!egg.version) {
-    log.warning("No version found. Generating a new version now...");
-    egg.version = semver.inc(latest, options.bump || "patch") as string;
-  }
-
-  const nv = `${egg.name}@${egg.version}`;
-
-  if (existing && existing.packageUploadNames.indexOf(nv) !== -1) {
+  if (
+    existing &&
+    existing.packageUploadNames.indexOf(`${egg.name}@${egg.version}`) !== -1
+  ) {
     log.error(
       "This version was already published. Please increment the version in your configuration.",
     );
@@ -231,19 +244,19 @@ async function publishCommand(options: Options) {
 
   const module: PublishModule = {
     name: egg.name,
-    description: egg.description,
-    repository: egg.repository,
     version: egg.version,
-    unlisted: egg.unlisted,
-    entry: egg.entry,
+    description: egg.description || "",
+    repository: egg.repository || "",
+    unlisted: egg.unlisted || false,
+    stable: egg.stable || !egg.unstable || isVersionUnstable(egg.version),
     upload: true,
-    stable: egg.stable || isVersionStable(egg.version),
     latest: isLatest,
+    entry: egg.entry,
   };
 
   log.debug("Module: ", module);
 
-  if (options.dry) {
+  if (options.dryRun) {
     log.info(`This was a dry run, the resulting module is:`, module);
     log.info("The matched file were:");
     matched.forEach((file) => {
@@ -265,6 +278,11 @@ async function publishCommand(options: Options) {
     throw new Error("Something broke when sending pieces... ");
   }
 
+  const configPath = defaultConfig()
+  if (configPath) {
+    writeConfig(egg, configFormat(configPath))
+  }
+
   log.info(`Successfully published ${bold(egg.name)}!`);
 
   const files = Object.entries(pieceResponse.files).reduce(
@@ -280,7 +298,7 @@ async function publishCommand(options: Options) {
   console.log();
   log.info(
     green(
-      "You can now find your package on our registry at " +
+      "You can now find your module on our registry at " +
         highlight(`https://nest.land/package/${egg.name}\n`),
     ),
   );
@@ -293,57 +311,33 @@ async function publishCommand(options: Options) {
   );
 }
 
-const releases = [
-  "patch",
-  "minor",
-  "major",
-  "pre",
-  "prepatch",
-  "preminor",
-  "premajor",
-  "prerelease",
-];
-
-function releaseType(
-  option: IFlagOptions,
-  arg: IFlagArgument,
-  value: string,
-): string {
-  if (!(releases.includes(value))) {
-    throw new Error(
-      `Option --${option.name} must be a valid release type but got: ${value}.\nAccepted values are ${
-        releases.join(", ")
-      }.`,
-    );
-  }
-  return value;
-}
-
-function versionType(
-  option: IFlagOptions,
-  arg: IFlagArgument,
-  value: string,
-): string {
-  if (!semver.valid(value)) {
-    throw new Error(
-      `Option --${option.name} must be a valid version but got: ${value}.\nVersion must follow Semantic Versioning 2.0.0.`,
-    );
-  }
-  return value;
-}
-
 interface Options extends DefaultOptions {
-  dry: boolean;
-  bump: semver.ReleaseType;
-  version: string;
+  dryRun?: boolean;
+  bump?: semver.ReleaseType;
+  version?: string;
+  description?: string;
+  entry?: string;
+  unstable?: boolean;
+  unlisted?: boolean;
+  repository?: string;
+  files?: string[];
+  ignore?: string[];
 }
 
-export const publish = new Command<Options, []>()
-  .description("Publishes the current directory to the nest.land registry.")
+type Arguments = [string]
+
+export const publish = new Command<Options, Arguments>()
+  .description("Publishes your module to the nest.land registry.")
   .version(version)
   .type("release", releaseType)
   .type("version", versionType)
-  .option("-d, --dry", "Do a dry run")
+  .type("url", urlType)
+  .arguments("[name: string]")
+  .option("-d, --dry-run", "No changes will actually be made, reports the details of what would have been published.")
+  .option(
+    "--description <value:string>",
+    "A description of your module that will appear on the gallery.",
+  )
   .option(
     "--bump <value:release>",
     "Increment the version by the release type.",
@@ -353,5 +347,24 @@ export const publish = new Command<Options, []>()
     "--version <value:version>",
     "Set the version.",
     { conflicts: ["bump"] },
+  )
+  .option(
+    "--entry <value:string>",
+    "The main file of your project.",
+    { default: "mod.ts" },
+  )
+  .option("--unstable", "Flag this version as unstable.")
+  .option("--unlisted", "Hide this module/version on the gallery.")
+  .option(
+    "--repository <value:url>",
+    "A link to your repository.",
+  )
+  .option(
+    "--files <values...:string>",
+    "All the files that should be uploaded to nest.land. Supports file globbing.",
+  )
+  .option(
+    "--ignore <values...:string>",
+    "All the files that should be ignored when uploading to nest.land. Supports file globbing.",
   )
   .action(publishCommand);

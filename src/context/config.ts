@@ -3,6 +3,7 @@ import {
   extname,
   join,
   parseYaml,
+  semver,
   stringifyYaml,
   writeJson,
 } from "../../deps.ts";
@@ -23,7 +24,9 @@ export interface Config {
   description?: string;
   repository?: string;
   version: string;
-  stable?: boolean;
+  bump?: semver.ReleaseType;
+  unstable?: boolean;
+  stable?: boolean; // ! DEPRECATED
   unlisted?: boolean;
   fmt?: boolean;
 
@@ -69,7 +72,7 @@ export async function writeConfig(
 ): Promise<void> {
   switch (format) {
     case ConfigFormat.YAML:
-      await writeYaml(`egg.yml`, stringifyYaml(data));
+      await writeYaml("egg.yml", stringifyYaml(data));
       break;
     case ConfigFormat.JSON:
       await writeJson("egg.json", data, { spaces: 2 });
