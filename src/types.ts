@@ -16,18 +16,18 @@ export function validateRelease(value: string): boolean {
 }
 
 export function releaseType(
-  option: IFlagOptions,
+  option: IFlagOptions | string,
   arg: IFlagArgument,
   value: string,
-): string {
+): semver.ReleaseType {
   if (!validateRelease(value)) {
     throw new Error(
-      `Option --${option.name} must be a valid release type but got: ${value}.\nAccepted values are ${
+      `Option ${typeof option === "string" ? option : `--${option.name}`} must be a valid release type but got: ${value}.\nAccepted values are ${
         releases.join(", ")
       }.`,
     );
   }
-  return value;
+  return value as semver.ReleaseType;
 }
 
 export function validateVersion(value: string): boolean {
@@ -35,13 +35,13 @@ export function validateVersion(value: string): boolean {
 }
 
 export function versionType(
-  option: IFlagOptions,
+  option: IFlagOptions | string,
   arg: IFlagArgument,
   value: string,
 ): string {
   if (!validateVersion(value)) {
     throw new Error(
-      `Option --${option.name} must be a valid version but got: ${value}.\nVersion must follow Semantic Versioning 2.0.0.`,
+      `Option ${typeof option === "string" ? option : `--${option.name}`} must be a valid version but got: ${value}.\nVersion must follow Semantic Versioning 2.0.0.`,
     );
   }
   return value;
@@ -54,13 +54,13 @@ export function validateURL(value: string): boolean {
 }
 
 export function urlType(
-  option: IFlagOptions,
+  option: IFlagOptions | string,
   arg: IFlagArgument,
   value: string,
 ): string {
   if (!validateURL(value)) {
     throw new Error(
-      `Option --${option.name} must be a valid url but got: ${value}.`,
+      `Option ${typeof option === "string" ? option : `--${option.name}`} must be a valid url but got: ${value}.`,
     );
   }
   return value;

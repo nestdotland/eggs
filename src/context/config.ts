@@ -28,7 +28,6 @@ export interface Config {
   unstable?: boolean;
   stable?: boolean; // ! DEPRECATED
   unlisted?: boolean;
-  fmt?: boolean;
 
   files?: string[];
   ignore?: Ignore;

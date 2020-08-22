@@ -1,36 +1,27 @@
 import {
-  base64,
   bold,
   Command,
   existsSync,
-  expandGlobSync,
   green,
   italic,
   log,
-  relative,
-  resolve,
   semver,
-  walkSync,
 } from "../../deps.ts";
 import { DefaultOptions } from "../commands.ts";
 import { releaseType, urlType, versionType } from "../types.ts";
+
 import { ENDPOINT } from "../api/common.ts";
 import { fetchModule } from "../api/fetch.ts";
 import { postPieces, postPublishModule, PublishModule } from "../api/post.ts";
 
 import { Config, defaultConfig, configFormat, writeConfig } from "../context/config.ts";
 import { gatherContext } from "../context/context.ts";
-import { Ignore, parseIgnore } from "../context/ignore.ts";
+import { parseIgnore } from "../context/ignore.ts";
+import { MatchedFile, matchFiles, readFiles } from "../context/files.ts";
 
 import { getAPIKey } from "../keyfile.ts";
 import { version } from "../version.ts";
 import { setupLog, highlight } from "../log.ts";
-
-interface File {
-  fullPath: string;
-  path: string;
-  lstat: Deno.FileInfo;
-}
 
 function ensureCompleteConfig(config: Partial<Config>): config is Config {
   let isConfigComplete = true;
@@ -62,6 +53,18 @@ function ensureCompleteConfig(config: Partial<Config>): config is Config {
   return isConfigComplete;
 }
 
+function ensureEntryFile(config: Config, matched: MatchedFile[]): boolean {
+  config.entry = (config.entry || "/mod.ts")
+    ?.replace(/^[.]/, "")
+    .replace(/^[^/]/, (s: string) => `/${s}`);
+
+  if (!matched.find((e) => e.path === config.entry)) {
+    log.error(`No ${config.entry} found. This file is required.`);
+    return false;
+  }
+  return true;
+}
+
 async function checkREADME(config: Config) {
   if (!existsSync("README.md")) {
     log.warning("No README found at project root, continuing without one...");
@@ -89,106 +92,26 @@ async function checkREADME(config: Config) {
   }
 }
 
-async function checkFmt(config: Config) {
-  if (!config.fmt) return;
-
-  const formatProcess = Deno.run({ cmd: ["deno", "fmt"] }),
-    formatStatus = await formatProcess.status();
-  if (formatStatus.success) {
-    log.info("Formatted your code.");
-  } else {
-    log.error(`${italic("deno fmt")} returned a non-zero code.`);
-  }
-}
-
-function matchFiles(config: Config): File[] {
-  let matched: File[] = [];
-  if (config.files) {
-    for (let file of config.files) {
-      let matches = [
-        ...expandGlobSync(file, {
-          root: Deno.cwd(),
-          extended: true,
-        }),
-      ]
-        .map((file) => ({
-          fullPath: file.path.replace(/\\/g, "/"),
-          path: "/" + relative(Deno.cwd(), file.path).replace(/\\/g, "/"),
-          lstat: Deno.lstatSync(file.path),
-        }));
-      matched.push(...matches);
-    }
-  } else {
-    for (const entry of walkSync(".")) {
-      const path = "/" + entry.path;
-      const fullPath = resolve(entry.path);
-      const lstat = Deno.lstatSync(entry.path);
-      const file: File = {
-        fullPath,
-        path,
-        lstat,
-      };
-      matched.push(file);
-    }
-  }
-
-  matched = matched.filter((file) => file.lstat.isFile);
-  matched = matched.filter((file) => {
-    if (config?.ignore?.denies.some((rgx) => rgx.test(file.path.substr(1)))) {
-      return config.ignore.accepts.some((rgx) => rgx.test(file.path.substr(1)));
-    }
-    return true;
-  });
-
-  return matched;
-}
-
-function readFiles(matched: File[]): { [x: string]: string } {
-  function readFileBtoa(path: string): string {
-    const data = Deno.readFileSync(path);
-    return base64.fromUint8Array(data);
-  }
-
-  return matched.map((el) =>
-    [el, readFileBtoa(el.fullPath)] as [typeof el, string]
-  ).reduce((p, c) => {
-    p[c[0].path] = c[1];
-    return p;
-  }, {} as { [x: string]: string });
-}
-
-function ensureEntryFile(config: Config, matched: File[]): boolean {
-  config.entry = (config.entry || "/mod.ts")
-    ?.replace(/^[.]/, "")
-    .replace(/^[^/]/, (s: string) => `/${s}`);
-
-  if (!matched.find((e) => e.path === config.entry)) {
-    log.error(`No ${config.entry} found. This file is required.`);
-    return false;
-  }
-  return true;
-}
-
 function isVersionUnstable(v: string) {
   return !((semver.major(v) === 0) || semver.prerelease(v));
 }
 
-function gatherOptions(options: Options, name: string) {
+function gatherOptions(options: Options, name?: string) {
   return {
     name,
-    version: options.version,
-    bump: options.bump,
+    version: options.version ? versionType("version", {}, options.version) : undefined,
+    bump: options.bump ? releaseType("bump", {}, options.bump) : undefined,
     description: options.description,
     entry: options.entry,
     unstable: options.unstable,
     unlisted: options.unlisted,
-    repository: options.repository,
+    repository: options.repository ? urlType("repository", {}, options.repository) : undefined,
     files: options.files,
     ignore: options.ignore ? parseIgnore(options.ignore.join()) : undefined,
-  };
+  }
 }
 
-async function publishCommand(options: Options, name: string) {
+async function publishCommand(options: Options, name?: string) {
   await setupLog(options.debug);
 
   let apiKey = await getAPIKey();
@@ -201,18 +124,23 @@ async function publishCommand(options: Options, name: string) {
     return;
   }
 
-  const egg = {
-    ...await gatherContext(),
-    ...gatherOptions(options, name),
-  };
+  let egg: Partial<Config>
+
+  try {
+    egg = {
+      ...await gatherContext(),
+      ...gatherOptions(options, name),
+    };
+  } catch (err) {
+    log.error(err)
+    return
+  }
 
   log.debug("Config: ", egg);
 
   if (!ensureCompleteConfig(egg)) return;
 
   await checkREADME(egg);
-
-  await checkFmt(egg); // TODO(@oganexon): move this to `eggs prepublish`
 
   const matched = matchFiles(egg);
   const matchedContent = readFiles(matched);
