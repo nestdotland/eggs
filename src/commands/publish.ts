@@ -200,7 +200,7 @@ async function checkUp(
         await Deno.mkdir(dir, { recursive: true });
       } catch (err) {
         if (err !== Deno.errors.AlreadyExists) {
-          throw err
+          throw err;
         }
       }
       await Deno.copyFile(file.fullPath, join(tempDir, file.path));
