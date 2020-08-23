@@ -242,16 +242,16 @@ async function publishCommand(options: Options, name?: string) {
   }
 
   if (!ensureCompleteConfig(egg)) return;
-  
+
   const matched = matchFiles(egg);
   const matchedContent = readFiles(matched);
-  
+
   if (!ensureFiles(egg, matched)) return;
   if (!await checkUp(egg, matched)) return;
   await deprecationWarnings(egg);
 
   log.debug("Config:", egg);
-  log.debug("Matched files:", matched)
+  log.debug("Matched files:", matched);
 
   const existing = await fetchModule(egg.name);
 
