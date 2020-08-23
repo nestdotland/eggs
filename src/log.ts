@@ -48,7 +48,7 @@ class ConsoleHandler extends BaseHandler {
 
     if (record.level !== LogLevels.CRITICAL || detailedLog) {
       for (const arg of record.args) {
-        msg += ` ${Deno.inspect(arg)}`;
+        msg += ` ${Deno.inspect(arg, { depth: 10 })}`;
       }
     }
 
@@ -87,7 +87,7 @@ class FileHandler extends BaseHandler {
     msg += ` ${stripANSII(record.msg)}`;
 
     for (const arg of record.args) {
-      msg += ` ${stripANSII(Deno.inspect(arg))}`;
+      msg += ` ${stripANSII(Deno.inspect(arg, { depth: Infinity }))}`;
     }
 
     return msg;
@@ -136,6 +136,10 @@ export async function writeLogFile() {
         platform +
         masterLogRecord,
     ),
+  );
+
+  log.info(
+    `Debug file created. (${highlight(resolve(Deno.cwd(), DEBUG_LOG_FILE))})`,
   );
 }
 
