@@ -173,7 +173,9 @@ async function checkUp(
       const dir = join(tempDir, dirname(file.path));
       try {
         await Deno.mkdir(dir, { recursive: true });
-      } catch { /* Directory already exists */ }
+      } catch {
+        /* Directory already exists */
+      }
       await Deno.copyFile(file.fullPath, join(tempDir, file.path));
     }
     const entry = join(tempDir, options.entry);

@@ -63,8 +63,8 @@ export function prettyTree(
   name: string,
   tree: DependencyTree,
   indent: string,
-  last: boolean = true,
-  raw: boolean = false,
+  last = true,
+  raw = false,
 ) {
   let line = indent;
   if (last) {
