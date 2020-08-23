@@ -7,7 +7,7 @@ import {
   stringifyYaml,
   writeJson,
 } from "../../deps.ts";
-import { Ignore} from "./ignore.ts";
+import { Ignore } from "./ignore.ts";
 
 /** Supported configuration formats. */
 export enum ConfigFormat {
@@ -31,6 +31,11 @@ export interface Config {
 
   files?: string[];
   ignore?: Ignore;
+
+  checkFmt?: boolean;
+  checkTests?: boolean;
+  checkInstallation?: boolean;
+  checkAll?: boolean;
 }
 
 /** Filenames of the default configs.

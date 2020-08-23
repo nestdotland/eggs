@@ -14,7 +14,12 @@ import { ENDPOINT } from "../api/common.ts";
 import { fetchModule } from "../api/fetch.ts";
 import { postPieces, postPublishModule, PublishModule } from "../api/post.ts";
 
-import { Config, defaultConfig, configFormat, writeConfig } from "../context/config.ts";
+import {
+  Config,
+  defaultConfig,
+  configFormat,
+  writeConfig,
+} from "../context/config.ts";
 import { gatherContext } from "../context/context.ts";
 import { parseIgnore } from "../context/ignore.ts";
 import { MatchedFile, matchFiles, readFiles } from "../context/files.ts";
@@ -99,16 +104,62 @@ function isVersionUnstable(v: string) {
 function gatherOptions(options: Options, name?: string) {
   return {
     name,
-    version: options.version ? versionType("version", {}, options.version) : undefined,
+    version: options.version
+      ? versionType("version", {}, options.version)
+      : undefined,
     bump: options.bump ? releaseType("bump", {}, options.bump) : undefined,
     description: options.description,
     entry: options.entry,
     unstable: options.unstable,
     unlisted: options.unlisted,
-    repository: options.repository ? urlType("repository", {}, options.repository) : undefined,
+    repository: options.repository
+      ? urlType("repository", {}, options.repository)
+      : undefined,
     files: options.files,
     ignore: options.ignore ? parseIgnore(options.ignore.join()) : undefined,
+    checkFmt: options.checkFmt,
+    checkTests: options.checkTests,
+    checkInstallation: options.checkInstallation,
+    checkAll: options.checkAll,
+  };
+}
+
+async function checkUp(options: Options): Promise<boolean> {
+  if (options.checkFmt || options.checkAll) {
+    const process = Deno.run(
+      { cmd: ["deno", "fmt"], stderr: "null", stdout: "null" },
+    );
+    const status = await process.status();
+    if (status.success) {
+      log.info("Formatted your code.");
+    } else {
+      log.error(`${italic("deno fmt")} returned a non-zero code.`);
+      return false;
+    }
   }
+
+  if (options.checkTests || options.checkAll) {
+    const process = Deno.run(
+      {
+        cmd: ["deno", "test", "-A", "--unstable"],
+        stderr: "null",
+        stdout: "piped",
+      },
+    );
+    const status = await process.status();
+    const stdout = new TextDecoder("utf-8").decode(await process.output());
+    if (status.success || stdout.match(/^No matching test modules found/)) {
+      console.log("Tests passed successfully.");
+    } else {
+      log.error(`${italic("deno test")} returned a non-zero code.`);
+    }
+    return false;
+  }
+
+  if (options.checkInstallation || options.checkAll) {
+  }
+
+  return true;
 }
 
 async function publishCommand(options: Options, name?: string) {
@@ -124,7 +175,7 @@ async function publishCommand(options: Options, name?: string) {
     return;
   }
 
-  let egg: Partial<Config>
+  let egg: Partial<Config>;
 
   try {
     egg = {
@@ -132,8 +183,8 @@ async function publishCommand(options: Options, name?: string) {
       ...gatherOptions(options, name),
     };
   } catch (err) {
-    log.error(err)
-    return
+    log.error(err);
+    return;
   }
 
   log.debug("Config: ", egg);
@@ -206,9 +257,9 @@ async function publishCommand(options: Options, name?: string) {
     throw new Error("Something broke when sending pieces... ");
   }
 
-  const configPath = defaultConfig()
+  const configPath = defaultConfig();
   if (configPath) {
-    writeConfig(egg, configFormat(configPath))
+    writeConfig(egg, configFormat(configPath));
   }
 
   log.info(`Successfully published ${bold(egg.name)}!`);
@@ -250,9 +301,13 @@ interface Options extends DefaultOptions {
   repository?: string;
   files?: string[];
   ignore?: string[];
+  checkFmt?: boolean;
+  checkTests?: boolean;
+  checkInstallation?: boolean;
+  checkAll?: boolean;
 }
 
-type Arguments = [string]
+type Arguments = [string];
 
 export const publish = new Command<Options, Arguments>()
   .description("Publishes your module to the nest.land registry.")
@@ -261,7 +316,10 @@ export const publish = new Command<Options, Arguments>()
   .type("version", versionType)
   .type("url", urlType)
   .arguments("[name: string]")
-  .option("-d, --dry-run", "No changes will actually be made, reports the details of what would have been published.")
+  .option(
+    "-d, --dry-run",
+    "No changes will actually be made, reports the details of what would have been published.",
+  )
   .option(
     "--description <value:string>",
     "A description of your module that will appear on the gallery.",
@@ -295,4 +353,11 @@ export const publish = new Command<Options, Arguments>()
     "--ignore <values...:string>",
     "All the files that should be ignored when uploading to nest.land. Supports file globbing.",
   )
+  .option("--check-fmt", "Automatically format your code before publishing")
+  .option("--check-tests", `Run ${italic("deno test")}.`)
+  .option(
+    "--check-installation",
+    "Check for missing files in the dependency tree.",
+  )
+  .option("--check-all", "Performs all checks", { default: true })
   .action(publishCommand);

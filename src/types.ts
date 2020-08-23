@@ -12,7 +12,7 @@ export const releases = [
 ];
 
 export function validateRelease(value: string): boolean {
-  return releases.includes(value)
+  return releases.includes(value);
 }
 
 export function releaseType(
@@ -22,7 +22,9 @@ export function releaseType(
 ): semver.ReleaseType {
   if (!validateRelease(value)) {
     throw new Error(
-      `Option ${typeof option === "string" ? option : `--${option.name}`} must be a valid release type but got: ${value}.\nAccepted values are ${
+      `Option ${
+        typeof option === "string" ? option : `--${option.name}`
+      } must be a valid release type but got: ${value}.\nAccepted values are ${
         releases.join(", ")
       }.`,
     );
@@ -41,7 +43,9 @@ export function versionType(
 ): string {
   if (!validateVersion(value)) {
     throw new Error(
-      `Option ${typeof option === "string" ? option : `--${option.name}`} must be a valid version but got: ${value}.\nVersion must follow Semantic Versioning 2.0.0.`,
+      `Option ${
+        typeof option === "string" ? option : `--${option.name}`
+      } must be a valid version but got: ${value}.\nVersion must follow Semantic Versioning 2.0.0.`,
     );
   }
   return value;
@@ -60,7 +64,9 @@ export function urlType(
 ): string {
   if (!validateURL(value)) {
     throw new Error(
-      `Option ${typeof option === "string" ? option : `--${option.name}`} must be a valid url but got: ${value}.`,
+      `Option ${
+        typeof option === "string" ? option : `--${option.name}`
+      } must be a valid url but got: ${value}.`,
     );
   }
   return value;
