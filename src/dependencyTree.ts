@@ -1,3 +1,5 @@
+// WARNING: temporary file
+
 import {
   fromFileUrl,
   isAbsolute,

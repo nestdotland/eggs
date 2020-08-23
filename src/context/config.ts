@@ -32,6 +32,7 @@ export interface Config {
   files?: string[];
   ignore?: Ignore;
 
+  fmt?: boolean; // ! DEPRECATED
   checkFmt?: boolean;
   checkTests?: boolean;
   checkInstallation?: boolean;

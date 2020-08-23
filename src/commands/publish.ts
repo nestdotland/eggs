@@ -10,6 +10,7 @@ import {
   log,
   semver,
   dependencyTree,
+  yellow,
 } from "../../deps.ts";
 import { DefaultOptions } from "../commands.ts";
 import { releaseType, urlType, versionType } from "../types.ts";
@@ -62,7 +63,11 @@ function ensureCompleteConfig(config: Partial<Config>): config is Config {
   return isConfigComplete;
 }
 
-function ensureEntryFile(config: Config, matched: MatchedFile[]): boolean {
+function ensureFiles(config: Config, matched: MatchedFile[]): boolean {
+  if (!existsSync("README.md")) {
+    log.warning("No README found at project root, continuing without one...");
+  }
+
   config.entry = (config.entry || "/mod.ts")
     ?.replace(/^[.]/, "")
     .replace(/^[^/]/, (s: string) => `/${s}`);
@@ -74,11 +79,7 @@ function ensureEntryFile(config: Config, matched: MatchedFile[]): boolean {
   return true;
 }
 
-async function checkREADME(config: Config) {
-  if (!existsSync("README.md")) {
-    log.warning("No README found at project root, continuing without one...");
-  }
-
+async function deprecationWarnings(config: Config) {
   const name = config.name.toLowerCase();
 
   try {
@@ -92,12 +93,27 @@ async function checkREADME(config: Config) {
       );
       log.warning(
         `You can change these to ${
-          highlight("https://x.nest.land/${name}@VERSION")
+          highlight(`https://x.nest.land/${name}@VERSION`)
         }`,
       );
     }
   } catch {
-    log.warning("Could not find the README file.");
+    // Do not report the user in case of error
+  }
+
+  if (typeof config.stable === "boolean") {
+    log.warning(
+      `${
+        yellow("[Deprecated - stable]")
+      } Module stability is detected automatically. If you still want to specify the stability of your module, use the ${
+        bold("unstable")
+      } field.`,
+    );
+  }
+  if (typeof config.fmt === "boolean") {
+    log.warning(
+      `${yellow("[Deprecated - fmt]")} Use the ${bold("checkFmt")} field.`,
+    );
   }
 }
 
@@ -128,10 +144,10 @@ function gatherOptions(options: Options, name?: string) {
 }
 
 async function checkUp(
-  options: Options,
+  config: Config,
   matched: MatchedFile[],
 ): Promise<boolean> {
-  if (options.checkFmt || options.checkAll) {
+  if (config.checkFmt || config.fmt || config.checkAll) {
     const process = Deno.run(
       { cmd: ["deno", "fmt"], stderr: "null", stdout: "null" },
     );
@@ -144,7 +160,7 @@ async function checkUp(
     }
   }
 
-  if (options.checkTests || options.checkAll) {
+  if (config.checkTests || config.checkAll) {
     const process = Deno.run(
       {
         cmd: ["deno", "test", "-A", "--unstable"],
@@ -166,7 +182,7 @@ async function checkUp(
     }
   }
 
-  if (options.checkInstallation || options.checkAll) {
+  if (config.checkInstallation || config.checkAll) {
     const tempDir = await Deno.makeTempDir();
     for (let i = 0; i < matched.length; i++) {
       const file = matched[i];
@@ -178,7 +194,7 @@ async function checkUp(
       }
       await Deno.copyFile(file.fullPath, join(tempDir, file.path));
     }
-    const entry = join(tempDir, options.entry);
+    const entry = join(tempDir, config.entry);
     const deps = await dependencyTree(entry);
     await Deno.remove(tempDir, { recursive: true });
     if (deps.errors.length === 0) {
@@ -228,13 +244,13 @@ async function publishCommand(options: Options, name?: string) {
 
   if (!ensureCompleteConfig(egg)) return;
 
-  await checkREADME(egg);
+  await deprecationWarnings(egg);
 
   const matched = matchFiles(egg);
   const matchedContent = readFiles(matched);
 
-  if (!ensureEntryFile(egg, matched)) return;
-  if (!await checkUp(options, matched)) return;
+  if (!ensureFiles(egg, matched)) return;
+  if (!await checkUp(egg, matched)) return;
 
   const existing = await fetchModule(egg.name);
 
@@ -395,7 +411,7 @@ export const publish = new Command<Options, Arguments>()
   .option("--check-tests", `Run ${italic("deno test")}.`)
   .option(
     "--check-installation",
-    "Check for missing files in the dependency tree.",
+    "Simulates a dummy installation and check for missing files in the dependency tree.",
   )
-  .option("--check-all", "Performs all checks", { default: true })
+  .option("--check-all", "Performs all checks.", { default: true })
   .action(publishCommand);
