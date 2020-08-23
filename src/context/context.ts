@@ -12,8 +12,8 @@ export async function gatherContext(
     try {
       config = await readConfig(configPath);
     } catch (err) {
-      log.error("Unable to read config file.", err)
-      return
+      log.error("Unable to read config file.", err);
+      return;
     }
   }
 

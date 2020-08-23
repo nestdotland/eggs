@@ -121,7 +121,10 @@ function isVersionUnstable(v: string) {
   return !((semver.major(v) === 0) || semver.prerelease(v));
 }
 
-function gatherOptions(options: Options, name?: string): Partial<Config> | undefined {
+function gatherOptions(
+  options: Options,
+  name?: string,
+): Partial<Config> | undefined {
   try {
     const cfg: Partial<Config> = {};
     // TODO(@oganexon): find a more elegant way to remove undefined fields
@@ -234,9 +237,9 @@ async function publishCommand(options: Options, name?: string) {
     return;
   }
 
-  const gatheredContext = await gatherContext()
-  const gatheredOptions = gatherOptions(options, name)
-  if (!gatheredContext || !gatheredOptions) return
+  const gatheredContext = await gatherContext();
+  const gatheredOptions = gatherOptions(options, name);
+  if (!gatheredContext || !gatheredOptions) return;
 
   let egg: Partial<Config> = {
     ...gatheredContext,
