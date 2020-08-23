@@ -199,7 +199,7 @@ async function checkUp(
       try {
         await Deno.mkdir(dir, { recursive: true });
       } catch (err) {
-        if (err !== Deno.errors.AlreadyExists) {
+        if (!(err instanceof Deno.errors.AlreadyExists)) {
           throw err;
         }
       }
