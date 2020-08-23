@@ -6,7 +6,6 @@ import { publish } from "./src/commands/publish.ts";
 import { update } from "./src/commands/update.ts";
 import { install } from "./src/commands/install.ts";
 import { upgrade } from "./src/commands/upgrade.ts";
-import { info } from "./src/commands/info.ts";
 
 import { version } from "./src/version.ts";
 
@@ -17,7 +16,7 @@ import {
   errorOccurred,
 } from "./src/log.ts";
 
-const commands = { link, init, publish, update, install, upgrade, info };
+const commands = { link, init, publish, update, install, upgrade };
 
 await setupLog();
 
@@ -44,8 +43,7 @@ const eggs = new Command<DefaultOptions, []>()
   .command("publish", publish)
   .command("update", update)
   .command("install", install)
-  .command("upgrade", upgrade)
-  .command("info", info);
+  .command("upgrade", upgrade);
 
 try {
   const { options } = await eggs.parse(Deno.args);

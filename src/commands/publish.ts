@@ -123,6 +123,7 @@ function isVersionUnstable(v: string) {
 
 function gatherOptions(options: Options, name?: string) {
   const result: Partial<Config> = {};
+  // TODO(@oganexon): find a more elegant way to remove undefined fields
   name && (result.name = name);
   options.version &&
     (result.version = versionType("version", {}, options.version));
@@ -240,17 +241,17 @@ async function publishCommand(options: Options, name?: string) {
     return;
   }
 
-  log.debug("Config: ", egg);
-
   if (!ensureCompleteConfig(egg)) return;
-
-  await deprecationWarnings(egg);
-
+  
   const matched = matchFiles(egg);
   const matchedContent = readFiles(matched);
-
+  
   if (!ensureFiles(egg, matched)) return;
   if (!await checkUp(egg, matched)) return;
+  await deprecationWarnings(egg);
+
+  log.debug("Config:", egg);
+  log.debug("Matched files:", matched)
 
   const existing = await fetchModule(egg.name);
 
@@ -273,8 +274,6 @@ async function publishCommand(options: Options, name?: string) {
     return;
   }
 
-  const isLatest = semver.compare(egg.version, latest) === 1;
-
   const module: PublishModule = {
     name: egg.name,
     version: egg.version,
@@ -283,7 +282,7 @@ async function publishCommand(options: Options, name?: string) {
     unlisted: egg.unlisted || false,
     stable: egg.stable || !egg.unstable || isVersionUnstable(egg.version),
     upload: true,
-    latest: isLatest,
+    latest: semver.compare(egg.version, latest) === 1,
     entry: egg.entry,
   };
 
@@ -331,17 +330,14 @@ async function publishCommand(options: Options, name?: string) {
   console.log();
   log.info(
     green(
-      "You can now find your module on our registry at " +
-        highlight(`https://nest.land/package/${egg.name}\n`),
+      `You can now find your module on our registry at ${
+        highlight(`https://nest.land/package/${egg.name}`)
+      }`,
     ),
   );
-  log.info(
-    `Add this badge to your README to let everyone know:\n\n ${
-      highlight(
-        `[![nest badge](https://nest.land/badge.svg)](https://nest.land/package/${egg.name})`,
-      )
-    }`,
-  );
+  console.log();
+  log.info("Now you can showcase your module on our GitHub Discussions!");
+  log.info(highlight("https://github.com/nestdotland/nest.land/discussions"));
 }
 
 interface Options extends DefaultOptions {
