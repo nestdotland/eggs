@@ -20,7 +20,7 @@ export enum ConfigFormat {
  * commands require at least some. */
 export interface Config {
   name: string;
-  entry?: string;
+  entry: string;
   description?: string;
   repository?: string;
   version: string;

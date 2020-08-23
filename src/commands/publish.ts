@@ -1,11 +1,15 @@
 import {
+  basename,
   bold,
   Command,
+  dirname,
   existsSync,
+  join,
   green,
   italic,
   log,
   semver,
+  dependencyTree,
 } from "../../deps.ts";
 import { DefaultOptions } from "../commands.ts";
 import { releaseType, urlType, versionType } from "../types.ts";
@@ -64,7 +68,7 @@ function ensureEntryFile(config: Config, matched: MatchedFile[]): boolean {
     .replace(/^[^/]/, (s: string) => `/${s}`);
 
   if (!matched.find((e) => e.path === config.entry)) {
-    log.error(`No ${config.entry} found. This file is required.`);
+    log.error(`No ${config.entry} found in config. An entry file is required.`);
     return false;
   }
   return true;
@@ -93,7 +97,7 @@ async function checkREADME(config: Config) {
       );
     }
   } catch {
-    log.warning("Could not open the README for url checking...");
+    log.warning("Could not find the README file.");
   }
 }
 
@@ -102,29 +106,31 @@ function isVersionUnstable(v: string) {
 }
 
 function gatherOptions(options: Options, name?: string) {
-  return {
-    name,
-    version: options.version
-      ? versionType("version", {}, options.version)
-      : undefined,
-    bump: options.bump ? releaseType("bump", {}, options.bump) : undefined,
-    description: options.description,
-    entry: options.entry,
-    unstable: options.unstable,
-    unlisted: options.unlisted,
-    repository: options.repository
-      ? urlType("repository", {}, options.repository)
-      : undefined,
-    files: options.files,
-    ignore: options.ignore ? parseIgnore(options.ignore.join()) : undefined,
-    checkFmt: options.checkFmt,
-    checkTests: options.checkTests,
-    checkInstallation: options.checkInstallation,
-    checkAll: options.checkAll,
-  };
+  const result: Partial<Config> = {};
+  name && (result.name = name);
+  options.version &&
+    (result.version = versionType("version", {}, options.version));
+  options.bump && (result.bump = releaseType("bump", {}, options.bump));
+  options.description && (result.description = options.description);
+  options.entry && (result.entry = options.entry);
+  options.unstable && (result.unstable = options.unstable);
+  options.unlisted && (result.unstable = options.unlisted);
+  options.repository &&
+    (result.repository = urlType("repository", {}, options.repository));
+  options.files && (result.files = options.files);
+  options.ignore && (result.ignore = parseIgnore(options.ignore.join()));
+  options.checkFmt && (result.files = options.files);
+  options.checkTests && (result.checkTests = options.checkTests);
+  options.checkInstallation &&
+    (result.checkInstallation = options.checkInstallation);
+  options.checkAll && (result.checkAll = options.checkAll);
+  return result;
 }
 
-async function checkUp(options: Options): Promise<boolean> {
+async function checkUp(
+  options: Options,
+  matched: MatchedFile[],
+): Promise<boolean> {
   if (options.checkFmt || options.checkAll) {
     const process = Deno.run(
       { cmd: ["deno", "fmt"], stderr: "null", stdout: "null" },
@@ -148,15 +154,44 @@ async function checkUp(options: Options): Promise<boolean> {
     );
     const status = await process.status();
     const stdout = new TextDecoder("utf-8").decode(await process.output());
-    if (status.success || stdout.match(/^No matching test modules found/)) {
-      console.log("Tests passed successfully.");
+    if (status.success) {
+      log.info("Tests passed successfully.");
     } else {
-      log.error(`${italic("deno test")} returned a non-zero code.`);
+      if (stdout.match(/^No matching test modules found/)) {
+        log.info("No matching test modules found, tests skipped.");
+      } else {
+        log.error(`${italic("deno test")} returned a non-zero code.`);
+        return false;
+      }
     }
-    return false;
   }
 
   if (options.checkInstallation || options.checkAll) {
+    const tempDir = await Deno.makeTempDir();
+    for (let i = 0; i < matched.length; i++) {
+      const file = matched[i];
+      const dir = join(tempDir, dirname(file.path));
+      try {
+        await Deno.mkdir(dir, { recursive: true });
+      } catch { /* Directory already exists */ }
+      await Deno.copyFile(file.fullPath, join(tempDir, file.path));
+    }
+    const entry = join(tempDir, options.entry);
+    const deps = await dependencyTree(entry);
+    await Deno.remove(tempDir, { recursive: true });
+    if (deps.errors.length === 0) {
+      log.info("No errors detected when installing the module.");
+    } else {
+      log.error(
+        "Some files could not be resolved during the test installation. They are probably missing, you should include them.",
+      );
+      for (let i = 0; i < deps.errors.length; i++) {
+        const [path, error] = deps.errors[i];
+        const relativePath = path.split(basename(tempDir))[1] || path;
+        log.error(`${bold(relativePath)} : ${error}`);
+      }
+      return false;
+    }
   }
 
   return true;
@@ -197,6 +232,7 @@ async function publishCommand(options: Options, name?: string) {
   const matchedContent = readFiles(matched);
 
   if (!ensureEntryFile(egg, matched)) return;
+  if (!await checkUp(options, matched)) return;
 
   const existing = await fetchModule(egg.name);
 
@@ -295,7 +331,7 @@ interface Options extends DefaultOptions {
   bump?: semver.ReleaseType;
   version?: string;
   description?: string;
-  entry?: string;
+  entry: string;
   unstable?: boolean;
   unlisted?: boolean;
   repository?: string;

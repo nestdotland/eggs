@@ -11,11 +11,9 @@ import {
   bold,
   red,
   italic,
-} from "../../deps.ts";
-import {
   dependencyTree,
   DependencyTree,
-} from "../dependencyTree.ts";
+} from "../../deps.ts";
 import { DefaultOptions } from "../commands.ts";
 import { version } from "../version.ts";
 import { setupLog } from "../log.ts";
@@ -42,7 +40,7 @@ async function infoCommand(options: Options, file?: string) {
 
     const deps = await dependencyTree(path, { fullTree: options.full });
     log.debug("Dependency tree", deps.tree[0]);
-    prettyTree(deps.tree[0].path, deps.tree[0].imports, "", true, options);
+    prettyTree(deps.tree[0].path, deps.tree[0].imports, "", true, options.raw);
 
     console.log();
     log.info(`Found ${deps.count} dependencies.`);
@@ -61,12 +59,12 @@ async function infoCommand(options: Options, file?: string) {
   }
 }
 
-function prettyTree(
+export function prettyTree(
   name: string,
   tree: DependencyTree,
   indent: string,
-  last: boolean,
-  options: Options,
+  last: boolean = true,
+  raw: boolean = false,
 ) {
   let line = indent;
   if (last) {
@@ -77,11 +75,11 @@ function prettyTree(
     indent += "│ ";
   }
 
-  console.log(`${line}${options.raw ? name : beautifyDependency(name)}`);
+  console.log(`${line}${raw ? name : beautifyDependency(name)}`);
 
   for (let i = 0; i < tree.length; i++) {
     const { path, imports } = tree[i];
-    prettyTree(path, imports, indent, i === tree.length - 1, options);
+    prettyTree(path, imports, indent, i === tree.length - 1, raw);
   }
 }
 

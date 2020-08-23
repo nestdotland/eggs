@@ -1,11 +1,12 @@
 export {
+  basename,
   join,
+  dirname,
   extname,
   fromFileUrl,
   isAbsolute,
   relative,
   resolve,
-  basename,
   globToRegExp,
 } from "https://x.nest.land/std@0.61.0/path/mod.ts";
 
@@ -84,4 +85,4 @@ export {
 
 export { NestLand as Nest } from "https://x.nest.land/hatcher@0.8.0/lib/registries/NestLand.ts";
 
-export { tree } from "https://x.nest.land/analyzer@0.0.1/deno.ts";
+export { dependencyTree, DependencyTree } from "./src/dependencyTree.ts";

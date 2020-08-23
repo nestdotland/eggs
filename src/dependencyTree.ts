@@ -2,8 +2,8 @@ import {
   fromFileUrl,
   isAbsolute,
   resolve,
-  tree as extractDependencies,
-} from "../deps.ts";
+} from "https://x.nest.land/std@0.61.0/path/mod.ts";
+import { tree as extractDependencies } from "https://x.nest.land/analyzer@0.0.1/deno.ts";
 
 const decoder = new TextDecoder("utf-8");
 
@@ -15,6 +15,7 @@ export type DependencyTree = Array<{
 export interface IDependencyTree {
   tree: DependencyTree;
   circular: boolean;
+  errors: Array<[string, any]>;
   count: number;
   iterator: IterableIterator<string>;
 }
@@ -33,6 +34,7 @@ export async function dependencyTree(
 
   const { fullTree } = options;
 
+  const errors: Array<[string, any]> = [];
   let circular = false;
   let count = 0;
 
@@ -72,7 +74,9 @@ export async function dependencyTree(
         count++;
         return createTree(dep, [url, ...parents]);
       });
-    const settledDependencies = await Promise.allSettled(resolvedDependencies);
+    const settledDependencies = await Promise.allSettled(
+      resolvedDependencies,
+    );
 
     for (let i = 0; i < dependencies.length; i++) {
       const subTree = settledDependencies[i];
@@ -83,6 +87,7 @@ export async function dependencyTree(
           imports: subTree.value,
         });
       } else {
+        errors.push([dependencies[i], subTree.reason]);
         depTree.push({
           path: dependencies[i],
           imports: [{
@@ -101,7 +106,7 @@ export async function dependencyTree(
     path: url,
     imports: await createTree(url),
   }];
-  return { tree, circular, count, iterator: markedDependencies.keys() };
+  return { tree, circular, count, iterator: markedDependencies.keys(), errors };
 }
 
 /* Converts a path string to a file URL. */
