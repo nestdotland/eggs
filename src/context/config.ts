@@ -77,11 +77,13 @@ export async function writeConfig(
 ): Promise<void> {
   switch (format) {
     case ConfigFormat.YAML:
-      await writeYaml("egg.yml", stringifyYaml(data));
+      await writeYaml(join(Deno.cwd(), "egg.yml"), stringifyYaml(data));
       break;
     case ConfigFormat.JSON:
-      await writeJson("egg.json", data, { spaces: 2 });
+      await writeJson(join(Deno.cwd(), "egg.json"), data, { spaces: 2 });
       break;
+    default:
+      throw new Error(`Unknown config format: ${format}`);
   }
 }
 

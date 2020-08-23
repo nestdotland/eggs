@@ -121,27 +121,32 @@ function isVersionUnstable(v: string) {
   return !((semver.major(v) === 0) || semver.prerelease(v));
 }
 
-function gatherOptions(options: Options, name?: string) {
-  const result: Partial<Config> = {};
-  // TODO(@oganexon): find a more elegant way to remove undefined fields
-  name && (result.name = name);
-  options.version &&
-    (result.version = versionType("version", {}, options.version));
-  options.bump && (result.bump = releaseType("bump", {}, options.bump));
-  options.description && (result.description = options.description);
-  options.entry && (result.entry = options.entry);
-  options.unstable && (result.unstable = options.unstable);
-  options.unlisted && (result.unstable = options.unlisted);
-  options.repository &&
-    (result.repository = urlType("repository", {}, options.repository));
-  options.files && (result.files = options.files);
-  options.ignore && (result.ignore = parseIgnore(options.ignore.join()));
-  options.checkFmt && (result.files = options.files);
-  options.checkTests && (result.checkTests = options.checkTests);
-  options.checkInstallation &&
-    (result.checkInstallation = options.checkInstallation);
-  options.checkAll && (result.checkAll = options.checkAll);
-  return result;
+function gatherOptions(options: Options, name?: string): Partial<Config> | undefined {
+  try {
+    const cfg: Partial<Config> = {};
+    // TODO(@oganexon): find a more elegant way to remove undefined fields
+    name && (cfg.name = name);
+    options.version &&
+      (cfg.version = versionType("version", {}, options.version));
+    options.bump && (cfg.bump = releaseType("bump", {}, options.bump));
+    options.description && (cfg.description = options.description);
+    options.entry && (cfg.entry = options.entry);
+    options.unstable && (cfg.unstable = options.unstable);
+    options.unlisted && (cfg.unstable = options.unlisted);
+    options.repository &&
+      (cfg.repository = urlType("repository", {}, options.repository));
+    options.files && (cfg.files = options.files);
+    options.ignore && (cfg.ignore = parseIgnore(options.ignore.join()));
+    options.checkFmt && (cfg.files = options.files);
+    options.checkTests && (cfg.checkTests = options.checkTests);
+    options.checkInstallation &&
+      (cfg.checkInstallation = options.checkInstallation);
+    options.checkAll && (cfg.checkAll = options.checkAll);
+    return cfg;
+  } catch (err) {
+    log.error(err);
+    return;
+  }
 }
 
 async function checkUp(
@@ -229,17 +234,14 @@ async function publishCommand(options: Options, name?: string) {
     return;
   }
 
-  let egg: Partial<Config>;
+  const gatheredContext = await gatherContext()
+  const gatheredOptions = gatherOptions(options, name)
+  if (!gatheredContext || !gatheredOptions) return
 
-  try {
-    egg = {
-      ...await gatherContext(),
-      ...gatherOptions(options, name),
-    };
-  } catch (err) {
-    log.error(err);
-    return;
-  }
+  let egg: Partial<Config> = {
+    ...gatheredContext,
+    ...gatheredOptions,
+  };
 
   if (!ensureCompleteConfig(egg)) return;
 
@@ -312,7 +314,8 @@ async function publishCommand(options: Options, name?: string) {
 
   const configPath = defaultConfig();
   if (configPath) {
-    writeConfig(egg, configFormat(configPath));
+    await writeConfig(egg, configFormat(configPath));
+    log.debug("Updated configuration.");
   }
 
   log.info(`Successfully published ${bold(egg.name)}!`);

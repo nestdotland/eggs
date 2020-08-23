@@ -46,7 +46,7 @@ class ConsoleHandler extends BaseHandler {
 
     msg += ` ${record.msg}`;
 
-    if (record.level !== LogLevels.CRITICAL || detailedLog) {
+    if (detailedLog) {
       for (const arg of record.args) {
         msg += ` ${Deno.inspect(arg, { depth: 10 })}`;
       }
