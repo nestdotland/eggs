@@ -382,7 +382,10 @@ export const publish = new Command<Options, Arguments>()
     "--description <value:string>",
     "A description of your module that will appear on the gallery.",
   )
-  .option("--bump <value:release>", "Increment the version by the release type.")
+  .option(
+    "--bump <value:release>",
+    "Increment the version by the release type.",
+  )
   .option("--version <value:version>", "Set the version.")
   .option(
     "--entry <value:string>",
