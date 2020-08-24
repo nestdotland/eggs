@@ -261,6 +261,7 @@ async function publishCommand(options: Options, name?: string) {
   if (existing) {
     latest = existing.getLatestVersion();
     egg.description = egg.description || existing.description;
+    egg.repository = egg.repository || existing.repository;
   }
   if (egg.bump) {
     egg.version = semver.inc(egg.version || latest, egg.bump) as string;
