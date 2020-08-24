@@ -1,21 +1,19 @@
 import {
-  Command,
-  resolve,
-  parseURL,
-  cyan,
-  green,
-  log,
   blue,
-  rgb24,
-  gray,
   bold,
-  red,
-  italic,
-} from "../../deps.ts";
-import {
+  Command,
+  cyan,
   dependencyTree,
   DependencyTree,
-} from "../dependencyTree.ts";
+  gray,
+  green,
+  italic,
+  log,
+  parseURL,
+  red,
+  resolve,
+  rgb24,
+} from "../../deps.ts";
 import { DefaultOptions } from "../commands.ts";
 import { version } from "../version.ts";
 import { setupLog } from "../log.ts";
