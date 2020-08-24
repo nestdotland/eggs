@@ -2,6 +2,7 @@ import {
   basename,
   bold,
   Command,
+  dependencyTree,
   dirname,
   existsSync,
   join,
@@ -9,7 +10,6 @@ import {
   italic,
   log,
   semver,
-  dependencyTree,
   yellow,
 } from "../../deps.ts";
 import { DefaultOptions } from "../commands.ts";
@@ -21,8 +21,8 @@ import { postPieces, postPublishModule, PublishModule } from "../api/post.ts";
 
 import {
   Config,
-  defaultConfig,
   configFormat,
+  defaultConfig,
   writeConfig,
 } from "../context/config.ts";
 import { gatherContext } from "../context/context.ts";
