@@ -55,11 +55,6 @@ function ensureCompleteConfig(config: Partial<Config>): config is Config {
     isConfigComplete = false;
   }
 
-  if (!config.description) {
-    log.warning(
-      "You haven't provided a description for your module, continuing without one...",
-    );
-  }
   return isConfigComplete;
 }
 
@@ -265,11 +260,10 @@ async function publishCommand(options: Options, name?: string) {
   let latest = "0.0.0";
   if (existing) {
     latest = existing.getLatestVersion();
+    egg.description = egg.description || existing.description;
   }
   if (egg.bump) {
-    if ((egg.version && semver.eq(latest, egg.version)) || !egg.version) {
-      egg.version = semver.inc(latest, egg.bump) as string;
-    }
+    egg.version = semver.inc(egg.version || latest, egg.bump) as string;
   }
   if (
     existing &&
@@ -279,6 +273,12 @@ async function publishCommand(options: Options, name?: string) {
       "This version was already published. Please increment the version in your configuration.",
     );
     return;
+  }
+
+  if (!egg.description) {
+    log.warning(
+      "You haven't provided a description for your module, continuing without one...",
+    );
   }
 
   const module: PublishModule = {
@@ -382,16 +382,8 @@ export const publish = new Command<Options, Arguments>()
     "--description <value:string>",
     "A description of your module that will appear on the gallery.",
   )
-  .option(
-    "--bump <value:release>",
-    "Increment the version by the release type.",
-    { conflicts: ["version"] },
-  )
-  .option(
-    "--version <value:version>",
-    "Set the version.",
-    { conflicts: ["bump"] },
-  )
+  .option("--bump <value:release>", "Increment the version by the release type.")
+  .option("--version <value:version>", "Set the version.")
   .option(
     "--entry <value:string>",
     "The main file of your project.",
