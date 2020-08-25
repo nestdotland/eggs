@@ -20,15 +20,15 @@ import { setupLog } from "../log.ts";
 
 const format = {
   redundant: gray("..."),
-  circular: red("Circular import"),
-  local: bold("Local"),
-  nestLand: rgb24("N", 0x43c0ad) + rgb24("e", 0x52c0a2) +
+  circular: red("circular import"),
+  local: bold("local"),
+  nestLand: rgb24("n", 0x43c0ad) + rgb24("e", 0x52c0a2) +
     rgb24("s", 0x62bf97) + rgb24("t", 0x6cbf90) + rgb24(".", 0x80be83) +
     rgb24("l", 0x91be77) + rgb24("a", 0xa9bd67) + rgb24("n", 0xc9bc50) +
     rgb24("d", 0xd7bc47),
-  denoLand: cyan("Deno.land"),
-  github: blue("Github"),
-  denopkgCom: green("Denopkg.com"),
+  denoLand: cyan("deno.land"),
+  github: blue("github.com"),
+  denopkgCom: green("denopkg.com"),
 };
 
 /** Info Command. */
