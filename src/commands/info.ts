@@ -68,14 +68,14 @@ function prettyTree(
 ) {
   let line = indent;
   if (last) {
-    line += "└─";
+    line += "└─" + (tree.length > 0 ? "┬" : "─");
     indent += "  ";
   } else {
-    line += "├─";
+    line += "├─" + (tree.length > 0 ? "┬" : "─");
     indent += "│ ";
   }
 
-  console.log(`${line}${options.raw ? name : beautifyDependency(name)}`);
+  console.log(`${line} ${options.raw ? name : beautifyDependency(name)}`);
 
   for (let i = 0; i < tree.length; i++) {
     const { path, imports } = tree[i];
