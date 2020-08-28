@@ -36,9 +36,31 @@ async function infoCommand(options: Options, file?: string) {
   await setupLog(options.debug);
 
   if (file) {
+    let importsFound = 0
+    let importsResolved = 0
+
+    const progress = () => log.debug(`${importsResolved} / ${importsFound}`)
+  
+    function onImportFound(count: number) {
+      importsFound = count
+      progress()
+    }
+  
+    function onImportResolved(count: number) {
+      importsResolved = count
+      progress()
+    }
+
     const path = file.match(/https?:\/\//) ? file : resolve(Deno.cwd(), file);
 
-    const deps = await dependencyTree(path, { fullTree: options.full });
+    const deps = await dependencyTree(
+      path,
+      {
+        fullTree: options.full,
+        onImportFound,
+        onImportResolved,
+      },
+    );
     log.debug("Dependency tree", deps.tree[0]);
     prettyTree(deps.tree[0].path, deps.tree[0].imports, "", true, options);
 
