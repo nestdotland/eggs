@@ -87,4 +87,4 @@ export { NestLand as Nest } from "https://x.nest.land/hatcher@0.8.0/lib/registri
 export {
   dependencyTree,
   DependencyTree,
-} from "https://x.nest.land/analyzer@0.0.4/deno/tree.ts";
+} from "https://x.nest.land/analyzer@0.0.6/deno/tree.ts";

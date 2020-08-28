@@ -20,15 +20,15 @@ import { setupLog } from "../log.ts";
 
 const format = {
   redundant: gray("..."),
-  circular: red("Circular import"),
-  local: bold("Local"),
-  nestLand: rgb24("N", 0x43c0ad) + rgb24("e", 0x52c0a2) +
+  circular: red("circular import"),
+  local: bold("local"),
+  nestLand: rgb24("n", 0x43c0ad) + rgb24("e", 0x52c0a2) +
     rgb24("s", 0x62bf97) + rgb24("t", 0x6cbf90) + rgb24(".", 0x80be83) +
     rgb24("l", 0x91be77) + rgb24("a", 0xa9bd67) + rgb24("n", 0xc9bc50) +
     rgb24("d", 0xd7bc47),
-  denoLand: cyan("Deno.land"),
-  github: blue("Github"),
-  denopkgCom: green("Denopkg.com"),
+  denoLand: cyan("deno.land"),
+  github: blue("github.com"),
+  denopkgCom: green("denopkg.com"),
 };
 
 /** Info Command. */
@@ -36,9 +36,31 @@ async function infoCommand(options: Options, file?: string) {
   await setupLog(options.debug);
 
   if (file) {
+    let importsFound = 0;
+    let importsResolved = 0;
+
+    const progress = () => log.debug(`${importsResolved} / ${importsFound}`);
+
+    function onImportFound(count: number) {
+      importsFound = count;
+      progress();
+    }
+
+    function onImportResolved(count: number) {
+      importsResolved = count;
+      progress();
+    }
+
     const path = file.match(/https?:\/\//) ? file : resolve(Deno.cwd(), file);
 
-    const deps = await dependencyTree(path, { fullTree: options.full });
+    const deps = await dependencyTree(
+      path,
+      {
+        fullTree: options.full,
+        onImportFound,
+        onImportResolved,
+      },
+    );
     log.debug("Dependency tree", deps.tree[0]);
     prettyTree(deps.tree[0].path, deps.tree[0].imports, "", true, options);
 
@@ -68,14 +90,14 @@ function prettyTree(
 ) {
   let line = indent;
   if (last) {
-    line += "└─";
+    line += "└─" + (tree.length > 0 ? "┬" : "─");
     indent += "  ";
   } else {
-    line += "├─";
+    line += "├─" + (tree.length > 0 ? "┬" : "─");
     indent += "│ ";
   }
 
-  console.log(`${line}${options.raw ? name : beautifyDependency(name)}`);
+  console.log(`${line} ${options.raw ? name : beautifyDependency(name)}`);
 
   for (let i = 0; i < tree.length; i++) {
     const { path, imports } = tree[i];
