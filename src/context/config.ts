@@ -25,15 +25,15 @@ export interface Config {
   repository?: string;
   version: string;
   bump?: semver.ReleaseType;
-  unstable?: boolean;
   stable?: boolean; // ! DEPRECATED
+  unstable?: boolean;
   unlisted?: boolean;
 
   files?: string[];
   ignore?: Ignore;
 
   fmt?: boolean; // ! DEPRECATED
-  checkFmt?: boolean;
+  checkFormat?: boolean;
   checkTests?: boolean;
   checkInstallation?: boolean;
   checkAll?: boolean;

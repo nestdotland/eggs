@@ -107,7 +107,7 @@ async function deprecationWarnings(config: Config) {
   }
   if (typeof config.fmt === "boolean") {
     log.warning(
-      `${yellow("[Deprecated - fmt]")} Use the ${bold("checkFmt")} field.`,
+      `${yellow("[Deprecated - fmt]")} Use the ${bold("checkFormat")} field.`,
     );
   }
 }
@@ -135,7 +135,7 @@ function gatherOptions(
       (cfg.repository = urlType("repository", {}, options.repository));
     options.files && (cfg.files = options.files);
     options.ignore && (cfg.ignore = parseIgnore(options.ignore.join()));
-    options.checkFmt && (cfg.files = options.files);
+    options.checkFormat && (cfg.checkFormat = options.checkFormat);
     options.checkTests && (cfg.checkTests = options.checkTests);
     options.checkInstallation &&
       (cfg.checkInstallation = options.checkInstallation);
@@ -151,7 +151,7 @@ async function checkUp(
   config: Config,
   matched: MatchedFile[],
 ): Promise<boolean> {
-  if (config.checkFmt || config.fmt || config.checkAll) {
+  if (config.checkFormat || config.fmt || config.checkAll) {
     const process = Deno.run(
       { cmd: ["deno", "fmt"], stderr: "null", stdout: "null" },
     );
@@ -360,7 +360,7 @@ interface Options extends DefaultOptions {
   repository?: string;
   files?: string[];
   ignore?: string[];
-  checkFmt?: boolean;
+  checkFormat?: boolean;
   checkTests?: boolean;
   checkInstallation?: boolean;
   checkAll?: boolean;
@@ -407,7 +407,7 @@ export const publish = new Command<Options, Arguments>()
     "--ignore <values...:string>",
     "All the files that should be ignored when uploading to nest.land. Supports file globbing.",
   )
-  .option("--check-fmt", "Automatically format your code before publishing")
+  .option("--check-format", "Automatically format your code before publishing")
   .option("--check-tests", `Run ${italic("deno test")}.`)
   .option(
     "--check-installation",
