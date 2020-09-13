@@ -44,8 +44,8 @@ const eggs = new Command<DefaultOptions, []>()
   .command("publish", publish)
   .command("update", update)
   .command("install", install)
-  .command("upgrade", upgrade)
-  .command("info", info);
+  .command("info", info)
+  .command("upgrade", upgrade);
 
 try {
   const { options } = await eggs.parse(Deno.args);

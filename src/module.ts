@@ -4,6 +4,7 @@ export interface IModule {
   name: string;
   owner: string;
   description: string;
+  repository?: string;
   latestVersion?: string;
   latestStableVersion?: string;
   packageUploadNames: string[];
@@ -13,6 +14,7 @@ export class Module implements IModule {
   name: string;
   owner: string;
   description: string;
+  repository?: string;
   latestVersion?: string;
   latestStableVersion?: string;
   packageUploadNames: string[];
@@ -21,6 +23,7 @@ export class Module implements IModule {
     this.name = module.name;
     this.owner = module.owner;
     this.description = module.description;
+    this.repository = module.repository;
     this.latestVersion = module.latestVersion;
     this.latestStableVersion = module.latestStableVersion;
     this.packageUploadNames = module.packageUploadNames;

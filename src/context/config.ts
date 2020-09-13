@@ -3,9 +3,11 @@ import {
   extname,
   join,
   parseYaml,
+  semver,
   stringifyYaml,
   writeJson,
 } from "../../deps.ts";
+import { Ignore } from "./ignore.ts";
 
 /** Supported configuration formats. */
 export enum ConfigFormat {
@@ -18,15 +20,23 @@ export enum ConfigFormat {
  * commands require at least some. */
 export interface Config {
   name: string;
-  entry?: string;
+  entry: string;
   description?: string;
   repository?: string;
-  version?: string;
-  stable?: boolean;
+  version: string;
+  bump?: semver.ReleaseType;
+  stable?: boolean; // ! DEPRECATED
+  unstable?: boolean;
   unlisted?: boolean;
-  fmt?: boolean;
 
   files?: string[];
+  ignore?: Ignore;
+
+  fmt?: boolean; // ! DEPRECATED
+  checkFormat?: boolean;
+  checkTests?: boolean;
+  checkInstallation?: boolean;
+  checkAll?: boolean;
 }
 
 /** Filenames of the default configs.
@@ -67,11 +77,13 @@ export async function writeConfig(
 ): Promise<void> {
   switch (format) {
     case ConfigFormat.YAML:
-      await writeYaml(`egg.yml`, stringifyYaml(data));
+      await writeYaml(join(Deno.cwd(), "egg.yml"), stringifyYaml(data));
       break;
     case ConfigFormat.JSON:
-      await writeJson("egg.json", data, { spaces: 2 });
+      await writeJson(join(Deno.cwd(), "egg.json"), data, { spaces: 2 });
       break;
+    default:
+      throw new Error(`Unknown config format: ${format}`);
   }
 }
 
@@ -89,14 +101,7 @@ export function parseConfig(
   format: ConfigFormat,
 ): Partial<Config> {
   if (format == ConfigFormat.YAML) {
-    return (parseYaml(data) ?? {}) as Config;
+    return (parseYaml(data) ?? {}) as Partial<Config>;
   }
-  return JSON.parse(data) as Config;
-}
-
-export function ensureCompleteConfig(
-  config: Partial<Config>,
-): config is Config {
-  if (!config.name) return false;
-  return true;
+  return JSON.parse(data) as Partial<Config>;
 }

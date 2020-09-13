@@ -1,11 +1,12 @@
 export {
+  basename,
   join,
+  dirname,
   extname,
   fromFileUrl,
   isAbsolute,
   relative,
   resolve,
-  basename,
   globToRegExp,
 } from "https://x.nest.land/std@0.61.0/path/mod.ts";
 
