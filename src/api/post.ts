@@ -35,7 +35,7 @@ export interface PublishResponse {
   owner: string;
 }
 
-export interface PublishModule {
+export interface PublishModule extends Record<string, unknown> {
   name: string;
   description?: string;
   repository?: string;

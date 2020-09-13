@@ -1,3 +1,4 @@
+/**************** std ****************/
 export {
   basename,
   join,
@@ -39,28 +40,29 @@ export {
   stringify as stringifyYaml,
 } from "https://x.nest.land/std@0.69.0/encoding/yaml.ts";
 
+/**************** cliffy ****************/
 export {
   Command,
   HelpCommand,
   CompletionsCommand,
-} from "https://x.nest.land/cliffy@0.11.1/packages/command/mod.ts";
+} from "https://x.nest.land/cliffy@0.14.1/command/mod.ts";
 
 export {
   Input,
   Confirm,
   Select,
   List,
-} from "https://x.nest.land/cliffy@0.11.1/packages/prompt/mod.ts";
+} from "https://x.nest.land/cliffy@0.14.1/prompt/mod.ts";
 
-export type {
-  IFlagArgument,
-  IFlagOptions,
-} from "https://x.nest.land/cliffy@0.11.1/flags.ts";
+export type { ITypeInfo } from "https://x.nest.land/cliffy@0.14.1/flags/types.ts";
 
+/**************** semver ****************/
 export * as semver from "https://deno.land/x/semver@v1.0.0/mod.ts";
 
+/**************** bade64 ****************/
 export * as base64 from "https://denopkg.com/chiefbiiko/base64@v0.2.0/mod.ts";
 
+/**************** hatcher ****************/
 export {
   installUpdateHandler,
   globalModulesConfigPath,
@@ -81,5 +83,6 @@ export {
 
 export { NestLand as Nest } from "https://x.nest.land/hatcher@0.8.0/lib/registries/NestLand.ts";
 
+/**************** analyzer ****************/
 export type { DependencyTree } from "https://x.nest.land/analyzer@0.0.6/deno/tree.ts";
 export { dependencyTree } from "https://x.nest.land/analyzer@0.0.6/deno/tree.ts";
