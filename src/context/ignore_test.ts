@@ -19,13 +19,13 @@ test/*
           /^test(?:\\|\/)+[^\\/]*(?:\\|\/)*$/,
         ],
       );
-      assertEquals(matched.accepts, [/^test(?:\\|\/)should_keep_this\.ts$/]);
+      assertEquals(matched.accepts, [/^test(?:\\|\/)+should_keep_this\.ts(?:\\|\/)*$/]);
     } else {
       assertEquals(
         matched.denies,
         [/^\.git\/+[^/]*\/*$/, /^test\/+[^/]*\/*$/],
       );
-      assertEquals(matched.accepts, [/^test\/should_keep_this\.ts$/]);
+      assertEquals(matched.accepts, [/^test\/+should_keep_this\.ts\/*$/]);
     }
   },
 });
