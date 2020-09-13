@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Replacer = (key: string, value: any) => any;
 
 export interface WriteJsonOptions extends Deno.WriteFileOptions {

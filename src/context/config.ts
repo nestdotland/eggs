@@ -6,7 +6,7 @@ import {
   semver,
   stringifyYaml,
 } from "../../deps.ts";
-import { writeJson } from "../utilities/json.ts"
+import { writeJson } from "../utilities/json.ts";
 import type { Ignore } from "./ignore.ts";
 
 /** Supported configuration formats. */

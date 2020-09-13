@@ -7,7 +7,7 @@ type StringMap = {
 export async function postResource<T>(
   query: string,
   headers: StringMap,
-  data: object,
+  data: Record<string, unknown>,
 ): Promise<T | undefined> {
   // TODO(@qu4k): add test resource
   try {

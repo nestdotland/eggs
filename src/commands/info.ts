@@ -35,22 +35,22 @@ const format = {
 async function infoCommand(options: Options, file?: string) {
   await setupLog(options.debug);
 
+  let importsFound = 0;
+  let importsResolved = 0;
+
+  const progress = () => log.debug(`${importsResolved} / ${importsFound}`);
+
+  function onImportFound(count: number) {
+    importsFound = count;
+    progress();
+  }
+
+  function onImportResolved(count: number) {
+    importsResolved = count;
+    progress();
+  }
+
   if (file) {
-    let importsFound = 0;
-    let importsResolved = 0;
-
-    const progress = () => log.debug(`${importsResolved} / ${importsFound}`);
-
-    function onImportFound(count: number) {
-      importsFound = count;
-      progress();
-    }
-
-    function onImportResolved(count: number) {
-      importsResolved = count;
-      progress();
-    }
-
     const path = file.match(/https?:\/\//) ? file : resolve(Deno.cwd(), file);
 
     const deps = await dependencyTree(
