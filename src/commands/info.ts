@@ -14,7 +14,7 @@ import {
   resolve,
   rgb24,
 } from "../../deps.ts";
-import { DefaultOptions } from "../commands.ts";
+import type { DefaultOptions } from "../commands.ts";
 import { version } from "../version.ts";
 import { setupLog } from "../log.ts";
 

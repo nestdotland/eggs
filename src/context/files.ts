@@ -5,7 +5,7 @@ import {
   resolve,
   walkSync,
 } from "../../deps.ts";
-import { Config } from "./config.ts";
+import type { Config } from "./config.ts";
 
 export interface MatchedFile {
   fullPath: string;

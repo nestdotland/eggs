@@ -12,7 +12,7 @@ import {
   semver,
   yellow,
 } from "../../deps.ts";
-import { DefaultOptions } from "../commands.ts";
+import type { DefaultOptions } from "../commands.ts";
 import { releaseType, urlType, versionType } from "../types.ts";
 
 import { ENDPOINT } from "../api/common.ts";

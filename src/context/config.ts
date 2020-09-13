@@ -5,9 +5,9 @@ import {
   parseYaml,
   semver,
   stringifyYaml,
-  writeJson,
 } from "../../deps.ts";
-import { Ignore } from "./ignore.ts";
+import { writeJson } from "../utilities/json.ts"
+import type { Ignore } from "./ignore.ts";
 
 /** Supported configuration formats. */
 export enum ConfigFormat {
