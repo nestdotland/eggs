@@ -15,7 +15,7 @@ export function validateRelease(value: string): boolean {
   return releases.includes(value);
 }
 
-export function releaseType( { name, value }: ITypeInfo ): semver.ReleaseType {
+export function releaseType({ name, value }: ITypeInfo): semver.ReleaseType {
   if (!validateRelease(value)) {
     throw new Error(
       `Option --${name} must be a valid release type but got: ${value}.\nAccepted values are ${
