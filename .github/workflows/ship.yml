@@ -3,7 +3,8 @@ name: Ship
 on:
   push:
     branches: [master]
- 
+
+
 jobs:
   release:
     runs-on: ubuntu-latest
@@ -13,6 +14,8 @@ jobs:
 
       - name: Setup Deno
         uses: denolib/setup-deno@v2
+        with:
+          deno-version: v1.3.3
 
       - name: Publish eggs
         run: |

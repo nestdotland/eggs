@@ -1,5 +1,5 @@
 import { Command, log } from "../../deps.ts";
-import { DefaultOptions } from "../commands.ts";
+import type { DefaultOptions } from "../commands.ts";
 import { KEY_FILE, writeAPIKey } from "../keyfile.ts";
 import { version } from "../version.ts";
 import { setupLog } from "../log.ts";

@@ -1,11 +1,12 @@
 import { Command, HelpCommand, CompletionsCommand, log } from "./deps.ts";
-import { DefaultOptions } from "./src/commands.ts";
+import type { DefaultOptions } from "./src/commands.ts";
 import { link } from "./src/commands/link.ts";
 import { init } from "./src/commands/init.ts";
 import { publish } from "./src/commands/publish.ts";
 import { update } from "./src/commands/update.ts";
 import { install } from "./src/commands/install.ts";
 import { upgrade } from "./src/commands/upgrade.ts";
+import { info } from "./src/commands/info.ts";
 
 import { version } from "./src/version.ts";
 
@@ -15,6 +16,8 @@ import {
   setupLog,
   errorOccurred,
 } from "./src/log.ts";
+
+const commands = { link, init, publish, update, install, upgrade, info };
 
 await setupLog();
 
@@ -41,6 +44,7 @@ const eggs = new Command<DefaultOptions, []>()
   .command("publish", publish)
   .command("update", update)
   .command("install", install)
+  .command("info", info)
   .command("upgrade", upgrade);
 
 try {
@@ -60,7 +64,12 @@ try {
       /^(Unknown option:|Unknown command:|Option --|Missing value for option:|Missing argument\(s\):)/,
     )
   ) {
-    eggs.help();
+    const command = Deno.args[0] as keyof typeof commands;
+    if (command in commands) {
+      commands[command].help();
+    } else {
+      eggs.help();
+    }
     log.error(err.message);
   } else {
     await handleError(err);

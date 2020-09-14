@@ -7,6 +7,7 @@ import {
   LogRecord,
   red,
   resolve,
+  stripColor,
   underline,
   yellow,
   gray,
@@ -46,9 +47,9 @@ class ConsoleHandler extends BaseHandler {
 
     msg += ` ${record.msg}`;
 
-    if (record.level !== LogLevels.CRITICAL || detailedLog) {
+    if (detailedLog) {
       for (const arg of record.args) {
-        msg += ` ${Deno.inspect(arg)}`;
+        msg += ` ${Deno.inspect(arg, { depth: 10 })}`;
       }
     }
 
@@ -84,10 +85,10 @@ class FileHandler extends BaseHandler {
         break;
     }
 
-    msg += ` ${stripANSII(record.msg)}`;
+    msg += ` ${stripColor(record.msg)}`;
 
     for (const arg of record.args) {
-      msg += ` ${stripANSII(Deno.inspect(arg))}`;
+      msg += ` ${stripColor(Deno.inspect(arg, { depth: Infinity }))}`;
     }
 
     return msg;
@@ -137,6 +138,10 @@ export async function writeLogFile() {
         masterLogRecord,
     ),
   );
+
+  log.info(
+    `Debug file created. (${highlight(resolve(Deno.cwd(), DEBUG_LOG_FILE))})`,
+  );
 }
 
 export async function handleError(err: Error) {
@@ -154,12 +159,6 @@ export async function handleError(err: Error) {
       highlight("https://docs.nest.land/eggs/")
     } for documentation about this command.`,
   );
-}
-
-const colorRegex = /\x1B[[(?);]{0,2}(;?\d)*./g;
-
-export function stripANSII(msg: string) {
-  return msg.replace(colorRegex, "");
 }
 
 export function highlight(msg: string) {
