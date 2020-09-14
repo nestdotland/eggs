@@ -7,6 +7,7 @@ import {
   LogRecord,
   red,
   resolve,
+  stripColor,
   underline,
   yellow,
   gray,
@@ -84,10 +85,10 @@ class FileHandler extends BaseHandler {
         break;
     }
 
-    msg += ` ${stripANSII(record.msg)}`;
+    msg += ` ${stripColor(record.msg)}`;
 
     for (const arg of record.args) {
-      msg += ` ${stripANSII(Deno.inspect(arg, { depth: Infinity }))}`;
+      msg += ` ${stripColor(Deno.inspect(arg, { depth: Infinity }))}`;
     }
 
     return msg;
@@ -158,12 +159,6 @@ export async function handleError(err: Error) {
       highlight("https://docs.nest.land/eggs/")
     } for documentation about this command.`,
   );
-}
-
-const colorRegex = /\x1B[[(?);]{0,2}(;?\d)*./g;
-
-export function stripANSII(msg: string) {
-  return msg.replace(colorRegex, "");
 }
 
 export function highlight(msg: string) {

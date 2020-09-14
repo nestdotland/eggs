@@ -34,13 +34,13 @@ export class Module implements IModule {
       return n.split("@")[1];
     }
 
+    function cmp(a: string, b: string): number {
+      return -(semver.compare(vn(a), vn(b)));
+    }
+
     let latest: string | undefined;
 
     if (this.packageUploadNames.length > 0) {
-      function cmp(a: string, b: string): number {
-        return -(semver.compare(vn(a), vn(b)));
-      }
-
       const sorted = this.packageUploadNames.sort(cmp);
       latest = vn(sorted[0]);
     }

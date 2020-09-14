@@ -1,5 +1,5 @@
 import { Command, HelpCommand, CompletionsCommand, log } from "./deps.ts";
-import { DefaultOptions } from "./src/commands.ts";
+import type { DefaultOptions } from "./src/commands.ts";
 import { link } from "./src/commands/link.ts";
 import { init } from "./src/commands/init.ts";
 import { publish } from "./src/commands/publish.ts";

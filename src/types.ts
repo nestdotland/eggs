@@ -1,4 +1,4 @@
-import { IFlagArgument, IFlagOptions, semver } from "../deps.ts";
+import { ITypeInfo, semver } from "../deps.ts";
 
 export const releases = [
   "patch",
@@ -15,16 +15,10 @@ export function validateRelease(value: string): boolean {
   return releases.includes(value);
 }
 
-export function releaseType(
-  option: IFlagOptions | string,
-  arg: IFlagArgument,
-  value: string,
-): semver.ReleaseType {
+export function releaseType({ name, value }: ITypeInfo): semver.ReleaseType {
   if (!validateRelease(value)) {
     throw new Error(
-      `Option ${
-        typeof option === "string" ? option : `--${option.name}`
-      } must be a valid release type but got: ${value}.\nAccepted values are ${
+      `Option --${name} must be a valid release type but got: ${value}.\nAccepted values are ${
         releases.join(", ")
       }.`,
     );
@@ -36,16 +30,10 @@ export function validateVersion(value: string): boolean {
   return !!semver.valid(value);
 }
 
-export function versionType(
-  option: IFlagOptions | string,
-  arg: IFlagArgument,
-  value: string,
-): string {
+export function versionType({ name, value }: ITypeInfo): string {
   if (!validateVersion(value)) {
     throw new Error(
-      `Option ${
-        typeof option === "string" ? option : `--${option.name}`
-      } must be a valid version but got: ${value}.\nVersion must follow Semantic Versioning 2.0.0.`,
+      `Option --${name} must be a valid version but got: ${value}.\nVersion must follow Semantic Versioning 2.0.0.`,
     );
   }
   return value;
@@ -57,16 +45,10 @@ export function validateURL(value: string): boolean {
   return value === "" || !!value.match(urlRegex);
 }
 
-export function urlType(
-  option: IFlagOptions | string,
-  arg: IFlagArgument,
-  value: string,
-): string {
+export function urlType({ name, value }: ITypeInfo): string {
   if (!validateURL(value)) {
     throw new Error(
-      `Option ${
-        typeof option === "string" ? option : `--${option.name}`
-      } must be a valid url but got: ${value}.`,
+      `Option --${name} must be a valid url but got: ${value}.`,
     );
   }
   return value;

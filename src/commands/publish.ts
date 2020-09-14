@@ -12,7 +12,7 @@ import {
   semver,
   yellow,
 } from "../../deps.ts";
-import { DefaultOptions } from "../commands.ts";
+import type { DefaultOptions } from "../commands.ts";
 import { releaseType, urlType, versionType } from "../types.ts";
 
 import { ENDPOINT } from "../api/common.ts";
@@ -125,14 +125,21 @@ function gatherOptions(
     // TODO(@oganexon): find a more elegant way to remove undefined fields
     name && (cfg.name = name);
     options.version &&
-      (cfg.version = versionType("version", {}, options.version));
-    options.bump && (cfg.bump = releaseType("bump", {}, options.bump));
+      (cfg.version = versionType(
+        { name: "version", value: options.version, label: "", type: "" },
+      ));
+    options.bump &&
+      (cfg.bump = releaseType(
+        { name: "bump", value: options.bump, label: "", type: "" },
+      ));
     options.description && (cfg.description = options.description);
     options.entry && (cfg.entry = options.entry);
     options.unstable && (cfg.unstable = options.unstable);
     options.unlisted && (cfg.unstable = options.unlisted);
     options.repository &&
-      (cfg.repository = urlType("repository", {}, options.repository));
+      (cfg.repository = urlType(
+        { name: "repository", value: options.repository, label: "", type: "" },
+      ));
     options.files && (cfg.files = options.files);
     options.ignore && (cfg.ignore = parseIgnore(options.ignore.join()));
     options.checkFormat && (cfg.checkFormat = options.checkFormat);
