@@ -14,13 +14,11 @@ jobs:
 
       - name: Setup Deno
         uses: denolib/setup-deno@v2
-        with:
-          deno-version: v1.3.3
 
       - name: Publish eggs
         run: |
           deno run -A --unstable mod.ts link ${{ secrets.NESTAPIKEY }}
-          deno run -A --unstable mod.ts publish
+          deno run -A --unstable mod.ts publish eggs
 
       - name: Draft release
         uses: release-drafter/release-drafter@v5

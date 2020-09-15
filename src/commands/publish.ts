@@ -75,27 +75,6 @@ function ensureFiles(config: Config, matched: MatchedFile[]): boolean {
 }
 
 async function deprecationWarnings(config: Config) {
-  const name = config.name.toLowerCase();
-
-  try {
-    let readme = await Deno.readTextFile(`README.md`);
-    readme = readme.toLowerCase();
-    if (readme.includes(`://deno.land/x/${name}`)) {
-      log.warning(
-        `Your readme contains old import URLs from your project using ${
-          highlight(`deno.land/x/${name}`)
-        }.`,
-      );
-      log.warning(
-        `You can change these to ${
-          highlight(`https://x.nest.land/${name}@VERSION`)
-        }`,
-      );
-    }
-  } catch {
-    // Do not report the user in case of error
-  }
-
   if (typeof config.stable === "boolean") {
     log.warning(
       `${
