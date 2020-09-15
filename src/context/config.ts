@@ -28,6 +28,7 @@ export interface Config {
   stable?: boolean; // ! DEPRECATED
   unstable?: boolean;
   unlisted?: boolean;
+  wallet?: string;
 
   files?: string[];
   ignore?: Ignore;

@@ -1,6 +1,6 @@
 import { Module } from "../module.ts";
 import { ENDPOINT } from "./common.ts";
-import { Yolk, Module as YolkModule } from "../../deps.ts";
+import { Yolk } from "../../deps.ts";
 
 /**
  * Create a new Yolk instance.

@@ -17,7 +17,6 @@ import {
 import type { DefaultOptions } from "../commands.ts";
 import { releaseType, urlType, versionType, walletType } from "../types.ts";
 
-import { ENDPOINT } from "../api/common.ts";
 import { fetchModule } from "../api/fetch.ts";
 import { postPublishModule } from "../api/post.ts";
 

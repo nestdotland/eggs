@@ -1,5 +1,5 @@
 import { ENDPOINT } from "./common.ts";
-import { Yolk, publish, PublishModule } from "../../deps.ts";
+import { publish, PublishModule } from "../../deps.ts";
 
 type StringMap = {
   [key: string]: string;

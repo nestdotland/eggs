@@ -1,4 +1,4 @@
-import { ITypeInfo, semver } from "../deps.ts";
+import { existsSync, ITypeInfo, semver } from "../deps.ts";
 
 export const releases = [
   "patch",
@@ -50,6 +50,17 @@ export function urlType({ name, value }: ITypeInfo): string {
     throw new Error(
       `Option --${name} must be a valid url but got: ${value}.`,
     );
+  }
+  return value;
+}
+
+export function walletType({ name, value }: ITypeInfo): string {
+  if (!value.endsWith(".json")) {
+    throw new Error(
+      `Option --${name} must be a valid keyfile but got: ${value}.\nKeyfile must end with .json`,
+    );
+  } else if (!existsSync(value)) {
+    throw new Error(`Given keyfile ${value} does not exist`);
   }
   return value;
 }
