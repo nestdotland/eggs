@@ -1,4 +1,12 @@
-import { existsSync, globToRegExp, join, log } from "../../deps.ts";
+import {
+  basename,
+  existsSync,
+  expandGlob,
+  globToRegExp,
+  join,
+  log,
+  relative,
+} from "../../deps.ts";
 
 export interface Ignore {
   accepts: RegExp[];
@@ -16,13 +24,18 @@ export function defaultIgnore(wd: string = Deno.cwd()): string | undefined {
 }
 
 export async function readIgnore(path: string): Promise<Ignore> {
-  const data = await Deno.readTextFile(path);
-  return parseIgnore(data);
+  try {
+    const data = await Deno.readTextFile(path);
+    return parseIgnore(data, basename(path));
+  } catch (err) {
+    throw new Error(`Error while reading ${path}: ${err}`);
+  }
 }
 
-export function parseIgnore(
+export async function parseIgnore(
   data: string,
-): Ignore {
+  name = ".eggignore",
+): Promise<Ignore> {
   const ignore: Ignore = {
     accepts: [],
     denies: [],
@@ -34,16 +47,31 @@ export function parseIgnore(
     if (!line) continue;
     if (line.startsWith("#")) continue;
     const accepts = line.startsWith("!");
+    const extends_ = line.startsWith("extends ");
     if (accepts) line = line.substr(1);
+    if (extends_) line = line.substr(8);
     try {
-      const pattern = globToRegExp(line, { extended: true, globstar: true });
-      if (accepts) {
-        ignore.accepts.push(pattern);
+      if (extends_) {
+        if (line.match(/.gitignore$/)) {
+          ignore.denies.push(globToRegExp(".git*/**"));
+        }
+        const files = expandGlob(line, { root: Deno.cwd() });
+        for await (const file of files) {
+          const path = relative(Deno.cwd(), file.path).replace(/\\/g, "/");
+          const { accepts, denies } = await readIgnore(path);
+          ignore.accepts.concat(accepts);
+          ignore.denies.concat(denies);
+        }
       } else {
-        ignore.denies.push(pattern);
+        const pattern = globToRegExp(line);
+        if (accepts) {
+          ignore.accepts.push(pattern);
+        } else {
+          ignore.denies.push(pattern);
+        }
       }
     } catch (err) {
-      log.error(`parsing .eggsignore file. error at line ${n}`);
+      log.error(`parsing ${name} file. Error at line ${n}`);
     }
   }
   return ignore;

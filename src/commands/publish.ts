@@ -116,10 +116,10 @@ function isVersionUnstable(v: string) {
   return !((semver.major(v) === 0) || semver.prerelease(v));
 }
 
-function gatherOptions(
+async function gatherOptions(
   options: Options,
   name?: string,
-): Partial<Config> | undefined {
+): Promise<Partial<Config> | undefined> {
   try {
     const cfg: Partial<Config> = {};
     // TODO(@oganexon): find a more elegant way to remove undefined fields
@@ -141,7 +141,7 @@ function gatherOptions(
         { name: "repository", value: options.repository, label: "", type: "" },
       ));
     options.files && (cfg.files = options.files);
-    options.ignore && (cfg.ignore = parseIgnore(options.ignore.join()));
+    options.ignore && (cfg.ignore = await parseIgnore(options.ignore.join()));
     options.checkFormat && (cfg.checkFormat = options.checkFormat);
     options.checkTests && (cfg.checkTests = options.checkTests);
     options.checkInstallation &&
@@ -242,7 +242,7 @@ async function publishCommand(options: Options, name?: string) {
   }
 
   const gatheredContext = await gatherContext();
-  const gatheredOptions = gatherOptions(options, name);
+  const gatheredOptions = await gatherOptions(options, name);
   if (!gatheredContext || !gatheredOptions) return;
 
   let egg: Partial<Config> = {
