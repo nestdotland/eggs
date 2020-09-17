@@ -26,7 +26,7 @@ import {
   writeConfig,
 } from "../context/config.ts";
 import { gatherContext } from "../context/context.ts";
-import { parseIgnore } from "../context/ignore.ts";
+import { parseIgnore, extendsIgnore } from "../context/ignore.ts";
 import { MatchedFile, matchFiles, readFiles } from "../context/files.ts";
 
 import { getAPIKey } from "../keyfile.ts";
@@ -116,10 +116,10 @@ function isVersionUnstable(v: string) {
   return !((semver.major(v) === 0) || semver.prerelease(v));
 }
 
-async function gatherOptions(
+function gatherOptions(
   options: Options,
   name?: string,
-): Promise<Partial<Config> | undefined> {
+): Partial<Config> | undefined {
   try {
     const cfg: Partial<Config> = {};
     // TODO(@oganexon): find a more elegant way to remove undefined fields
@@ -141,7 +141,7 @@ async function gatherOptions(
         { name: "repository", value: options.repository, label: "", type: "" },
       ));
     options.files && (cfg.files = options.files);
-    options.ignore && (cfg.ignore = await parseIgnore(options.ignore.join()));
+    options.ignore && (cfg.ignore = parseIgnore(options.ignore.join()));
     options.checkFormat && (cfg.checkFormat = options.checkFormat);
     options.checkTests && (cfg.checkTests = options.checkTests);
     options.checkInstallation &&
@@ -242,7 +242,7 @@ async function publishCommand(options: Options, name?: string) {
   }
 
   const gatheredContext = await gatherContext();
-  const gatheredOptions = await gatherOptions(options, name);
+  const gatheredOptions = gatherOptions(options, name);
   if (!gatheredContext || !gatheredOptions) return;
 
   let egg: Partial<Config> = {
@@ -251,6 +251,10 @@ async function publishCommand(options: Options, name?: string) {
   };
 
   if (!ensureCompleteConfig(egg)) return;
+
+  if (egg.ignore && egg.ignore.extends.length > 0) {
+    egg.ignore = await extendsIgnore(egg.ignore);
+  }
 
   const matched = matchFiles(egg);
   const matchedContent = readFiles(matched);

@@ -28,23 +28,27 @@ export async function readIgnore(path: string): Promise<Ignore> {
   try {
     const data = await Deno.readTextFile(path);
     const ignore = parseIgnore(data, basename(path));
-    while (ignore.extends.length > 0) {
-      const pattern = ignore.extends.pop() as string;
-      if (pattern.match(/.gitignore$/)) {
-        ignore.denies.push(globToRegExp(".git*/**"));
-      }
-      const files = expandGlob(pattern, { root: Deno.cwd() });
-      for await (const file of files) {
-        const path = relative(Deno.cwd(), file.path).replace(/\\/g, "/");
-        const { accepts, denies } = await readIgnore(path);
-        ignore.accepts.concat(accepts);
-        ignore.denies.concat(denies);
-      }
-    }
-    return ignore;
+    return extendsIgnore(ignore);
   } catch (err) {
     throw new Error(`Error while reading ${path}: ${err}`);
   }
+}
+
+export async function extendsIgnore(ignore: Ignore) {
+  while (ignore.extends.length > 0) {
+    const pattern = ignore.extends.pop() as string;
+    if (pattern.match(/.gitignore$/)) {
+      ignore.denies.push(globToRegExp(".git*/**"));
+    }
+    const files = expandGlob(pattern, { root: Deno.cwd() });
+    for await (const file of files) {
+      const path = relative(Deno.cwd(), file.path).replace(/\\/g, "/");
+      const { accepts, denies } = await readIgnore(path);
+      ignore.accepts.concat(accepts);
+      ignore.denies.concat(denies);
+    }
+  }
+  return ignore;
 }
 
 export function parseIgnore(
