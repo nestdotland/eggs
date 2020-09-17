@@ -35,6 +35,8 @@ export async function readIgnore(path: string): Promise<Ignore> {
 }
 
 export async function extendsIgnore(ignore: Ignore) {
+  console.log("extendsIgnore");
+  console.log(ignore);
   while (ignore.extends.length > 0) {
     const pattern = ignore.extends.pop() as string;
     if (pattern.match(/.gitignore$/)) {
@@ -44,10 +46,11 @@ export async function extendsIgnore(ignore: Ignore) {
     for await (const file of files) {
       const path = relative(Deno.cwd(), file.path).replace(/\\/g, "/");
       const { accepts, denies } = await readIgnore(path);
-      ignore.accepts.concat(accepts);
-      ignore.denies.concat(denies);
+      ignore.accepts.push(...accepts);
+      ignore.denies.push(...denies);
     }
   }
+  console.log(ignore);
   return ignore;
 }
 
@@ -83,9 +86,12 @@ export function parseIgnore(
     // If there is a separator at the beginning or middle (or both) of the pattern,
     // then the pattern is relative to the directory level of the particular .gitignore file itself.
     // Otherwise the pattern may also match at any level below the .gitignore level.
-    if (line.replace(/\/$/, "").split("/").length === 1) line = `**/${line}`;
-    // TODO(@oganexon): If there is a separator at the end of the pattern then the pattern will only match directories,
-    // otherwise the pattern can match both files and directories.
+    if (line.replace(/\/$/, "").split("/").length === 1) {
+      line = `**/${line}`;
+      // If there is a separator at the end of the pattern then the pattern will only match directories,
+      // otherwise the pattern can match both files and directories.
+      if (line.endsWith("/")) line = `${line}**`;
+    }
     try {
       const pattern = globToRegExp(line);
       if (accepts) {
