@@ -9,7 +9,13 @@ extends .gitignore
 extends ./dir/*
 .git/*
 test/*
+foo
+   foo
+   f o o
+   f\\ o\\  o
+foo/bar
 !test/should_keep_this.ts
+\\!test/should_ignore_this.ts
 # this is a comment
     # this is a comment, just a bit indented
     `);
@@ -19,6 +25,12 @@ test/*
         [
           /^\.git(?:\\|\/)+[^\\/]*(?:\\|\/)*$/,
           /^test(?:\\|\/)+[^\\/]*(?:\\|\/)*$/,
+          /^(?:[^\\/]*(?:\\|\/|$)+)*foo(?:\\|\/)*$/,
+          /^(?:[^\\/]*(?:\\|\/|$)+)*foo(?:\\|\/)*$/,
+          /^(?:[^\\/]*(?:\\|\/|$)+)*foo(?:\\|\/)*$/,
+          /^(?:[^\\/]*(?:\\|\/|$)+)*f o o(?:\\|\/)*$/,
+          /^foo(?:\\|\/)+bar(?:\\|\/)*$/,
+          /^\!test(?:\\|\/)+should_ignore_this\.ts(?:\\|\/)*$/,
         ],
       );
       assertEquals(
@@ -28,7 +40,16 @@ test/*
     } else {
       assertEquals(
         matched.denies,
-        [/^\.git\/+[^/]*\/*$/, /^test\/+[^/]*\/*$/],
+        [
+          /^\.git\/+[^/]*\/*$/,
+          /^test\/+[^/]*\/*$/,
+          /^(?:[^/]*(?:\/|$)+)*foo\/*$/,
+          /^(?:[^/]*(?:\/|$)+)*foo\/*$/,
+          /^(?:[^/]*(?:\/|$)+)*foo\/*$/,
+          /^(?:[^/]*(?:\/|$)+)*f o o\/*$/,
+          /^foo\/+bar\/*$/,
+          /^\!test\/+should_ignore_this\.ts\/*$/,
+        ],
       );
       assertEquals(matched.accepts, [/^test\/+should_keep_this\.ts\/*$/]);
     }
