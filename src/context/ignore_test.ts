@@ -5,6 +5,8 @@ Deno.test({
   name: "internal | ignore | parsing",
   fn(): void {
     let matched = parseIgnore(`
+extends .gitignore
+extends ./dir/*
 .git/*
 test/*
 !test/should_keep_this.ts
@@ -30,5 +32,9 @@ test/*
       );
       assertEquals(matched.accepts, [/^test\/+should_keep_this\.ts\/*$/]);
     }
+    assertEquals(
+      matched.extends,
+      [".gitignore", "./dir/*"],
+    );
   },
 });
