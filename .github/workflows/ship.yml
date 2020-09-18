@@ -18,7 +18,7 @@ jobs:
       - name: Get eggs version
         run: |
           deno run ./src/version/printVersion.ts
-          EGGS_VERSION="$(deno run ./src/version/printVersion.ts)"
+          echo "::set-env name=EGGS_VERSION::$(deno run ./src/version/printVersion.ts)"
 
       - name: Draft release
         id: draft_release
@@ -33,5 +33,5 @@ jobs:
         # TODO(@oganexon): remove --description after next release
         run: |
           deno run -A --unstable mod.ts link ${{ secrets.NESTAPIKEY }}
-          deno run -A --unstable mod.ts publish eggs --ignore "extends .gitignore" --version ${{ steps.draft_release.outputs.tag_name }} --description "The CLI used to publish and update modules in nest.land.
+          deno run -A --unstable mod.ts publish eggs --ignore "extends .gitignore" --version $EGGS_VERSION --description "The CLI used to publish and update modules in nest.land.
 

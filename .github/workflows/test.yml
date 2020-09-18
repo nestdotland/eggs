@@ -28,20 +28,10 @@ jobs:
       - name: Run tests
         run: deno test -A --unstable
 
-      - name: Get eggs version (Windows)
-        if: ${{ matrix.os == 'windows-latest' }}
+      - name: Get eggs version
         run: |
           deno run ./src/version/printVersion.ts
-          $env:EGGS_VERSION="$(deno run ./src/version/printVersion.ts)"
-
-      - name: Get eggs version (Unix)
-        if: ${{ matrix.os != 'windows-latest' }}
-        run: |
-          deno run ./src/version/printVersion.ts
-          EGGS_VERSION="$(deno run ./src/version/printVersion.ts)"
-          echo $EGGS_VERSION
           echo "::set-env name=EGGS_VERSION::$(deno run ./src/version/printVersion.ts)"
-
 
       - name: Eggs release test
         run: |
