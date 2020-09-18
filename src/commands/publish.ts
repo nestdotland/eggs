@@ -213,8 +213,8 @@ async function publishCommand(options: Options, name?: string) {
   let apiKey = await getAPIKey();
   if (!apiKey) {
     log.error(
-      `No API Key file found. You can add one using eggs ${
-        italic("link <api key>")
+      `No API Key file found. You can add one using ${
+        italic("eggs link <api key>")
       }. You can create one on ${highlight("https://nest.land")}`,
     );
     return;
