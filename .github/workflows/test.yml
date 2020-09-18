@@ -27,6 +27,11 @@ jobs:
 
       - name: Run tests
         run: deno test -A --unstable
+      
+      - name: Eggs release test
+        run: |
+          deno run -A --unstable mod.ts link ${{ secrets.NESTAPIKEY }}
+          deno run -A --unstable mod.ts publish eggs --dry-run --ignore "extends .gitignore"
 
   nightly:
     name: Deno Nightly

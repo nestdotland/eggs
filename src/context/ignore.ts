@@ -35,8 +35,6 @@ export async function readIgnore(path: string): Promise<Ignore> {
 }
 
 export async function extendsIgnore(ignore: Ignore) {
-  console.log("extendsIgnore");
-  console.log(ignore);
   while (ignore.extends.length > 0) {
     const pattern = ignore.extends.pop() as string;
     if (pattern.match(/.gitignore$/)) {
@@ -50,7 +48,6 @@ export async function extendsIgnore(ignore: Ignore) {
       ignore.denies.push(...denies);
     }
   }
-  console.log(ignore);
   return ignore;
 }
 

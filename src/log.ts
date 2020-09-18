@@ -24,28 +24,30 @@ let detailedLog = false;
 class ConsoleHandler extends BaseHandler {
   format(record: LogRecord): string {
     let msg = "";
-    switch (record.level) {
-      case LogLevels.DEBUG:
-        msg += gray("[DEBUG]");
-        break;
-      case LogLevels.INFO:
-        msg += blue("[INFO]");
-        break;
-      case LogLevels.WARNING:
-        msg += yellow("[WARN]");
-        break;
-      case LogLevels.ERROR:
-        msg += red("[ERR]");
-        errorOccurred = true;
-        break;
-      case LogLevels.CRITICAL:
-        msg += bold(red("[CRIT]"));
-        break;
-      default:
-        break;
-    }
+    if (record.msg) {
+      switch (record.level) {
+        case LogLevels.DEBUG:
+          msg += gray("[DEBUG]");
+          break;
+        case LogLevels.INFO:
+          msg += blue("[INFO]");
+          break;
+        case LogLevels.WARNING:
+          msg += yellow("[WARN]");
+          break;
+        case LogLevels.ERROR:
+          msg += red("[ERR]");
+          errorOccurred = true;
+          break;
+        case LogLevels.CRITICAL:
+          msg += bold(red("[CRIT]"));
+          break;
+        default:
+          break;
+      }
 
-    msg += ` ${record.msg}`;
+      msg += ` ${record.msg}`;
+    }
 
     if (detailedLog) {
       for (const arg of record.args) {

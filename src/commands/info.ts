@@ -64,7 +64,7 @@ async function infoCommand(options: Options, file?: string) {
     log.debug("Dependency tree", deps.tree[0]);
     prettyTree(deps.tree[0].path, deps.tree[0].imports, "", true, options);
 
-    console.log();
+    log.info("");
     log.info(`Found ${deps.count} dependencies.`);
     if (deps.circular) {
       log.warning("This dependency tree contains circular imports!");
