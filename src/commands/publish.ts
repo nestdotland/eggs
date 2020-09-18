@@ -30,7 +30,7 @@ import { parseIgnore, extendsIgnore } from "../context/ignore.ts";
 import { MatchedFile, matchFiles, readFiles } from "../context/files.ts";
 
 import { getAPIKey } from "../keyfile.ts";
-import { version } from "../version.ts";
+import { version } from "../version/version.ts";
 import { setupLog, highlight } from "../log.ts";
 
 function ensureCompleteConfig(config: Partial<Config>): config is Config {

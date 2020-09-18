@@ -11,6 +11,7 @@ import {
   yellow,
   writeGlobalModuleConfig,
 } from "../../deps.ts";
+import { version } from "../version/version.ts";
 import type { DefaultOptions } from "../commands.ts";
 import { setupLog } from "../log.ts";
 
@@ -233,6 +234,7 @@ type Arguments = [string[]];
 
 export const update = new Command<Options, Arguments>()
   .description("Update your dependencies")
+  .version(version)
   .arguments("[deps...:string]")
   .option(
     "--file <file:string>",

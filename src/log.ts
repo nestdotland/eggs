@@ -13,7 +13,7 @@ import {
   gray,
 } from "../deps.ts";
 
-import { version } from "./version.ts";
+import { version } from "./version/version.ts";
 
 const DEBUG_LOG_FILE = "./eggs-debug.log";
 
