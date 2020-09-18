@@ -43,10 +43,10 @@ jobs:
           deno run -A --unstable mod.ts publish eggs --dry-run --debug --ignore "extends .gitignore" --version ${{ steps.draft_release.outputs.tag_name || '0.0.0-0' }}
         
       - uses: actions/upload-artifact@v2
+        if: failure()
         with:
           name: eggs-debug
           path: eggs-debug.log
-          if-no-files-found: ignore
 
   nightly:
     name: Deno Nightly
@@ -84,3 +84,9 @@ jobs:
         run: |
           deno run -A --unstable mod.ts link ${{ secrets.NESTAPIKEY }}
           deno run -A --unstable mod.ts publish eggs --dry-run --debug --ignore "extends .gitignore" --version ${{ steps.draft_release.outputs.tag_name || '0.0.0-0' }}
+      
+      - uses: actions/upload-artifact@v2
+        if: failure()
+        with:
+          name: eggs-debug
+          path: eggs-debug.log
