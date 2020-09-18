@@ -32,7 +32,6 @@ import { MatchedFile, matchFiles, readFiles } from "../context/files.ts";
 import { getAPIKey } from "../keyfile.ts";
 import { version } from "../version.ts";
 import { setupLog, highlight } from "../log.ts";
-import { LoggerConfig } from "c:/users/maela/appdata/local/deno/deps/https/egaw3jbwnh2i2k54z6kem4rafuzgbzcwrtwvsx3jbv4xpiu4n3ba.arweave.net/8f7d8a63257bf34e698a5164ebabf9363e35f2cc846526e90093db4269bed093";
 
 function ensureCompleteConfig(config: Partial<Config>): config is Config {
   let isConfigComplete = true;
