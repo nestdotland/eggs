@@ -18,7 +18,7 @@ jobs:
       - name: Publish eggs
         run: |
           deno run -A --unstable mod.ts link ${{ secrets.NESTAPIKEY }}
-          deno run -A --unstable mod.ts publish eggs
+          deno run -A --unstable mod.ts publish eggs --ignore "extends .gitignore"
 
       - name: Draft release
         uses: release-drafter/release-drafter@v5
