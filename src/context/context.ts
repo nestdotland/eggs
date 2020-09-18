@@ -20,6 +20,7 @@ export async function gatherContext(
   let ignore: Ignore = {
     accepts: [],
     denies: [],
+    extends: [],
   };
   const ignorePath = defaultIgnore(wd);
   if (ignorePath) {

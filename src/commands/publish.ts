@@ -26,7 +26,7 @@ import {
   writeConfig,
 } from "../context/config.ts";
 import { gatherContext } from "../context/context.ts";
-import { parseIgnore } from "../context/ignore.ts";
+import { parseIgnore, extendsIgnore } from "../context/ignore.ts";
 import { MatchedFile, matchFiles, readFiles } from "../context/files.ts";
 
 import { getAPIKey } from "../keyfile.ts";
@@ -230,6 +230,10 @@ async function publishCommand(options: Options, name?: string) {
   };
 
   if (!ensureCompleteConfig(egg)) return;
+
+  if (egg.ignore && egg.ignore.extends.length > 0) {
+    egg.ignore = await extendsIgnore(egg.ignore);
+  }
 
   const matched = matchFiles(egg);
   const matchedContent = readFiles(matched);
