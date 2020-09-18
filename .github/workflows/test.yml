@@ -39,9 +39,13 @@ jobs:
         run: |
           deno run ./src/version/printVersion.ts
           EGGS_VERSION="$(deno run ./src/version/printVersion.ts)"
+          echo $EGGS_VERSION
+          echo "::set-env name=EGGS_VERSION::$(deno run ./src/version/printVersion.ts)"
+
 
       - name: Eggs release test
         run: |
+          echo $EGGS_VERSION
           deno run -A --unstable mod.ts link ${{ secrets.NESTAPIKEY }} --debug
           deno run -A --unstable mod.ts publish eggs --dry-run --debug --ignore "extends .gitignore" --version $EGGS_VERSION
         
