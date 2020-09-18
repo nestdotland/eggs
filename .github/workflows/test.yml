@@ -27,11 +27,19 @@ jobs:
 
       - name: Run tests
         run: deno test -A --unstable
-      
+
+      - name: Draft release
+        id: draft_release
+        uses: release-drafter/release-drafter@v5
+        with:
+          config-name: release-template.yml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Eggs release test
         run: |
           deno run -A --unstable mod.ts link ${{ secrets.NESTAPIKEY }}
-          deno run -A --unstable mod.ts publish eggs --dry-run --ignore "extends .gitignore"
+          deno run -A --unstable mod.ts publish eggs --dry-run --debug --ignore "extends .gitignore" --version ${{ steps.draft_release.outputs.tag_name }}
 
   nightly:
     name: Deno Nightly
