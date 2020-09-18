@@ -33,5 +33,5 @@ jobs:
         # TODO(@oganexon): remove --description after next release
         run: |
           deno run -A --unstable mod.ts link ${{ secrets.NESTAPIKEY }}
-          deno run -A --unstable mod.ts publish eggs --ignore "extends .gitignore" --version $EGGS_VERSION --description "The CLI used to publish and update modules in nest.land.
+          deno run -A --unstable mod.ts publish eggs --ignore "extends .gitignore" --version ${{ env.EGGS_VERSION }} --description "The CLI used to publish and update modules in nest.land.
 

@@ -35,7 +35,6 @@ jobs:
 
       - name: Eggs release test
         run: |
-          echo $EGGS_VERSION
           deno run -A --unstable mod.ts link ${{ secrets.NESTAPIKEY }} --debug
           deno run -A --unstable mod.ts publish eggs --dry-run --debug --ignore "extends .gitignore" --version ${{ env.EGGS_VERSION }}
         
@@ -75,9 +74,8 @@ jobs:
 
       - name: Eggs release test
         run: |
-          echo $EGGS_VERSION
           deno run -A --unstable mod.ts link ${{ secrets.NESTAPIKEY }} --debug
-          deno run -A --unstable mod.ts publish eggs --dry-run --debug --ignore "extends .gitignore" --version $EGGS_VERSION
+          deno run -A --unstable mod.ts publish eggs --dry-run --debug --ignore "extends .gitignore" --version ${{ env.EGGS_VERSION }}
       
       - uses: actions/upload-artifact@v2
         if: failure()
