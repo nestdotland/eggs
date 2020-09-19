@@ -48,6 +48,8 @@ export {
   CompletionsCommand,
 } from "https://x.nest.land/cliffy@0.14.1/command/mod.ts";
 
+export { string as stringType } from "https://x.nest.land/cliffy@0.14.1/flags/types/string.ts";
+
 export {
   Input,
   Confirm,
