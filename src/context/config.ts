@@ -29,8 +29,10 @@ export interface Config {
   unstable?: boolean;
   unlisted: boolean;
 
-  files: string[];
-  ignore?: Ignore;
+  files?: string[];
+  ignore?:
+    | string[]
+    | Ignore; // ! DEPRECATED
 
   fmt?: boolean; // ! DEPRECATED
   checkFormat?: boolean;

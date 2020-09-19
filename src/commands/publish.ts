@@ -60,8 +60,6 @@ function ensureCompleteConfig(config: Partial<Config>): config is Config {
   config.description = config.description || "";
   config.repository = config.repository || "";
   config.unlisted = config.unlisted ?? false;
-  config.files = config.files || [];
-  // config.ignore = config.ignore || [];
 
   return isConfigComplete;
 }
@@ -97,6 +95,13 @@ async function deprecationWarnings(config: Config) {
       `${yellow("[Deprecated - fmt]")} Use the ${bold("checkFormat")} field.`,
     );
   }
+  if (config?.ignore && !Array.isArray(config.ignore)) {
+    log.warning(
+      `${yellow("[Deprecated - ignore as Ignore]")} Write ${
+        bold("ignore")
+      } field as a string array.`,
+    );
+  }
 }
 
 function isVersionUnstable(v: string) {
@@ -128,7 +133,7 @@ function gatherOptions(
         { name: "repository", value: options.repository, label: "", type: "" },
       ));
     options.files && (cfg.files = options.files);
-    options.ignore && (cfg.ignore = parseIgnore(options.ignore.join()));
+    options.ignore && (cfg.ignore = options.ignore);
     options.checkFormat && (cfg.checkFormat = options.checkFormat);
     options.checkTests && (cfg.checkTests = options.checkTests);
     options.checkInstallation &&
@@ -228,7 +233,7 @@ async function publishCommand(options: Options, name?: string) {
     return;
   }
 
-  const gatheredContext = await gatherContext();
+  const [gatheredContext, contextIgnore] = await gatherContext();
   const gatheredOptions = gatherOptions(options, name);
   if (!gatheredContext || !gatheredOptions) return;
 
@@ -241,19 +246,25 @@ async function publishCommand(options: Options, name?: string) {
 
   if (!ensureCompleteConfig(egg)) return;
 
-  if (egg.ignore && egg.ignore.extends.length > 0) {
-    egg.ignore = await extendsIgnore(egg.ignore);
-  }
+  // TODO(@oganexon): deprecate egg.ignore as Ignore
+  const ignore = contextIgnore ||
+    egg.ignore &&
+      (Array.isArray(egg.ignore)
+        ? await extendsIgnore(parseIgnore(egg.ignore.join()))
+        : egg.ignore);
 
-  const matched = matchFiles(egg);
+  log.debug("Ignore:", ignore);
+
+  const matched = matchFiles(egg, ignore);
   const matchedContent = readFiles(matched);
+
+  log.debug("Matched files:", matched);
 
   if (!ensureFiles(egg, matched)) return;
   if (!await checkUp(egg, matched)) return;
   await deprecationWarnings(egg);
 
   log.debug("Config:", egg);
-  log.debug("Matched files:", matched);
 
   const existing = await fetchModule(egg.name);
 

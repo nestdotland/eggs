@@ -1,11 +1,13 @@
 import {
   base64,
   expandGlobSync,
+  globToRegExp,
   relative,
   resolve,
   walkSync,
 } from "../../deps.ts";
 import type { Config } from "./config.ts";
+import type { Ignore } from "./ignore.ts";
 
 export interface MatchedFile {
   fullPath: string;
@@ -13,29 +15,46 @@ export interface MatchedFile {
   lstat: Deno.FileInfo;
 }
 
-export function matchFiles(config: Config): MatchedFile[] {
+export function matchFiles(
+  config: Config,
+  ignore: Ignore | undefined,
+): MatchedFile[] {
   let matched: MatchedFile[] = [];
-  config.files.push(config.entry);
 
-  for (let file of config.files) {
-    let matches = [
-      ...expandGlobSync(file, {
-        root: Deno.cwd(),
-        extended: true,
-      }),
-    ]
-      .map((file) => ({
-        fullPath: file.path.replace(/\\/g, "/"),
-        path: "/" + relative(Deno.cwd(), file.path).replace(/\\/g, "/"),
-        lstat: Deno.lstatSync(file.path),
-      }));
-    matched.push(...matches);
+  if (config.files) {
+    config.files.push(config.entry);
+    for (let file of config.files) {
+      let matches = [
+        ...expandGlobSync(file, {
+          root: Deno.cwd(),
+          extended: true,
+        }),
+      ]
+        .map((file) => ({
+          fullPath: file.path.replace(/\\/g, "/"),
+          path: "/" + relative(Deno.cwd(), file.path).replace(/\\/g, "/"),
+          lstat: Deno.lstatSync(file.path),
+        }));
+      matched.push(...matches);
+    }
+  } else {
+    (ignore as Ignore).accepts.push(globToRegExp(config.entry));
+    for (const entry of walkSync(".")) {
+      const path = "/" + entry.path.replace(/\\/g, "/");
+      const fullPath = resolve(entry.path);
+      const lstat = Deno.lstatSync(entry.path);
+      const file: MatchedFile = {
+        fullPath,
+        path,
+        lstat,
+      };
+      matched.push(file);
+    }
   }
 
-  matched = matched.filter((file) => file.lstat.isFile);
-  matched = matched.filter((file) => {
-    if (config?.ignore?.denies.some((rgx) => rgx.test(file.path.substr(1)))) {
-      return config.ignore.accepts.some((rgx) => rgx.test(file.path.substr(1)));
+  matched = matched.filter((file) => file.lstat.isFile).filter((file) => {
+    if (ignore?.denies.some((rgx) => rgx.test(file.path.substr(1)))) {
+      return ignore.accepts.some((rgx) => rgx.test(file.path.substr(1)));
     }
     return true;
   });
