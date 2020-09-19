@@ -15,33 +15,21 @@ export interface MatchedFile {
 
 export function matchFiles(config: Config): MatchedFile[] {
   let matched: MatchedFile[] = [];
-  if (config.files) {
-    for (let file of config.files) {
-      let matches = [
-        ...expandGlobSync(file, {
-          root: Deno.cwd(),
-          extended: true,
-        }),
-      ]
-        .map((file) => ({
-          fullPath: file.path.replace(/\\/g, "/"),
-          path: "/" + relative(Deno.cwd(), file.path).replace(/\\/g, "/"),
-          lstat: Deno.lstatSync(file.path),
-        }));
-      matched.push(...matches);
-    }
-  } else {
-    for (const entry of walkSync(".")) {
-      const path = "/" + entry.path;
-      const fullPath = resolve(entry.path);
-      const lstat = Deno.lstatSync(entry.path);
-      const file: MatchedFile = {
-        fullPath,
-        path,
-        lstat,
-      };
-      matched.push(file);
-    }
+  config.files.push(config.entry);
+
+  for (let file of config.files) {
+    let matches = [
+      ...expandGlobSync(file, {
+        root: Deno.cwd(),
+        extended: true,
+      }),
+    ]
+      .map((file) => ({
+        fullPath: file.path.replace(/\\/g, "/"),
+        path: "/" + relative(Deno.cwd(), file.path).replace(/\\/g, "/"),
+        lstat: Deno.lstatSync(file.path),
+      }));
+    matched.push(...matches);
   }
 
   matched = matched.filter((file) => file.lstat.isFile);

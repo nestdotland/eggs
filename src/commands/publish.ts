@@ -55,6 +55,14 @@ function ensureCompleteConfig(config: Partial<Config>): config is Config {
     isConfigComplete = false;
   }
 
+  config.entry = config.entry || "/mod.ts";
+  config.checkAll = config.checkAll ?? true;
+  config.description = config.description || "";
+  config.repository = config.repository || "";
+  config.unlisted = config.unlisted ?? false;
+  config.files = config.files || [];
+  // config.ignore = config.ignore || [];
+
   return isConfigComplete;
 }
 
@@ -63,7 +71,7 @@ function ensureFiles(config: Config, matched: MatchedFile[]): boolean {
     log.warning("No README found at project root, continuing without one...");
   }
 
-  config.entry = (config.entry || "/mod.ts")
+  config.entry = config.entry
     ?.replace(/^[.]/, "")
     .replace(/^[^/]/, (s: string) => `/${s}`);
 
@@ -251,7 +259,7 @@ async function publishCommand(options: Options, name?: string) {
   if (existing) {
     latest = existing.getLatestVersion();
     egg.description = egg.description || existing.description;
-    egg.repository = egg.repository || existing.repository;
+    egg.repository = egg.repository || existing.repository || "";
   }
   if (egg.bump) {
     egg.version = semver.inc(egg.version || latest, egg.bump) as string;
@@ -275,9 +283,9 @@ async function publishCommand(options: Options, name?: string) {
   const module: PublishModule = {
     name: egg.name,
     version: egg.version,
-    description: egg.description || "",
-    repository: egg.repository || "",
-    unlisted: egg.unlisted || false,
+    description: egg.description,
+    repository: egg.repository,
+    unlisted: egg.unlisted,
     stable: egg.stable || !egg.unstable || isVersionUnstable(egg.version),
     upload: true,
     latest: semver.compare(egg.version, latest) === 1,
@@ -344,7 +352,7 @@ interface Options extends DefaultOptions {
   bump?: semver.ReleaseType;
   version?: string;
   description?: string;
-  entry: string;
+  entry?: string;
   unstable?: boolean;
   unlisted?: boolean;
   repository?: string;
@@ -381,7 +389,6 @@ export const publish = new Command<Options, Arguments>()
   .option(
     "--entry <value:string>",
     "The main file of your project.",
-    { default: "mod.ts" },
   )
   .option("--unstable", "Flag this version as unstable.")
   .option("--unlisted", "Hide this module/version on the gallery.")
@@ -403,5 +410,5 @@ export const publish = new Command<Options, Arguments>()
     "--check-installation",
     "Simulates a dummy installation and check for missing files in the dependency tree.",
   )
-  .option("--check-all", "Performs all checks.", { default: true })
+  .option("--check-all", "Performs all checks.")
   .action(publishCommand);
