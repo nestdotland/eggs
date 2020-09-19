@@ -177,30 +177,33 @@ export function highlight(msg: string) {
   return underline(bold(msg));
 }
 
+const ci = Deno.env.get("CI");
+const ciSpinner = { stop: () => {} };
+
 export class spinner {
   static info(msg: string) {
-    return wait({
+    return ci ? ciSpinner : wait({
       text: msg,
       prefix: prefix.info + " ",
     }).start();
   }
 
   static warning(msg: string) {
-    return wait({
+    return ci ? ciSpinner : wait({
       text: msg,
       prefix: prefix.warning + " ",
     }).start();
   }
 
   static error(msg: string) {
-    return wait({
+    return ci ? ciSpinner : wait({
       text: msg,
       prefix: prefix.error + " ",
     }).start();
   }
 
   static critical(msg: string) {
-    return wait({
+    return ci ? ciSpinner : wait({
       text: msg,
       prefix: prefix.critical + " ",
     }).start();

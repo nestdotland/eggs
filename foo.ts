@@ -1,13 +1,37 @@
-import { wait } from "https://deno.land/x/wait@0.1.7/mod.ts";
-import * as color from "https://x.nest.land/std@0.69.0/fmt/colors.ts";
+import { prompt } from "https://deno.land/x/cliffy/prompt/prompt.ts";
+import {
+  Number,
+  Confirm,
+  Checkbox,
+} from "https://deno.land/x/cliffy/prompt/mod.ts";
 
-const spinner = wait("Generating terrain").start();
+const result = await prompt([{
+  name: "animals",
+  message: "Select some animal's",
+  type: Checkbox,
+  options: ["dog", "cat", "snake"],
+}, {
+  name: "like",
+  message: "Do you like animal's?",
+  type: Confirm,
+  after: async ({ like }, next) => { // executed after like prompt
+    if (like) {
+      await next(); // run age prompt
+    } else {
+      await next("like"); // run like prompt again
+    }
+  },
+}, {
+  name: "age",
+  message: "How old are you?",
+  type: Number,
+  before: async ({ animals }, next) => { // executed before age prompt
+    if (animals?.length === 3) {
+      await next(); // run age prompt
+    } else {
+      await next("animals"); // begin from start
+    }
+  },
+}]);
 
-setTimeout(() => {
-  spinner.color = "yellow";
-  spinner.text = "Loading dinosaurs";
-  spinner.prefix = color.blue("[INFO] ");
-}, 1500);
-setTimeout(() => {
-  spinner.stop();
-}, 5500);
+console.log(result);
