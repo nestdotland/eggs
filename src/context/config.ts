@@ -35,8 +35,8 @@ export interface Config {
     | Ignore; // ! DEPRECATED
 
   fmt?: boolean; // ! DEPRECATED
-  checkFormat?: string;
-  checkTests?: string;
+  checkFormat?: boolean | string;
+  checkTests?: boolean | string;
   checkInstallation?: boolean;
   checkAll: boolean;
 }

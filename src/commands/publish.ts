@@ -135,22 +135,8 @@ function gatherOptions(
       ));
     options.files && (cfg.files = options.files);
     options.ignore && (cfg.ignore = options.ignore);
-    options.checkFormat && (cfg.checkFormat = stringType(
-      {
-        name: "check-format",
-        value: options.checkFormat,
-        label: "",
-        type: "",
-      },
-    ));
-    options.checkTests && (cfg.checkTests = stringType(
-      {
-        name: "check-tests",
-        value: options.checkTests,
-        label: "",
-        type: "",
-      },
-    ));
+    options.checkFormat && (cfg.checkFormat = options.checkFormat);
+    options.checkTests && (cfg.checkTests = options.checkTests);
     options.checkInstallation &&
       (cfg.checkInstallation = options.checkInstallation);
     options.checkAll && (cfg.checkAll = options.checkAll);
@@ -165,19 +151,13 @@ async function checkUp(
   config: Config,
   matched: MatchedFile[],
 ): Promise<boolean> {
-  if (config.checkFormat ?? (config.fmt || config.checkAll)) {
-    if (config.checkFormat === "") config.checkFormat = undefined;
-    console.log({
-      cmd: config.checkFormat?.split(" ") ||
-        ["deno", "fmt"].concat(matched.map((file) => file.fullPath)),
-      stderr: "null",
-      stdout: "null",
-    });
+  if (config.checkFormat || config.fmt || config.checkAll) {
     const wait = spinner.info("Formatting your code...");
     const process = Deno.run(
       {
-        cmd: config.checkFormat?.split(" ") ||
-          ["deno", "fmt"].concat(matched.map((file) => file.fullPath)),
+        cmd: typeof config.checkFormat === "string"
+          ? config.checkFormat?.split(" ")
+          : ["deno", "fmt"].concat(matched.map((file) => file.fullPath)),
         stderr: "null",
         stdout: "null",
       },
@@ -192,12 +172,13 @@ async function checkUp(
     }
   }
 
-  if (config.checkTests ?? config.checkAll) {
+  if (config.checkTests || config.checkAll) {
     const wait = spinner.info("Testing your code...");
     const process = Deno.run(
       {
-        cmd: config.checkTests?.split(" ") ||
-          ["deno", "test", "-A", "--unstable"],
+        cmd: typeof config.checkTests === "string"
+          ? config.checkTests?.split(" ")
+          : ["deno", "test", "-A", "--unstable"],
         stderr: "null",
         stdout: "piped",
       },
@@ -405,8 +386,8 @@ interface Options extends DefaultOptions {
   repository?: string;
   files?: string[];
   ignore?: string[];
-  checkFormat?: string;
-  checkTests?: string;
+  checkFormat?: boolean | string;
+  checkTests?: boolean | string;
   checkInstallation?: boolean;
   checkAll?: boolean;
 }
@@ -452,10 +433,10 @@ export const publish = new Command<Options, Arguments>()
     "All the files that should be ignored when uploading to nest.land. Supports file globbing.",
   )
   .option(
-    "--check-format <value:string>",
+    "--check-format [value:string]",
     "Automatically format your code before publishing",
   )
-  .option("--check-tests <value:string>", `Run ${italic("deno test")}.`)
+  .option("--check-tests [value:string]", `Run ${italic("deno test")}.`)
   .option(
     "--check-installation",
     "Simulates a dummy installation and check for missing files in the dependency tree.",
