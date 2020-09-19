@@ -237,6 +237,8 @@ async function publishCommand(options: Options, name?: string) {
     ...gatheredOptions,
   };
 
+  log.debug("Raw config:", egg);
+
   if (!ensureCompleteConfig(egg)) return;
 
   if (egg.ignore && egg.ignore.extends.length > 0) {
