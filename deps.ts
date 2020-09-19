@@ -87,3 +87,6 @@ export { NestLand as Nest } from "https://x.nest.land/hatcher@0.8.2/lib/registri
 /**************** analyzer ****************/
 export type { DependencyTree } from "https://x.nest.land/analyzer@0.0.6/deno/tree.ts";
 export { dependencyTree } from "https://x.nest.land/analyzer@0.0.6/deno/tree.ts";
+
+/**************** wait ****************/
+export { wait, Spinner } from "https://deno.land/x/wait@0.1.7/mod.ts";

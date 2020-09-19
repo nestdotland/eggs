@@ -31,7 +31,7 @@ import { MatchedFile, matchFiles, readFiles } from "../context/files.ts";
 
 import { getAPIKey } from "../keyfile.ts";
 import { version } from "../version/version.ts";
-import { setupLog, highlight } from "../log.ts";
+import { setupLog, highlight, spinner } from "../log.ts";
 
 function ensureCompleteConfig(config: Partial<Config>): config is Config {
   let isConfigComplete = true;
@@ -146,15 +146,19 @@ function gatherOptions(
   }
 }
 
+import { wait } from "https://deno.land/x/wait@0.1.7/mod.ts";
+
 async function checkUp(
   config: Config,
   matched: MatchedFile[],
 ): Promise<boolean> {
   if (config.checkFormat || config.fmt || config.checkAll) {
+    const wait = spinner.info("Formatting your code...");
     const process = Deno.run(
       { cmd: ["deno", "fmt"], stderr: "null", stdout: "null" },
     );
     const status = await process.status();
+    wait.stop();
     if (status.success) {
       log.info("Formatted your code.");
     } else {
@@ -164,6 +168,7 @@ async function checkUp(
   }
 
   if (config.checkTests || config.checkAll) {
+    const wait = spinner.info("Testing your code...");
     const process = Deno.run(
       {
         cmd: ["deno", "test", "-A", "--unstable"],
@@ -173,6 +178,7 @@ async function checkUp(
     );
     const status = await process.status();
     const stdout = new TextDecoder("utf-8").decode(await process.output());
+    wait.stop();
     if (status.success) {
       log.info("Tests passed successfully.");
     } else {
@@ -186,6 +192,7 @@ async function checkUp(
   }
 
   if (config.checkInstallation || config.checkAll) {
+    const wait = spinner.info("Test installation...");
     const tempDir = await Deno.makeTempDir();
     for (let i = 0; i < matched.length; i++) {
       const file = matched[i];
@@ -202,6 +209,7 @@ async function checkUp(
     const entry = join(tempDir, config.entry);
     const deps = await dependencyTree(entry);
     await Deno.remove(tempDir, { recursive: true });
+    wait.stop();
     if (deps.errors.length === 0) {
       log.info("No errors detected when installing the module.");
     } else {
