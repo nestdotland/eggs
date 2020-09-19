@@ -146,8 +146,6 @@ function gatherOptions(
   }
 }
 
-import { wait } from "https://deno.land/x/wait@0.1.7/mod.ts";
-
 async function checkUp(
   config: Config,
   matched: MatchedFile[],
@@ -155,7 +153,11 @@ async function checkUp(
   if (config.checkFormat || config.fmt || config.checkAll) {
     const wait = spinner.info("Formatting your code...");
     const process = Deno.run(
-      { cmd: ["deno", "fmt"], stderr: "null", stdout: "null" },
+      {
+        cmd: ["deno", "fmt"].concat(matched.map((file) => file.fullPath)),
+        stderr: "null",
+        stdout: "null",
+      },
     );
     const status = await process.status();
     wait.stop();

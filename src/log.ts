@@ -184,28 +184,28 @@ export class spinner {
   static info(msg: string) {
     return ci ? ciSpinner : wait({
       text: msg,
-      prefix: prefix.info + " ",
+      prefix: prefix.info,
     }).start();
   }
 
   static warning(msg: string) {
     return ci ? ciSpinner : wait({
       text: msg,
-      prefix: prefix.warning + " ",
+      prefix: prefix.warning,
     }).start();
   }
 
   static error(msg: string) {
     return ci ? ciSpinner : wait({
       text: msg,
-      prefix: prefix.error + " ",
+      prefix: prefix.error,
     }).start();
   }
 
   static critical(msg: string) {
     return ci ? ciSpinner : wait({
       text: msg,
-      prefix: prefix.critical + " ",
+      prefix: prefix.critical,
     }).start();
   }
 }
