@@ -1,7 +1,9 @@
 import {
   base64,
+  bold,
   expandGlobSync,
   globToRegExp,
+  log,
   relative,
   resolve,
   walkSync,
@@ -18,7 +20,7 @@ export interface MatchedFile {
 export function matchFiles(
   config: Config,
   ignore: Ignore | undefined,
-): MatchedFile[] {
+): MatchedFile[] | undefined {
   let matched: MatchedFile[] = [];
 
   if (config.files) {
@@ -35,6 +37,14 @@ export function matchFiles(
           path: "/" + relative(Deno.cwd(), file.path).replace(/\\/g, "/"),
           lstat: Deno.lstatSync(file.path),
         }));
+      if (matches.length === 0) {
+        log.error(
+          `${
+            bold(file)
+          } did not match any file. There may be a typo in the path.`,
+        );
+        return;
+      }
       matched.push(...matches);
     }
   } else {

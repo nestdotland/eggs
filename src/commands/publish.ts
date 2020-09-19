@@ -51,7 +51,11 @@ function ensureCompleteConfig(config: Partial<Config>): config is Config {
 
   if (!config.files && !config.ignore) {
     log.error(
-      "Your module configuration must provide files to upload in the form of a `files` field and/or `ignore` field in the config or in an .eggignore file.",
+      `Your module configuration must provide files to upload in the form of a ${
+        italic("files")
+      } field and/or ${
+        italic("ignore")
+      } field in the config or in an .eggignore file.`,
     );
     isConfigComplete = false;
   }
@@ -75,7 +79,7 @@ function ensureFiles(config: Config, matched: MatchedFile[]): boolean {
     .replace(/^[^/]/, (s: string) => `/${s}`);
 
   if (!matched.find((e) => e.path === config.entry)) {
-    log.error(`No ${config.entry} found in config. An entry file is required.`);
+    log.error(`${config.entry} was not found. This file is required.`);
     return false;
   }
   return true;
@@ -271,6 +275,7 @@ async function publishCommand(options: Options, name?: string) {
   log.debug("Ignore:", ignore);
 
   const matched = matchFiles(egg, ignore);
+  if (!matched) return;
   const matchedContent = readFiles(matched);
 
   log.debug("Matched files:", matched);
