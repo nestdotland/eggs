@@ -30,7 +30,7 @@ import { parseIgnore, extendsIgnore } from "../context/ignore.ts";
 import { MatchedFile, matchFiles, readFiles } from "../context/files.ts";
 
 import { getAPIKey } from "../keyfile.ts";
-import { version } from "../version.ts";
+import { version } from "../version/version.ts";
 import { setupLog, highlight } from "../log.ts";
 
 function ensureCompleteConfig(config: Partial<Config>): config is Config {
@@ -213,8 +213,8 @@ async function publishCommand(options: Options, name?: string) {
   let apiKey = await getAPIKey();
   if (!apiKey) {
     log.error(
-      `No API Key file found. You can add one using eggs ${
-        italic("link <api key>")
+      `No API Key file found. You can add one using ${
+        italic("eggs link <api key>")
       }. You can create one on ${highlight("https://nest.land")}`,
     );
     return;
@@ -326,7 +326,7 @@ async function publishCommand(options: Options, name?: string) {
   );
   log.info(files);
 
-  console.log();
+  log.info("");
   log.info(
     green(
       `You can now find your module on our registry at ${
@@ -334,7 +334,7 @@ async function publishCommand(options: Options, name?: string) {
       }`,
     ),
   );
-  console.log();
+  log.info("");
   log.info("Now you can showcase your module on our GitHub Discussions!");
   log.info(highlight("https://github.com/nestdotland/nest.land/discussions"));
 }

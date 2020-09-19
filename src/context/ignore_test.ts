@@ -1,4 +1,4 @@
-import { assertEquals } from "../../test_deps.ts";
+import { assertEquals } from "../../test/deps.ts";
 import { parseIgnore } from "./ignore.ts";
 
 Deno.test({
