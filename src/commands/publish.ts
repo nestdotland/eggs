@@ -131,19 +131,20 @@ function gatherOptions(
       ));
     options.description && (cfg.description = options.description);
     options.entry && (cfg.entry = options.entry);
-    options.unstable && (cfg.unstable = options.unstable);
-    options.unlisted && (cfg.unstable = options.unlisted);
+    options.unstable !== undefined && (cfg.unstable = options.unstable);
+    options.unlisted !== undefined && (cfg.unstable = options.unlisted);
     options.repository &&
       (cfg.repository = urlType(
         { name: "repository", value: options.repository, label: "", type: "" },
       ));
     options.files && (cfg.files = options.files);
     options.ignore && (cfg.ignore = options.ignore);
-    options.checkFormat && (cfg.checkFormat = options.checkFormat);
-    options.checkTests && (cfg.checkTests = options.checkTests);
-    options.checkInstallation &&
+    options.checkFormat !== undefined &&
+      (cfg.checkFormat = options.checkFormat);
+    options.checkTests !== undefined && (cfg.checkTests = options.checkTests);
+    options.checkInstallation !== undefined &&
       (cfg.checkInstallation = options.checkInstallation);
-    options.checkAll && (cfg.checkAll = options.checkAll);
+    options.checkAll !== undefined && (cfg.checkAll = options.checkAll);
     return cfg;
   } catch (err) {
     log.error(err);
@@ -155,7 +156,7 @@ async function checkUp(
   config: Config,
   matched: MatchedFile[],
 ): Promise<boolean> {
-  if (config.checkFormat || config.fmt || config.checkAll) {
+  if (config.checkFormat ?? (config.fmt || config.checkAll)) {
     const wait = spinner.info("Formatting your code...");
     const process = Deno.run(
       {
@@ -176,7 +177,7 @@ async function checkUp(
     }
   }
 
-  if (config.checkTests || config.checkAll) {
+  if (config.checkTests ?? config.checkAll) {
     const wait = spinner.info("Testing your code...");
     const process = Deno.run(
       {
@@ -202,7 +203,7 @@ async function checkUp(
     }
   }
 
-  if (config.checkInstallation || config.checkAll) {
+  if (config.checkInstallation ?? config.checkAll) {
     const wait = spinner.info("Test installation...");
     const tempDir = await Deno.makeTempDir();
     for (let i = 0; i < matched.length; i++) {
