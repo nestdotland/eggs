@@ -10,6 +10,7 @@ import {
   italic,
   log,
   semver,
+  stringType,
   yellow,
 } from "../../deps.ts";
 import type { DefaultOptions } from "../commands.ts";
@@ -31,7 +32,7 @@ import { MatchedFile, matchFiles, readFiles } from "../context/files.ts";
 
 import { getAPIKey } from "../keyfile.ts";
 import { version } from "../version/version.ts";
-import { setupLog, highlight } from "../log.ts";
+import { setupLog, highlight, spinner } from "../log.ts";
 
 function ensureCompleteConfig(config: Partial<Config>): config is Config {
   let isConfigComplete = true;
@@ -50,10 +51,20 @@ function ensureCompleteConfig(config: Partial<Config>): config is Config {
 
   if (!config.files && !config.ignore) {
     log.error(
-      "Your module configuration must provide files to upload in the form of a `files` field and/or `ignore` field in the config or in an .eggignore file.",
+      `Your module configuration must provide files to upload in the form of a ${
+        italic("files")
+      } field and/or ${
+        italic("ignore")
+      } field in the config or in an .eggignore file.`,
     );
     isConfigComplete = false;
   }
+
+  config.entry = config.entry || "/mod.ts";
+  config.checkAll = config.checkAll ?? true;
+  config.description = config.description || "";
+  config.repository = config.repository || "";
+  config.unlisted = config.unlisted ?? false;
 
   return isConfigComplete;
 }
@@ -63,12 +74,12 @@ function ensureFiles(config: Config, matched: MatchedFile[]): boolean {
     log.warning("No README found at project root, continuing without one...");
   }
 
-  config.entry = (config.entry || "/mod.ts")
+  config.entry = config.entry
     ?.replace(/^[.]/, "")
     .replace(/^[^/]/, (s: string) => `/${s}`);
 
   if (!matched.find((e) => e.path === config.entry)) {
-    log.error(`No ${config.entry} found in config. An entry file is required.`);
+    log.error(`${config.entry} was not found. This file is required.`);
     return false;
   }
   return true;
@@ -87,6 +98,13 @@ async function deprecationWarnings(config: Config) {
   if (typeof config.fmt === "boolean") {
     log.warning(
       `${yellow("[Deprecated - fmt]")} Use the ${bold("checkFormat")} field.`,
+    );
+  }
+  if (config?.ignore && !Array.isArray(config.ignore)) {
+    log.warning(
+      `${yellow("[Deprecated - ignore as Ignore]")} Write ${
+        bold("ignore")
+      } field as a string array.`,
     );
   }
 }
@@ -113,19 +131,20 @@ function gatherOptions(
       ));
     options.description && (cfg.description = options.description);
     options.entry && (cfg.entry = options.entry);
-    options.unstable && (cfg.unstable = options.unstable);
-    options.unlisted && (cfg.unstable = options.unlisted);
+    options.unstable !== undefined && (cfg.unstable = options.unstable);
+    options.unlisted !== undefined && (cfg.unstable = options.unlisted);
     options.repository &&
       (cfg.repository = urlType(
         { name: "repository", value: options.repository, label: "", type: "" },
       ));
     options.files && (cfg.files = options.files);
-    options.ignore && (cfg.ignore = parseIgnore(options.ignore.join()));
-    options.checkFormat && (cfg.checkFormat = options.checkFormat);
-    options.checkTests && (cfg.checkTests = options.checkTests);
-    options.checkInstallation &&
+    options.ignore && (cfg.ignore = options.ignore);
+    options.checkFormat !== undefined &&
+      (cfg.checkFormat = options.checkFormat);
+    options.checkTests !== undefined && (cfg.checkTests = options.checkTests);
+    options.checkInstallation !== undefined &&
       (cfg.checkInstallation = options.checkInstallation);
-    options.checkAll && (cfg.checkAll = options.checkAll);
+    options.checkAll !== undefined && (cfg.checkAll = options.checkAll);
     return cfg;
   } catch (err) {
     log.error(err);
@@ -137,11 +156,19 @@ async function checkUp(
   config: Config,
   matched: MatchedFile[],
 ): Promise<boolean> {
-  if (config.checkFormat || config.fmt || config.checkAll) {
+  if (config.checkFormat ?? (config.fmt || config.checkAll)) {
+    const wait = spinner.info("Formatting your code...");
     const process = Deno.run(
-      { cmd: ["deno", "fmt"], stderr: "null", stdout: "null" },
+      {
+        cmd: typeof config.checkFormat === "string"
+          ? config.checkFormat?.split(" ")
+          : ["deno", "fmt"].concat(matched.map((file) => file.fullPath)),
+        stderr: "null",
+        stdout: "null",
+      },
     );
     const status = await process.status();
+    wait.stop();
     if (status.success) {
       log.info("Formatted your code.");
     } else {
@@ -150,16 +177,20 @@ async function checkUp(
     }
   }
 
-  if (config.checkTests || config.checkAll) {
+  if (config.checkTests ?? config.checkAll) {
+    const wait = spinner.info("Testing your code...");
     const process = Deno.run(
       {
-        cmd: ["deno", "test", "-A", "--unstable"],
+        cmd: typeof config.checkTests === "string"
+          ? config.checkTests?.split(" ")
+          : ["deno", "test", "-A", "--unstable"],
         stderr: "null",
         stdout: "piped",
       },
     );
     const status = await process.status();
     const stdout = new TextDecoder("utf-8").decode(await process.output());
+    wait.stop();
     if (status.success) {
       log.info("Tests passed successfully.");
     } else {
@@ -172,7 +203,8 @@ async function checkUp(
     }
   }
 
-  if (config.checkInstallation || config.checkAll) {
+  if (config.checkInstallation ?? config.checkAll) {
+    const wait = spinner.info("Test installation...");
     const tempDir = await Deno.makeTempDir();
     for (let i = 0; i < matched.length; i++) {
       const file = matched[i];
@@ -189,6 +221,7 @@ async function checkUp(
     const entry = join(tempDir, config.entry);
     const deps = await dependencyTree(entry);
     await Deno.remove(tempDir, { recursive: true });
+    wait.stop();
     if (deps.errors.length === 0) {
       log.info("No errors detected when installing the module.");
     } else {
@@ -220,7 +253,7 @@ async function publishCommand(options: Options, name?: string) {
     return;
   }
 
-  const gatheredContext = await gatherContext();
+  const [gatheredContext, contextIgnore] = await gatherContext();
   const gatheredOptions = gatherOptions(options, name);
   if (!gatheredContext || !gatheredOptions) return;
 
@@ -229,21 +262,30 @@ async function publishCommand(options: Options, name?: string) {
     ...gatheredOptions,
   };
 
+  log.debug("Raw config:", egg);
+
   if (!ensureCompleteConfig(egg)) return;
 
-  if (egg.ignore && egg.ignore.extends.length > 0) {
-    egg.ignore = await extendsIgnore(egg.ignore);
-  }
+  // TODO(@oganexon): deprecate egg.ignore as Ignore
+  const ignore = contextIgnore ||
+    egg.ignore &&
+      (Array.isArray(egg.ignore)
+        ? await extendsIgnore(parseIgnore(egg.ignore.join()))
+        : egg.ignore);
 
-  const matched = matchFiles(egg);
+  log.debug("Ignore:", ignore);
+
+  const matched = matchFiles(egg, ignore);
+  if (!matched) return;
   const matchedContent = readFiles(matched);
+
+  log.debug("Matched files:", matched);
 
   if (!ensureFiles(egg, matched)) return;
   if (!await checkUp(egg, matched)) return;
   await deprecationWarnings(egg);
 
   log.debug("Config:", egg);
-  log.debug("Matched files:", matched);
 
   const existing = await fetchModule(egg.name);
 
@@ -251,7 +293,7 @@ async function publishCommand(options: Options, name?: string) {
   if (existing) {
     latest = existing.getLatestVersion();
     egg.description = egg.description || existing.description;
-    egg.repository = egg.repository || existing.repository;
+    egg.repository = egg.repository || existing.repository || "";
   }
   if (egg.bump) {
     egg.version = semver.inc(egg.version || latest, egg.bump) as string;
@@ -275,9 +317,9 @@ async function publishCommand(options: Options, name?: string) {
   const module: PublishModule = {
     name: egg.name,
     version: egg.version,
-    description: egg.description || "",
-    repository: egg.repository || "",
-    unlisted: egg.unlisted || false,
+    description: egg.description,
+    repository: egg.repository,
+    unlisted: egg.unlisted,
     stable: egg.stable || !egg.unstable || isVersionUnstable(egg.version),
     upload: true,
     latest: semver.compare(egg.version, latest) === 1,
@@ -344,14 +386,14 @@ interface Options extends DefaultOptions {
   bump?: semver.ReleaseType;
   version?: string;
   description?: string;
-  entry: string;
+  entry?: string;
   unstable?: boolean;
   unlisted?: boolean;
   repository?: string;
   files?: string[];
   ignore?: string[];
-  checkFormat?: boolean;
-  checkTests?: boolean;
+  checkFormat?: boolean | string;
+  checkTests?: boolean | string;
   checkInstallation?: boolean;
   checkAll?: boolean;
 }
@@ -381,7 +423,6 @@ export const publish = new Command<Options, Arguments>()
   .option(
     "--entry <value:string>",
     "The main file of your project.",
-    { default: "mod.ts" },
   )
   .option("--unstable", "Flag this version as unstable.")
   .option("--unlisted", "Hide this module/version on the gallery.")
@@ -397,11 +438,14 @@ export const publish = new Command<Options, Arguments>()
     "--ignore <values...:string>",
     "All the files that should be ignored when uploading to nest.land. Supports file globbing.",
   )
-  .option("--check-format", "Automatically format your code before publishing")
-  .option("--check-tests", `Run ${italic("deno test")}.`)
+  .option(
+    "--check-format [value:string]",
+    "Automatically format your code before publishing",
+  )
+  .option("--check-tests [value:string]", `Run ${italic("deno test")}.`)
   .option(
     "--check-installation",
     "Simulates a dummy installation and check for missing files in the dependency tree.",
   )
-  .option("--check-all", "Performs all checks.", { default: true })
+  .option("--check-all", "Performs all checks.")
   .action(publishCommand);

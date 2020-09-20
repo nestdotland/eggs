@@ -48,6 +48,8 @@ export {
   CompletionsCommand,
 } from "https://x.nest.land/cliffy@0.14.1/command/mod.ts";
 
+export { string as stringType } from "https://x.nest.land/cliffy@0.14.1/flags/types/string.ts";
+
 export {
   Input,
   Confirm,
@@ -87,3 +89,6 @@ export { NestLand as Nest } from "https://x.nest.land/hatcher@0.8.2/lib/registri
 /**************** analyzer ****************/
 export type { DependencyTree } from "https://x.nest.land/analyzer@0.0.6/deno/tree.ts";
 export { dependencyTree } from "https://x.nest.land/analyzer@0.0.6/deno/tree.ts";
+
+/**************** wait ****************/
+export { wait, Spinner } from "https://deno.land/x/wait@0.1.7/mod.ts";
