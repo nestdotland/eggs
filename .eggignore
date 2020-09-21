@@ -1,5 +1,7 @@
 extends .gitignore
+.*ignore
 
+# Extra typescript files
 *_test.ts
-
 Drakefile.ts
+
