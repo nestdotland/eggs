@@ -8,7 +8,7 @@ import { install } from "./src/commands/install.ts";
 import { upgrade } from "./src/commands/upgrade.ts";
 import { info } from "./src/commands/info.ts";
 
-import { version } from "./src/version.ts";
+import { version } from "./src/version/version.ts";
 
 import {
   handleError,

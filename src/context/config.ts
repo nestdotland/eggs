@@ -21,22 +21,24 @@ export enum ConfigFormat {
 export interface Config {
   name: string;
   entry: string;
-  description?: string;
-  repository?: string;
+  description: string;
+  repository: string;
   version: string;
   bump?: semver.ReleaseType;
   stable?: boolean; // ! DEPRECATED
   unstable?: boolean;
-  unlisted?: boolean;
+  unlisted: boolean;
 
   files?: string[];
-  ignore?: Ignore;
+  ignore?:
+    | string[]
+    | Ignore; // ! DEPRECATED
 
   fmt?: boolean; // ! DEPRECATED
-  checkFormat?: boolean;
-  checkTests?: boolean;
+  checkFormat?: boolean | string;
+  checkTests?: boolean | string;
   checkInstallation?: boolean;
-  checkAll?: boolean;
+  checkAll: boolean;
 }
 
 /** Filenames of the default configs.

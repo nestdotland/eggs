@@ -2,18 +2,20 @@ import {
   BaseHandler,
   blue,
   bold,
+  gray,
   log,
   LogLevels,
   LogRecord,
   red,
   resolve,
+  Spinner,
   stripColor,
   underline,
   yellow,
-  gray,
+  wait,
 } from "../deps.ts";
 
-import { version } from "./version.ts";
+import { version } from "./version/version.ts";
 
 const DEBUG_LOG_FILE = "./eggs-debug.log";
 
@@ -21,31 +23,41 @@ export let masterLogRecord = "";
 export let errorOccurred = false;
 let detailedLog = false;
 
+const prefix = {
+  debug: gray("[DEBUG]"),
+  info: blue("[INFO]"),
+  warning: yellow("[WARN]"),
+  error: red("[ERR]"),
+  critical: bold(red("[CRIT]")),
+};
+
 class ConsoleHandler extends BaseHandler {
   format(record: LogRecord): string {
     let msg = "";
-    switch (record.level) {
-      case LogLevels.DEBUG:
-        msg += gray("[DEBUG]");
-        break;
-      case LogLevels.INFO:
-        msg += blue("[INFO]");
-        break;
-      case LogLevels.WARNING:
-        msg += yellow("[WARN]");
-        break;
-      case LogLevels.ERROR:
-        msg += red("[ERR]");
-        errorOccurred = true;
-        break;
-      case LogLevels.CRITICAL:
-        msg += bold(red("[CRIT]"));
-        break;
-      default:
-        break;
-    }
+    if (record.msg) {
+      switch (record.level) {
+        case LogLevels.DEBUG:
+          msg += prefix.debug;
+          break;
+        case LogLevels.INFO:
+          msg += prefix.info;
+          break;
+        case LogLevels.WARNING:
+          msg += prefix.warning;
+          break;
+        case LogLevels.ERROR:
+          msg += prefix.error;
+          errorOccurred = true;
+          break;
+        case LogLevels.CRITICAL:
+          msg += prefix.critical;
+          break;
+        default:
+          break;
+      }
 
-    msg += ` ${record.msg}`;
+      msg += ` ${record.msg}`;
+    }
 
     if (detailedLog) {
       for (const arg of record.args) {
@@ -163,4 +175,37 @@ export async function handleError(err: Error) {
 
 export function highlight(msg: string) {
   return underline(bold(msg));
+}
+
+const ci = Deno.env.get("CI");
+const ciSpinner = { stop: () => {} };
+
+export class spinner {
+  static info(msg: string) {
+    return ci ? ciSpinner : wait({
+      text: msg,
+      prefix: prefix.info,
+    }).start();
+  }
+
+  static warning(msg: string) {
+    return ci ? ciSpinner : wait({
+      text: msg,
+      prefix: prefix.warning,
+    }).start();
+  }
+
+  static error(msg: string) {
+    return ci ? ciSpinner : wait({
+      text: msg,
+      prefix: prefix.error,
+    }).start();
+  }
+
+  static critical(msg: string) {
+    return ci ? ciSpinner : wait({
+      text: msg,
+      prefix: prefix.critical,
+    }).start();
+  }
 }

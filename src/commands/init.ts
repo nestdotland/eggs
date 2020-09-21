@@ -16,7 +16,7 @@ import {
   writeConfig,
 } from "../context/config.ts";
 import type { DefaultOptions } from "../commands.ts";
-import { version } from "../version.ts";
+import { version } from "../version/version.ts";
 import { setupLog } from "../log.ts";
 
 /** Init Command.

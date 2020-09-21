@@ -1,11 +1,15 @@
 import {
   base64,
+  bold,
   expandGlobSync,
+  globToRegExp,
+  log,
   relative,
   resolve,
   walkSync,
 } from "../../deps.ts";
 import type { Config } from "./config.ts";
+import type { Ignore } from "./ignore.ts";
 
 export interface MatchedFile {
   fullPath: string;
@@ -13,9 +17,14 @@ export interface MatchedFile {
   lstat: Deno.FileInfo;
 }
 
-export function matchFiles(config: Config): MatchedFile[] {
+export function matchFiles(
+  config: Config,
+  ignore: Ignore | undefined,
+): MatchedFile[] | undefined {
   let matched: MatchedFile[] = [];
+
   if (config.files) {
+    config.files.push(config.entry);
     for (let file of config.files) {
       let matches = [
         ...expandGlobSync(file, {
@@ -28,11 +37,20 @@ export function matchFiles(config: Config): MatchedFile[] {
           path: "/" + relative(Deno.cwd(), file.path).replace(/\\/g, "/"),
           lstat: Deno.lstatSync(file.path),
         }));
+      if (matches.length === 0) {
+        log.error(
+          `${
+            bold(file)
+          } did not match any file. There may be a typo in the path.`,
+        );
+        return;
+      }
       matched.push(...matches);
     }
   } else {
+    (ignore as Ignore).accepts.push(globToRegExp(config.entry));
     for (const entry of walkSync(".")) {
-      const path = "/" + entry.path;
+      const path = "/" + entry.path.replace(/\\/g, "/");
       const fullPath = resolve(entry.path);
       const lstat = Deno.lstatSync(entry.path);
       const file: MatchedFile = {
@@ -44,10 +62,9 @@ export function matchFiles(config: Config): MatchedFile[] {
     }
   }
 
-  matched = matched.filter((file) => file.lstat.isFile);
-  matched = matched.filter((file) => {
-    if (config?.ignore?.denies.some((rgx) => rgx.test(file.path.substr(1)))) {
-      return config.ignore.accepts.some((rgx) => rgx.test(file.path.substr(1)));
+  matched = matched.filter((file) => file.lstat.isFile).filter((file) => {
+    if (ignore?.denies.some((rgx) => rgx.test(file.path.substr(1)))) {
+      return ignore.accepts.some((rgx) => rgx.test(file.path.substr(1)));
     }
     return true;
   });

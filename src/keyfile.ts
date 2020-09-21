@@ -1,4 +1,4 @@
-import { existsSync, join } from "../deps.ts";
+import { existsSync, join, log } from "../deps.ts";
 
 import { ENDPOINT } from "./api/common.ts";
 import { envHOMEDIR } from "./environment.ts";
@@ -20,6 +20,7 @@ function slugify(text: string) {
 
 export async function writeAPIKey(key: string): Promise<void> {
   const keyPath = join(envHOMEDIR(), KEY_FILE);
+  log.debug("Key path", keyPath);
   await Deno.writeFile(keyPath, new TextEncoder().encode(key));
 }
 

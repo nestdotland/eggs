@@ -5,22 +5,24 @@ import { defaultIgnore, Ignore, readIgnore } from "./ignore.ts";
 
 export async function gatherContext(
   wd: string = Deno.cwd(),
-): Promise<Partial<Config> | undefined> {
+): Promise<[Partial<Config> | undefined, Ignore | undefined]> {
   let config: Partial<Config> = {};
+  let ignore: Ignore = {
+    accepts: [],
+    denies: [],
+    extends: [],
+  };
   const configPath = defaultConfig(wd);
+
   if (configPath) {
     try {
       config = await readConfig(configPath);
     } catch (err) {
       log.error("Unable to read config file.", err);
-      return;
+      return [undefined, undefined];
     }
   }
 
-  let ignore: Ignore = {
-    accepts: [],
-    denies: [],
-  };
   const ignorePath = defaultIgnore(wd);
   if (ignorePath) {
     try {
@@ -28,10 +30,8 @@ export async function gatherContext(
     } catch (err) {
       throw err;
     }
+    return [config, ignore];
   }
 
-  return {
-    ...config,
-    ignore,
-  };
+  return [config, undefined];
 }

@@ -28,6 +28,22 @@ jobs:
       - name: Run tests
         run: deno test -A --unstable
 
+      - name: Get eggs version
+        run: |
+          deno run ./src/version/printVersion.ts
+          echo "::set-env name=EGGS_VERSION::$(deno run ./src/version/printVersion.ts)"
+
+      - name: Eggs release test
+        run: |
+          deno run -A --unstable mod.ts link ${{ secrets.NESTAPIKEY }} -do
+          deno run -A --unstable mod.ts publish eggs --dry-run -do --ignore "extends .gitignore" --version ${{ env.EGGS_VERSION }}
+        
+      - uses: actions/upload-artifact@v2
+        if: failure()
+        with:
+          name: eggs-debug
+          path: eggs-debug.log
+
   nightly:
     name: Deno Nightly
 
@@ -50,3 +66,19 @@ jobs:
 
       - name: Run tests
         run: deno test -A --unstable
+
+      - name: Get eggs version
+        run: |
+          deno run ./src/version/printVersion.ts
+          echo "::set-env name=EGGS_VERSION::$(deno run ./src/version/printVersion.ts)"
+
+      - name: Eggs release test
+        run: |
+          deno run -A --unstable mod.ts link ${{ secrets.NESTAPIKEY }} -do
+          deno run -A --unstable mod.ts publish eggs --dry-run -do --ignore "extends .gitignore" --version ${{ env.EGGS_VERSION }}
+      
+      - uses: actions/upload-artifact@v2
+        if: failure()
+        with:
+          name: eggs-debug
+          path: eggs-debug.log
