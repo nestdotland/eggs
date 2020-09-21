@@ -162,9 +162,11 @@ async function checkUp(
       {
         cmd: typeof config.checkFormat === "string"
           ? config.checkFormat?.split(" ")
-          : ["deno", "fmt"].concat(matched.map((file) => file.fullPath).filter(
-            (path) => path.match(/\.(js|jsx|ts|tsx|json)$/),
-          )),
+          : ["deno", "fmt"].concat(
+            matched.map((file) => file.fullPath).filter(
+              (path) => path.match(/\.(js|jsx|ts|tsx|json)$/),
+            ),
+          ),
         stderr: "null",
         stdout: "null",
       },
