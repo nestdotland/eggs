@@ -1,0 +1,3 @@
+extends .gitignore
+
+**/*_test.ts;
