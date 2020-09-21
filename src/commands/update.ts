@@ -11,7 +11,7 @@ import {
   yellow,
   writeGlobalModuleConfig,
 } from "../../deps.ts";
-import { version } from "../version/version.ts";
+import { version } from "../version.ts";
 import type { DefaultOptions } from "../commands.ts";
 import { setupLog } from "../log.ts";
 
@@ -159,7 +159,7 @@ async function updateLocalModules(
     let { name, parsedURL, registry, owner, version } = parseURL(line);
 
     // TODO(@qu4k): edge case: dependency isn't a module, for example: from
-    //  "https://x.nest.land/std@version/version.ts";, will return -> "version.ts";
+    //  "https://x.nest.land/std@version.ts";, will return -> "version.ts";
     // Issue: "Mandarine.TS" is a module while "version.ts" isn't
 
     // Now we have the name, ignore dependency if requested dependencies are set and it isn't one requested

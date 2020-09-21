@@ -13,7 +13,7 @@ import {
   writeGlobalModuleConfig,
 } from "../../deps.ts";
 import type { DefaultOptions } from "../commands.ts";
-import { version } from "../version/version.ts";
+import { version } from "../version.ts";
 import { setupLog } from "../log.ts";
 
 const installPrefix = "eggs--";

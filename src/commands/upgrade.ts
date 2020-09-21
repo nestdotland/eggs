@@ -6,7 +6,7 @@ import {
 } from "../../deps.ts";
 import type { DefaultOptions } from "../commands.ts";
 
-import { version } from "../version/version.ts";
+import { version } from "../version.ts";
 import { setupLog } from "../log.ts";
 
 async function upgradeCommand(options: DefaultOptions) {
