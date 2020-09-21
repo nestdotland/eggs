@@ -35,7 +35,7 @@ jobs:
 
       - name: Eggs release test
         run: |
-          deno run -A --unstable mod.ts link ${{ secrets.NESTAPIKEY || "null" }} -do
+          deno run -A --unstable mod.ts link ${{ secrets.NESTAPIKEY || 'null' }} -do
           deno run -A --unstable mod.ts publish eggs --dry-run -do --ignore "extends .gitignore" --version ${{ env.EGGS_VERSION }}
         
       - uses: actions/upload-artifact@v2
@@ -74,7 +74,7 @@ jobs:
 
       - name: Eggs release test
         run: |
-          deno run -A --unstable mod.ts link ${{ secrets.NESTAPIKEY || "null" }} -do
+          deno run -A --unstable mod.ts link ${{ secrets.NESTAPIKEY || 'null' }} -do
           deno run -A --unstable mod.ts publish eggs --dry-run -do --ignore "extends .gitignore" --version ${{ env.EGGS_VERSION }}
       
       - uses: actions/upload-artifact@v2
