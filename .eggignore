@@ -1,3 +1,5 @@
 extends .gitignore
 
-**/*_test.ts;
+*_test.ts
+
+Drakefile.ts
