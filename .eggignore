@@ -2,6 +2,7 @@ extends .gitignore
 .*ignore
 
 # Extra typescript files
+test/
 *_test.ts
 Drakefile.ts
 

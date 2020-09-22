@@ -58,7 +58,7 @@ desc("Ship eggs to nest.land.");
 task("ship", ["link", "publish"]);
 
 task("get-version", [], function () {
-  console.log(`Eggs version: ${version}`)
+  console.log(`Eggs version: ${version}`);
   console.log(`::set-env name=EGGS_VERSION::${version}`);
 });
 
@@ -84,5 +84,8 @@ task("setup-github-actions", [], async function () {
       break;
   }
 });
+
+desc("Development tools. Should ideally be run before each commit.");
+task("dev", ["dry-publish", "format", "lint"]);
 
 run();
