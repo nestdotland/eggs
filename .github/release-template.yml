@@ -44,3 +44,5 @@ template: |
   ```sh
   eggs upgrade
   ```
+
+  Special thanks to $CONTRIBUTORS for their contributions to this release!

@@ -14,17 +14,24 @@ jobs:
 
       - name: Setup Deno
         uses: denolib/setup-deno@v2
-        with:
-          deno-version: v1.3.3
 
-      - name: Publish eggs
+      - name: Get eggs version
         run: |
-          deno run -A --unstable mod.ts link ${{ secrets.NESTAPIKEY }}
-          deno run -A --unstable mod.ts publish
+          deno run ./src/version/printVersion.ts
+          echo "::set-env name=EGGS_VERSION::$(deno run ./src/version/printVersion.ts)"
 
       - name: Draft release
+        id: draft_release
         uses: release-drafter/release-drafter@v5
         with:
           config-name: release-template.yml
+          version: ${{ env.EGGS_VERSION }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish eggs
+        # TODO(@oganexon): remove --description after next release
+        run: |
+          deno run -A --unstable mod.ts link ${{ secrets.NESTAPIKEY }}
+          deno run -A --unstable mod.ts publish eggs --ignore "extends .gitignore" --version ${{ env.EGGS_VERSION }} --description "The CLI used to publish and update modules in nest.land.
+

@@ -1,4 +1,4 @@
-import { assertEquals } from "../../test_deps.ts";
+import { assertEquals } from "../../test/deps.ts";
 import { configFormat, ConfigFormat } from "./config.ts";
 
 Deno.test({

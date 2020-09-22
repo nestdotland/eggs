@@ -1,6 +1,0 @@
-.git*/**
-.idea/**
-.vscode/**
-benchmarks/**
-!benchmarks/README.md
-eggs-debug.log

@@ -1,4 +1,4 @@
-import { assertEquals } from "../test_deps.ts";
+import { assertEquals } from "../test/deps.ts";
 import { Module } from "./module.ts";
 
 Deno.test({
