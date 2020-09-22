@@ -1,4 +1,4 @@
-import { ITypeInfo, semver, stringType } from "../deps.ts";
+import { ITypeInfo, semver, stringType } from "../../deps.ts";
 
 export const releases = [
   "patch",

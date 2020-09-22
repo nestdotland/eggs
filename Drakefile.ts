@@ -11,14 +11,21 @@ task("test", [], async function () {
 desc("Format source files.");
 task("format", [], async function () {
   await sh(
-    `deno test -A --unstable`,
+    `deno fmt`,
+  );
+});
+
+desc("Format source files.");
+task("check-format", [], async function () {
+  await sh(
+    `deno fmt --check`,
   );
 });
 
 desc("Lint source files.");
 task("lint", [], async function () {
   await sh(
-    `deno test -A --unstable`,
+    `deno lint --unstable`,
   );
 });
 
@@ -51,7 +58,31 @@ desc("Ship eggs to nest.land.");
 task("ship", ["link", "publish"]);
 
 task("get-version", [], function () {
-  console.log(version);
+  console.log(`Eggs version: ${version}`)
+  console.log(`::set-env name=EGGS_VERSION::${version}`);
+});
+
+task("setup-github-actions", [], async function () {
+  const process = Deno.run({
+    cmd: ["deno", "install", "-A", "-n", "drake", "Drakefile.ts"],
+  });
+  await process.status();
+  process.close();
+
+  switch (Deno.build.os) {
+    case "windows":
+      console.log("::add-path::C:\\Users\\runneradmin\\.deno\\bin");
+      break;
+    case "linux":
+      console.log("::add-path::/home/runner/.deno/bin");
+      console.log("::set-env name=SHELL::/bin/bash");
+      break;
+    case "darwin":
+      console.log("::add-path::/Users/runner/.deno/bin");
+      break;
+    default:
+      break;
+  }
 });
 
 run();

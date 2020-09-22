@@ -7,7 +7,7 @@ import {
 import type { DefaultOptions } from "../commands.ts";
 
 import { version } from "../version.ts";
-import { setupLog } from "../log.ts";
+import { setupLog } from "../utilities/log.ts";
 
 async function upgradeCommand(options: DefaultOptions) {
   await setupLog(options.debug);

@@ -17,7 +17,7 @@ import {
 } from "../context/config.ts";
 import type { DefaultOptions } from "../commands.ts";
 import { version } from "../version.ts";
-import { setupLog } from "../log.ts";
+import { setupLog } from "../utilities/log.ts";
 
 /** Init Command.
  * `init` creates (or overrides) configuration in

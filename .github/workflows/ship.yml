@@ -15,8 +15,11 @@ jobs:
       - name: Setup Deno
         uses: denolib/setup-deno@v2
 
+      - name: Setup Drake
+        run: deno run -A Drakefile.ts setup-github-actions
+
       - name: Get eggs version
-        run: echo "::set-env name=EGGS_VERSION::$(deno run -A Drakefile.ts get-version)"
+        run: drake get-version
 
       - name: Draft release
         id: draft_release

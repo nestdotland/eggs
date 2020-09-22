@@ -26,9 +26,7 @@ jobs:
         uses: denolib/setup-deno@v2
 
       - name: Setup Drake
-        run: |
-          deno install -A -n drake Drakefile.ts
-          echo "::add-path::/home/runner/.deno/bin"
+        run: deno run -A Drakefile.ts setup-github-actions
 
       - name: Run tests
         run: drake test
@@ -64,9 +62,7 @@ jobs:
           deno-version: nightly
 
       - name: Setup Drake
-        run: |
-          deno install -A -n drake Drakefile.ts
-          echo "::add-path::/home/runner/.deno/bin"
+        run: deno run -A Drakefile.ts setup-github-actions
 
       - name: Run tests
         run: drake test

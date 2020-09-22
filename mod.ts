@@ -15,7 +15,7 @@ import {
   writeLogFile,
   setupLog,
   errorOccurred,
-} from "./src/log.ts";
+} from "./src/utilities/log.ts";
 
 const commands = { link, init, publish, update, install, upgrade, info };
 

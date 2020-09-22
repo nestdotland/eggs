@@ -14,7 +14,7 @@ import {
   yellow,
 } from "../../deps.ts";
 import type { DefaultOptions } from "../commands.ts";
-import { releaseType, urlType, versionType } from "../types.ts";
+import { releaseType, urlType, versionType } from "../utilities/types.ts";
 
 import { ENDPOINT } from "../api/common.ts";
 import { fetchModule } from "../api/fetch.ts";
@@ -33,7 +33,7 @@ import { MatchedFile, matchFiles, readFiles } from "../context/files.ts";
 
 import { getAPIKey } from "../keyfile.ts";
 import { version } from "../version.ts";
-import { setupLog, highlight, spinner } from "../log.ts";
+import { setupLog, highlight, spinner } from "../utilities/log.ts";
 
 function ensureCompleteConfig(
   config: Partial<Config>,
