@@ -83,12 +83,11 @@ export function parseIgnore(
     // If there is a separator at the beginning or middle (or both) of the pattern,
     // then the pattern is relative to the directory level of the particular .gitignore file itself.
     // Otherwise the pattern may also match at any level below the .gitignore level.
-    if (line.replace(/\/$/, "").split("/").length === 1) {
-      line = `**/${line}`;
-      // If there is a separator at the end of the pattern then the pattern will only match directories,
-      // otherwise the pattern can match both files and directories.
-      if (line.endsWith("/")) line = `${line}**`;
-    }
+    if (line.replace(/\/$/, "").split("/").length === 1) line = `**/${line}`;
+    // If there is a separator at the end of the pattern then the pattern will only match directories,
+    // otherwise the pattern can match both files and directories.
+    if (line.endsWith("/")) line = `${line}**`;
+
     try {
       const pattern = globToRegExp(line);
       if (accepts) {

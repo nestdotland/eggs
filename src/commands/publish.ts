@@ -28,13 +28,17 @@ import {
 } from "../context/config.ts";
 import { gatherContext } from "../context/context.ts";
 import { parseIgnore, extendsIgnore } from "../context/ignore.ts";
+import type { Ignore } from "../context/ignore.ts";
 import { MatchedFile, matchFiles, readFiles } from "../context/files.ts";
 
 import { getAPIKey } from "../keyfile.ts";
 import { version } from "../version/version.ts";
 import { setupLog, highlight, spinner } from "../log.ts";
 
-function ensureCompleteConfig(config: Partial<Config>): config is Config {
+function ensureCompleteConfig(
+  config: Partial<Config>,
+  ignore: Ignore | undefined,
+): config is Config {
   let isConfigComplete = true;
 
   if (!config.name) {
@@ -49,7 +53,7 @@ function ensureCompleteConfig(config: Partial<Config>): config is Config {
     isConfigComplete = false;
   }
 
-  if (!config.files && !config.ignore) {
+  if (!config.files && !ignore) {
     log.error(
       `Your module configuration must provide files to upload in the form of a ${
         italic("files")
@@ -162,7 +166,11 @@ async function checkUp(
       {
         cmd: typeof config.checkFormat === "string"
           ? config.checkFormat?.split(" ")
-          : ["deno", "fmt"].concat(matched.map((file) => file.fullPath)),
+          : ["deno", "fmt"].concat(
+            matched.map((file) => file.fullPath).filter(
+              (path) => path.match(/\.(js|jsx|ts|tsx|json)$/),
+            ),
+          ),
         stderr: "null",
         stdout: "null",
       },
@@ -264,14 +272,14 @@ async function publishCommand(options: Options, name?: string) {
 
   log.debug("Raw config:", egg);
 
-  if (!ensureCompleteConfig(egg)) return;
-
   // TODO(@oganexon): deprecate egg.ignore as Ignore
   const ignore = contextIgnore ||
     egg.ignore &&
       (Array.isArray(egg.ignore)
         ? await extendsIgnore(parseIgnore(egg.ignore.join()))
         : egg.ignore);
+
+  if (!ensureCompleteConfig(egg, ignore)) return;
 
   log.debug("Ignore:", ignore);
 
