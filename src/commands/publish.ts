@@ -156,17 +156,17 @@ async function checkUp(
       },
     );
     const status = await process.status();
-    const stdout = new TextDecoder("utf-8").decode(await process.output());
-    const stderr = new TextDecoder("utf-8").decode(
-      await process.stderrOutput(),
-    );
+    // const stdout = new TextDecoder("utf-8").decode(await process.output());
+    // const stderr = new TextDecoder("utf-8").decode(
+    //   await process.stderrOutput(),
+    // );
     wait.stop();
     if (status.success) {
       log.info("Source files are formatted.");
     } else {
       log.error("Some source files are not properly formatted.");
-      log.error(stdout);
-      log.error(stderr);
+      // log.error(stdout);
+      // log.error(stderr);
       return false;
     }
   }
