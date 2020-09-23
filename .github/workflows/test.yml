@@ -25,20 +25,17 @@ jobs:
       - name: Setup Deno
         uses: denolib/setup-deno@v2
 
-      - name: Run tests
-        run: deno test -A --unstable
+      - name: Setup Drake
+        run: deno run -A Drakefile.ts setup-github-actions
 
-      - name: Get eggs version
-        run: |
-          deno run ./src/version/printVersion.ts
-          echo "::set-env name=EGGS_VERSION::$(deno run ./src/version/printVersion.ts)"
+      - name: Run tests
+        run: drake test
 
       - name: Eggs release test
-        run: |
-          deno run -A --unstable mod.ts link ${{ secrets.NESTAPIKEY || 'null' }} -do
-          deno run -A --unstable mod.ts publish eggs --dry-run -do --ignore "extends .gitignore" --version ${{ env.EGGS_VERSION }}
-        
-      - uses: actions/upload-artifact@v2
+        run: drake dry-ship
+      
+      - name: Upload debug file
+        uses: actions/upload-artifact@v2
         if: failure()
         with:
           name: eggs-debug
@@ -64,20 +61,17 @@ jobs:
         with:
           deno-version: nightly
 
-      - name: Run tests
-        run: deno test -A --unstable
+      - name: Setup Drake
+        run: deno run -A Drakefile.ts setup-github-actions
 
-      - name: Get eggs version
-        run: |
-          deno run ./src/version/printVersion.ts
-          echo "::set-env name=EGGS_VERSION::$(deno run ./src/version/printVersion.ts)"
+      - name: Run tests
+        run: drake test
 
       - name: Eggs release test
-        run: |
-          deno run -A --unstable mod.ts link ${{ secrets.NESTAPIKEY || 'null' }} -do
-          deno run -A --unstable mod.ts publish eggs --dry-run -do --ignore "extends .gitignore" --version ${{ env.EGGS_VERSION }}
+        run: drake dry-ship
       
-      - uses: actions/upload-artifact@v2
+      - name: Upload debug file
+        uses: actions/upload-artifact@v2
         if: failure()
         with:
           name: eggs-debug

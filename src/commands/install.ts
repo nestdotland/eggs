@@ -13,8 +13,8 @@ import {
   writeGlobalModuleConfig,
 } from "../../deps.ts";
 import type { DefaultOptions } from "../commands.ts";
-import { version } from "../version/version.ts";
-import { setupLog } from "../log.ts";
+import { version } from "../version.ts";
+import { setupLog } from "../utilities/log.ts";
 
 const installPrefix = "eggs--";
 const oneDay = 1000 * 60 * 60 * 24;

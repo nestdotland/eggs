@@ -1,4 +1,4 @@
-import { semver } from "../deps.ts";
+import { semver } from "../../deps.ts";
 
 export interface IModule {
   name: string;
