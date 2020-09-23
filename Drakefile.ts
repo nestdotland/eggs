@@ -41,7 +41,7 @@ task("link", [], async function () {
 desc("Reports the details of what would have been published.");
 task("dry-publish", [], async function () {
   await sh(
-    `deno run -A --unstable mod.ts publish eggs --dry-run -do --version ${
+    `deno run -A --unstable mod.ts publish eggs --dry-run -do --no-check-all --check-installation --version ${
       semver.inc(version, "prerelease")
     }`,
   );
@@ -50,7 +50,7 @@ task("dry-publish", [], async function () {
 desc("Publishes eggs to the nest.land registry.");
 task("publish", [], async function () {
   await sh(
-    `deno run -A --unstable mod.ts publish eggs -do --version ${version}`,
+    `deno run -A --unstable mod.ts publish eggs -do --no-check-all --check-installation --version ${version}`,
   );
 });
 
