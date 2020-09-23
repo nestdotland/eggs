@@ -44,21 +44,27 @@
     },
     "files": {
       "type": "array",
+      "items": {
+        "type": "string"
+      },
       "description": "All the files that should be uploaded to nest.land. Supports file globbing. Do not use ./**/* for the files field! This has been known to cause errors in the publishing process.",
       "examples": [["src/**/*"]]
     },
     "ignore": {
       "type": "array",
+      "items": {
+        "type": "string"
+      },
       "description": "All the files that should be ignored when uploading to nest.land. Supports file globbing.",
       "examples": [["tests/**/*"]]
     },
     "checkFormat": {
-      "type": "boolean",
+      "type": ["boolean", "string"],
       "description": "Automatically format your code before publishing to the blockchain. Defaults to false",
       "default": false
     },
     "checkTest": {
-      "type": "boolean",
+      "type": ["boolean", "string"],
       "description": "Run deno test. Defaults to false.",
       "default": false
     },
