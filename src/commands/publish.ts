@@ -151,13 +151,15 @@ async function checkUp(
               (path) => path.match(/\.(js|jsx|ts|tsx|json)$/),
             ),
           ),
-        stderr: "null",
+        stderr: "piped",
         stdout: "piped",
       },
     );
     const status = await process.status();
     const stdout = new TextDecoder("utf-8").decode(await process.output());
-    const stderr = new TextDecoder("utf-8").decode(await process.stderrOutput());
+    const stderr = new TextDecoder("utf-8").decode(
+      await process.stderrOutput(),
+    );
     wait.stop();
     if (status.success) {
       log.info("Source files are formatted.");
