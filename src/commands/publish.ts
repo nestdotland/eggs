@@ -152,15 +152,17 @@ async function checkUp(
             ),
           ),
         stderr: "null",
-        stdout: "null",
+        stdout: "piped",
       },
     );
     const status = await process.status();
+    const stdout = new TextDecoder("utf-8").decode(await process.output());
     wait.stop();
     if (status.success) {
       log.info("Source files are formatted.");
     } else {
-      log.error("Source files are not properly formatted.");
+      log.error("Some source files are not properly formatted.");
+      log.error(stdout);
       return false;
     }
   }
@@ -186,6 +188,7 @@ async function checkUp(
         log.info("No matching test modules found, tests skipped.");
       } else {
         log.error("Some tests were not successful.");
+        log.error(stdout);
         return false;
       }
     }
