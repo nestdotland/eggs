@@ -46,9 +46,9 @@ export async function init(options: Options) {
     default: currentConfig.description,
     maxLength: 4294967295,
   });
-  const stable: boolean = await Confirm.prompt({
-    message: "Is this a stable version?",
-    default: currentConfig.stable,
+  const unstable: boolean = await Confirm.prompt({
+    message: "Is this an unstable version?",
+    default: currentConfig.unstable,
   });
   const files: string[] = await List.prompt({
     message:
@@ -80,7 +80,7 @@ export async function init(options: Options) {
   const config = {
     name: name,
     description: description,
-    stable: stable,
+    unstable: unstable,
     files: (files.length === 0 ? currentConfig.files : files),
   };
 

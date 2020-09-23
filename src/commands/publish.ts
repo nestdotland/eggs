@@ -90,27 +90,7 @@ function ensureFiles(config: Config, matched: MatchedFile[]): boolean {
 }
 
 async function deprecationWarnings(config: Config) {
-  if (typeof config.stable === "boolean") {
-    log.warning(
-      `${
-        yellow("[Deprecated - stable]")
-      } Module stability is detected automatically. If you still want to specify the stability of your module, use the ${
-        bold("unstable")
-      } field.`,
-    );
-  }
-  if (typeof config.fmt === "boolean") {
-    log.warning(
-      `${yellow("[Deprecated - fmt]")} Use the ${bold("checkFormat")} field.`,
-    );
-  }
-  if (config?.ignore && !Array.isArray(config.ignore)) {
-    log.warning(
-      `${yellow("[Deprecated - ignore as Ignore]")} Write ${
-        bold("ignore")
-      } field as a string array.`,
-    );
-  }
+  // no deprecated feature for the time being :)
 }
 
 function isVersionUnstable(v: string) {
@@ -160,7 +140,7 @@ async function checkUp(
   config: Config,
   matched: MatchedFile[],
 ): Promise<boolean> {
-  if (config.checkFormat ?? (config.fmt || config.checkAll)) {
+  if (config.checkFormat ?? config.checkAll) {
     const wait = spinner.info("Checking if the source files are formatted...");
     const process = Deno.run(
       {
@@ -272,12 +252,8 @@ export async function publish(options: Options, name?: string) {
 
   log.debug("Raw config:", egg);
 
-  // TODO(@oganexon): deprecate egg.ignore as Ignore
   const ignore = contextIgnore ||
-    egg.ignore &&
-      (Array.isArray(egg.ignore)
-        ? await extendsIgnore(parseIgnore(egg.ignore.join()))
-        : egg.ignore);
+    egg.ignore && await extendsIgnore(parseIgnore(egg.ignore.join()));
 
   if (!ensureCompleteConfig(egg, ignore)) return;
 
@@ -328,7 +304,7 @@ export async function publish(options: Options, name?: string) {
     description: egg.description,
     repository: egg.repository,
     unlisted: egg.unlisted,
-    stable: egg.stable || !egg.unstable || isVersionUnstable(egg.version),
+    stable: !egg.unstable || isVersionUnstable(egg.version),
     upload: true,
     latest: semver.compare(egg.version, latest) === 1,
     entry: egg.entry,
