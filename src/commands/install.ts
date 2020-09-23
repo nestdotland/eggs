@@ -21,15 +21,15 @@ const oneDay = 1000 * 60 * 60 * 24;
 
 const configPath = globalModulesConfigPath();
 
-async function installCommand(
-  options: DefaultOptions,
+export async function install(
+  options: Options,
   ...args: string[]
 ): Promise<void> {
   await setupLog(options.debug);
 
   /** help option need to be parsed manually */
   if (["-h", "--help", "help"].includes(args[0])) {
-    install.help();
+    installCommand.help();
     return;
   }
 
@@ -166,9 +166,10 @@ The installation root is determined, in order of precedence:
 
 These must be added to the path manually if required.`;
 
-type Arguments = string[];
+export type Options = DefaultOptions;
+export type Arguments = string[];
 
-export const install = new Command<DefaultOptions, Arguments>()
+export const installCommand = new Command<Options, Arguments>()
   .version(version)
   .description(desc)
   .arguments("[options...:string]")
@@ -198,4 +199,4 @@ export const install = new Command<DefaultOptions, Arguments>()
   .option("--unstable", "Enable unstable APIs")
   /** Unknown options cannot be parsed */
   .useRawArgs()
-  .action(installCommand);
+  .action(install);

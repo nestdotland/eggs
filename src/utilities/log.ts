@@ -178,7 +178,7 @@ export function highlight(msg: string) {
 }
 
 const ci = Deno.env.get("CI");
-const ciSpinner = { stop: () => {} };
+const ciSpinner = { stop: () => {}, text: "" } as Spinner;
 
 export class spinner {
   static info(msg: string) {

@@ -9,7 +9,7 @@ import type { DefaultOptions } from "../commands.ts";
 import { version } from "../version.ts";
 import { setupLog } from "../utilities/log.ts";
 
-async function upgradeCommand(options: DefaultOptions) {
+export async function upgrade(options: DefaultOptions) {
   await setupLog(options.debug);
 
   const newVersion = await Nest.getLatestVersion("eggs");
@@ -51,7 +51,10 @@ async function upgradeCommand(options: DefaultOptions) {
   log.info("Successfully upgraded eggs cli!");
 }
 
-export const upgrade = new Command<DefaultOptions, []>()
+export type Options = DefaultOptions;
+export type Arguments = [];
+
+export const upgradeCommand = new Command<Options, Arguments>()
   .version(version)
   .description("Upgrade the current nest.land CLI.")
-  .action(upgradeCommand);
+  .action(upgrade);

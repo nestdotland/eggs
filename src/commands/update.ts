@@ -24,7 +24,7 @@ interface ModuleToUpdate {
 
 const decoder = new TextDecoder("utf-8");
 
-async function updateGlobalModules(
+export async function updateGlobalModules(
   options: Options,
   requestedModules: string[],
 ): Promise<void> {
@@ -119,7 +119,7 @@ async function updateGlobalModules(
   log.info("Updated your dependencies!");
 }
 
-async function updateLocalModules(
+export async function updateLocalModules(
   options: Options,
   requestedModules: string[],
 ): Promise<void> {
@@ -226,13 +226,13 @@ async function updateLocalModules(
   log.info("Updated your dependencies!");
 }
 
-interface Options extends DefaultOptions {
+export interface Options extends DefaultOptions {
   file: string;
   global: boolean;
 }
-type Arguments = [string[]];
+export type Arguments = [string[]];
 
-export const update = new Command<Options, Arguments>()
+export const updateCommand = new Command<Options, Arguments>()
   .description("Update your dependencies")
   .version(version)
   .arguments("[deps...:string]")

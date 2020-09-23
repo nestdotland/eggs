@@ -1,12 +1,12 @@
 import { Command, HelpCommand, CompletionsCommand, log } from "./deps.ts";
 import type { DefaultOptions } from "./src/commands.ts";
-import { link } from "./src/commands/link.ts";
-import { init } from "./src/commands/init.ts";
-import { publish } from "./src/commands/publish.ts";
-import { update } from "./src/commands/update.ts";
-import { install } from "./src/commands/install.ts";
-import { upgrade } from "./src/commands/upgrade.ts";
-import { info } from "./src/commands/info.ts";
+import { linkCommand } from "./src/commands/link.ts";
+import { initCommand } from "./src/commands/init.ts";
+import { publishCommand } from "./src/commands/publish.ts";
+import { updateCommand } from "./src/commands/update.ts";
+import { installCommand } from "./src/commands/install.ts";
+import { upgradeCommand } from "./src/commands/upgrade.ts";
+import { infoCommand } from "./src/commands/info.ts";
 
 import { version } from "./src/version.ts";
 
@@ -17,7 +17,15 @@ import {
   errorOccurred,
 } from "./src/utilities/log.ts";
 
-const commands = { link, init, publish, update, install, upgrade, info };
+const commands = {
+  link: linkCommand,
+  init: initCommand,
+  publish: publishCommand,
+  update: updateCommand,
+  install: installCommand,
+  upgrade: upgradeCommand,
+  info: infoCommand,
+};
 
 await setupLog();
 
@@ -39,13 +47,13 @@ const eggs = new Command<DefaultOptions, []>()
   })
   .command("help", new HelpCommand())
   .command("completions", new CompletionsCommand())
-  .command("link", link)
-  .command("init", init)
-  .command("publish", publish)
-  .command("update", update)
-  .command("install", install)
-  .command("info", info)
-  .command("upgrade", upgrade);
+  .command("link", linkCommand)
+  .command("init", initCommand)
+  .command("publish", publishCommand)
+  .command("update", updateCommand)
+  .command("install", installCommand)
+  .command("info", infoCommand)
+  .command("upgrade", upgradeCommand);
 
 try {
   const { options } = await eggs.parse(Deno.args);

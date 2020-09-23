@@ -22,7 +22,7 @@ import { setupLog } from "../utilities/log.ts";
 /** Init Command.
  * `init` creates (or overrides) configuration in
  * the cwd with an interactive prompt. */
-async function initCommand(options: DefaultOptions) {
+export async function init(options: Options) {
   await setupLog(options.debug);
 
   let currentConfig: Partial<Config> = {};
@@ -91,7 +91,10 @@ async function initCommand(options: DefaultOptions) {
   log.info("Successfully created config file.");
 }
 
-export const init = new Command<DefaultOptions, []>()
+export type Options = DefaultOptions;
+export type Arguments = [];
+
+export const initCommand = new Command<Options, Arguments>()
   .version(version)
   .description("Initiates a new module for the nest.land registry.")
-  .action(initCommand);
+  .action(init);

@@ -1,4 +1,5 @@
 import { desc, run, task, sh } from "https://x.nest.land/drake@1.4.1/mod.ts";
+import * as semver from "https://deno.land/x/semver@v1.0.0/mod.ts";
 import { version } from "./src/version.ts";
 
 desc("Run tests.");
@@ -40,14 +41,16 @@ task("link", [], async function () {
 desc("Reports the details of what would have been published.");
 task("dry-publish", [], async function () {
   await sh(
-    `deno run -A --unstable mod.ts publish eggs --dry-run -do --version ${version}`,
+    `deno run -A --unstable mod.ts publish eggs --dry-run -do --version ${
+      semver.inc(version, "prerelease")
+    }`,
   );
 });
 
 desc("Publishes eggs to the nest.land registry.");
 task("publish", [], async function () {
   await sh(
-    `deno run -A --unstable mod.ts publish eggs --dry-run -do --version ${version}`,
+    `deno run -A --unstable mod.ts publish eggs -do --version ${version}`,
   );
 });
 
@@ -86,6 +89,6 @@ task("setup-github-actions", [], async function () {
 });
 
 desc("Development tools. Should ideally be run before each commit.");
-task("dev", ["dry-publish", "format", "lint"]);
+task("dev", ["format", "lint", "dry-publish"]);
 
 run();

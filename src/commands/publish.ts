@@ -161,12 +161,12 @@ async function checkUp(
   matched: MatchedFile[],
 ): Promise<boolean> {
   if (config.checkFormat ?? (config.fmt || config.checkAll)) {
-    const wait = spinner.info("Formatting your code...");
+    const wait = spinner.info("Checking if the source files are formatted...");
     const process = Deno.run(
       {
         cmd: typeof config.checkFormat === "string"
           ? config.checkFormat?.split(" ")
-          : ["deno", "fmt"].concat(
+          : ["deno", "fmt", "--check"].concat(
             matched.map((file) => file.fullPath).filter(
               (path) => path.match(/\.(js|jsx|ts|tsx|json)$/),
             ),
@@ -178,9 +178,9 @@ async function checkUp(
     const status = await process.status();
     wait.stop();
     if (status.success) {
-      log.info("Formatted your code.");
+      log.info("Source files are formatted.");
     } else {
-      log.error(`${italic("deno fmt")} returned a non-zero code.`);
+      log.error("Source files are not properly formatted.");
       return false;
     }
   }
@@ -205,7 +205,7 @@ async function checkUp(
       if (stdout.match(/^No matching test modules found/)) {
         log.info("No matching test modules found, tests skipped.");
       } else {
-        log.error(`${italic("deno test")} returned a non-zero code.`);
+        log.error("Some tests were not successful.");
         return false;
       }
     }
@@ -248,7 +248,7 @@ async function checkUp(
   return true;
 }
 
-async function publishCommand(options: Options, name?: string) {
+export async function publish(options: Options, name?: string) {
   await setupLog(options.debug);
 
   let apiKey = await getAPIKey();
@@ -389,7 +389,7 @@ async function publishCommand(options: Options, name?: string) {
   log.info(highlight("https://github.com/nestdotland/nest.land/discussions"));
 }
 
-interface Options extends DefaultOptions {
+export interface Options extends DefaultOptions {
   dryRun?: boolean;
   bump?: semver.ReleaseType;
   version?: string;
@@ -405,10 +405,9 @@ interface Options extends DefaultOptions {
   checkInstallation?: boolean;
   checkAll?: boolean;
 }
+export type Arguments = [string];
 
-type Arguments = [string];
-
-export const publish = new Command<Options, Arguments>()
+export const publishCommand = new Command<Options, Arguments>()
   .description("Publishes your module to the nest.land registry.")
   .version(version)
   .type("release", releaseType)
@@ -456,4 +455,4 @@ export const publish = new Command<Options, Arguments>()
     "Simulates a dummy installation and check for missing files in the dependency tree.",
   )
   .option("--check-all", "Performs all checks.")
-  .action(publishCommand);
+  .action(publish);
