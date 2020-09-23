@@ -1,8 +1,8 @@
 import { Command, log } from "../../deps.ts";
 import type { DefaultOptions } from "../commands.ts";
 import { KEY_FILE, writeAPIKey } from "../keyfile.ts";
-import { version } from "../version/version.ts";
-import { setupLog } from "../log.ts";
+import { version } from "../version.ts";
+import { setupLog } from "../utilities/log.ts";
 
 /** Link Command.
  * Provided a key, the `link` commands creates

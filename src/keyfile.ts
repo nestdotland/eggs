@@ -1,7 +1,7 @@
 import { existsSync, join, log } from "../deps.ts";
 
 import { ENDPOINT } from "./api/common.ts";
-import { envHOMEDIR } from "./environment.ts";
+import { envHOMEDIR } from "./utilities/environment.ts";
 
 export const KEY_SUFFIX = (ENDPOINT === "https://x.nest.land")
   ? ""

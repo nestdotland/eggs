@@ -8,14 +8,14 @@ import { install } from "./src/commands/install.ts";
 import { upgrade } from "./src/commands/upgrade.ts";
 import { info } from "./src/commands/info.ts";
 
-import { version } from "./src/version/version.ts";
+import { version } from "./src/version.ts";
 
 import {
   handleError,
   writeLogFile,
   setupLog,
   errorOccurred,
-} from "./src/log.ts";
+} from "./src/utilities/log.ts";
 
 const commands = { link, init, publish, update, install, upgrade, info };
 

@@ -1,4 +1,4 @@
-import { IModule, Module } from "../module.ts";
+import { IModule, Module } from "./module.ts";
 import { apiFetch, ENDPOINT } from "./common.ts";
 
 export async function fetchResource<T>(query: string): Promise<T | undefined> {
