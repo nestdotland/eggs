@@ -33,7 +33,7 @@ task("lint", [], async function () {
 desc("Links the nest.land API key.");
 task("link", [], async function () {
   await sh(
-    `deno run -A --unstable mod.ts link ${Deno.env.get("NESTAPIKEY") ||
+    `deno run -A --unstable eggs.ts link ${Deno.env.get("NESTAPIKEY") ||
       "null"} -do`,
   );
 });
@@ -41,7 +41,7 @@ task("link", [], async function () {
 desc("Reports the details of what would have been published.");
 task("dry-publish", [], async function () {
   await sh(
-    `deno run -A --unstable mod.ts publish eggs --dry-run -do --no-check-all --check-installation --version ${
+    `deno run -A --unstable eggs.ts publish eggs --dry-run -do --no-check-all --check-installation --entry eggs.ts --version ${
       semver.inc(version, "prerelease")
     }`,
   );
@@ -50,7 +50,7 @@ task("dry-publish", [], async function () {
 desc("Publishes eggs to the nest.land registry.");
 task("publish", [], async function () {
   await sh(
-    `deno run -A --unstable mod.ts publish eggs -do --no-check-all --check-installation --version ${version}`,
+    `deno run -A --unstable eggs.ts publish eggs -do --no-check-all --check-installation --entry eggs.ts --version ${version}`,
   );
 });
 
@@ -89,6 +89,6 @@ task("setup-github-actions", [], async function () {
 });
 
 desc("Development tools. Should ideally be run before each commit.");
-task("dev", ["format", "lint", "dry-publish"]);
+task("dev", ["format", "lint", "test", "dry-publish"]);
 
 run();
