@@ -51,10 +51,11 @@ export {
 export { string as stringType } from "https://x.nest.land/cliffy@0.14.1/flags/types/string.ts";
 
 export {
-  Input,
+  Checkbox,
   Confirm,
-  Select,
+  Input,
   List,
+  Select,
 } from "https://x.nest.land/cliffy@0.14.1/prompt/mod.ts";
 
 export type { ITypeInfo } from "https://x.nest.land/cliffy@0.14.1/flags/types.ts";

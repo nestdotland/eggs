@@ -28,6 +28,10 @@
       src="https://github.com/nestdotland/eggs/workflows/Ship/badge.svg"
       alt="Eggs ship"
     >
+    <img
+      src="https://img.shields.io/discord/722823139960291328?label=Discord&logo=discord"
+      alt="Discord"
+    >
   </p>
 </p>
 
@@ -190,6 +194,9 @@ eggs upgrade
 ```
 
 ## Contributing
+
+<img alt="GitHub Hacktoberfest combined status" src="https://img.shields.io/github/hacktoberfest/2020/nestdotland/eggs?logo=digitalocean">
+
 
 All contributions are welcome! If you can think of a command or feature that
 might benefit nest.land, fork this repository and make a pull request from

@@ -1,5 +1,4 @@
 import { desc, run, task, sh } from "https://x.nest.land/drake@1.4.1/mod.ts";
-import * as semver from "https://deno.land/x/semver@v1.0.0/mod.ts";
 import { version } from "./src/version.ts";
 
 desc("Run tests.");
@@ -41,9 +40,7 @@ task("link", [], async function () {
 desc("Reports the details of what would have been published.");
 task("dry-publish", [], async function () {
   await sh(
-    `deno run -A --unstable eggs.ts publish eggs --dry-run -do --no-check-all --check-installation --entry eggs.ts --version ${
-      semver.inc(version, "prerelease")
-    }`,
+    `deno run -A --unstable eggs.ts publish eggs -do --no-check-all --check-installation --entry eggs.ts --version ${version}-dev --dry-run`,
   );
 });
 
