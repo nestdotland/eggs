@@ -22,7 +22,7 @@ import { setupLog } from "../utilities/log.ts";
 /** Init Command.
  * `init` creates (or overrides) configuration in
  * the cwd with an interactive prompt. */
-async function initCommand(options: DefaultOptions) {
+export async function init(options: Options) {
   await setupLog(options.debug);
 
   let currentConfig: Partial<Config> = {};
@@ -46,9 +46,9 @@ async function initCommand(options: DefaultOptions) {
     default: currentConfig.description,
     maxLength: 4294967295,
   });
-  const stable: boolean = await Confirm.prompt({
-    message: "Is this a stable version?",
-    default: currentConfig.stable,
+  const unstable: boolean = await Confirm.prompt({
+    message: "Is this an unstable version?",
+    default: currentConfig.unstable,
   });
   const files: string[] = await List.prompt({
     message:
@@ -80,7 +80,7 @@ async function initCommand(options: DefaultOptions) {
   const config = {
     name: name,
     description: description,
-    stable: stable,
+    unstable: unstable,
     files: (files.length === 0 ? currentConfig.files : files),
   };
 
@@ -91,7 +91,10 @@ async function initCommand(options: DefaultOptions) {
   log.info("Successfully created config file.");
 }
 
-export const init = new Command<DefaultOptions, []>()
+export type Options = DefaultOptions;
+export type Arguments = [];
+
+export const initCommand = new Command<Options, Arguments>()
   .version(version)
   .description("Initiates a new module for the nest.land registry.")
-  .action(initCommand);
+  .action(init);

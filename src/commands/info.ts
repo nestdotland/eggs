@@ -16,7 +16,7 @@ import {
 } from "../../deps.ts";
 import type { DefaultOptions } from "../commands.ts";
 import { version } from "../version.ts";
-import { setupLog } from "../utilities/log.ts";
+import { setupLog, spinner } from "../utilities/log.ts";
 
 const format = {
   redundant: gray("..."),
@@ -32,26 +32,27 @@ const format = {
 };
 
 /** Info Command. */
-async function infoCommand(options: Options, file?: string) {
+export async function info(options: Options, file?: string) {
   await setupLog(options.debug);
-
-  let importsFound = 0;
-  let importsResolved = 0;
-
-  const progress = () => log.debug(`${importsResolved} / ${importsFound}`);
-
-  function onImportFound(count: number) {
-    importsFound = count;
-    progress();
-  }
-
-  function onImportResolved(count: number) {
-    importsResolved = count;
-    progress();
-  }
 
   if (file) {
     const path = file.match(/https?:\/\//) ? file : resolve(Deno.cwd(), file);
+
+    const wait = spinner.info("Scanning dependency tree...");
+
+    let importsFound = 0;
+    let importsResolved = 0;
+
+    const progress = () =>
+      wait.text = (`${importsResolved} / ${importsFound} imports`);
+    const onImportFound = (count: number) => {
+      importsFound = count;
+      progress();
+    };
+    const onImportResolved = (count: number) => {
+      importsResolved = count;
+      progress();
+    };
 
     const deps = await dependencyTree(
       path,
@@ -61,6 +62,7 @@ async function infoCommand(options: Options, file?: string) {
         onImportResolved,
       },
     );
+    wait.stop();
     log.debug("Dependency tree", deps.tree[0]);
     prettyTree(deps.tree[0].path, deps.tree[0].imports, "", true, options);
 
@@ -160,14 +162,13 @@ function beautifyDependency(dep: string) {
   }
 }
 
-interface Options extends DefaultOptions {
+export interface Options extends DefaultOptions {
   full: boolean;
   raw: boolean;
 }
+export type Arguments = [string];
 
-type Arguments = [string];
-
-export const info = new Command<Options, Arguments>()
+export const infoCommand = new Command<Options, Arguments>()
   .version(version)
   .arguments("[file:string]")
   .option(
@@ -181,4 +182,4 @@ export const info = new Command<Options, Arguments>()
   .description(
     "Displays the dependency tree of a file in a more readable, colorful way. Useful when you have imports that redirect urls (like nest.land).",
   )
-  .action(infoCommand);
+  .action(info);
