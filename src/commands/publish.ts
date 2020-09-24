@@ -345,7 +345,7 @@ export async function publish(options: Options, name?: string) {
     throw new Error("Something broke when sending pieces... ");
   }
 
-  const configPath = defaultConfig();
+  const configPath = await defaultConfig();
   if (configPath) {
     await writeConfig(egg, configFormat(configPath));
     log.debug("Updated configuration.");
@@ -436,7 +436,7 @@ export const publishCommand = new Command<Options, Arguments>()
     "--check-format [value:string]",
     "Automatically format your code before publishing",
   )
-  .option("--check-tests [value:string]", `Run ${italic("deno test")}.`)
+  .option("--check-tests [value:string]", "Test your code.")
   .option(
     "--check-installation",
     "Simulates a dummy installation and check for missing files in the dependency tree.",
