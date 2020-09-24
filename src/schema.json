@@ -70,12 +70,12 @@
     },
     "checkInstallation": {
       "type": "boolean",
-      "description": "Simulates a dummy installation and check for missing files in the dependency tree.. Defaults to false.",
+      "description": "Simulates a dummy installation and check for missing files in the dependency tree. Defaults to false.",
       "default": false
     },
     "checkAll": {
       "type": "boolean",
-      "description": "Performs all checks.. Defaults to false.",
+      "description": "Performs all checks. Defaults to false.",
       "default": false
     }
   }
