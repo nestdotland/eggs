@@ -19,8 +19,6 @@ export async function install(
     return;
   }
 
-  log.info("test");
-
   await installHatcher(args);
 }
 
