@@ -18,6 +18,9 @@ jobs:
       matrix:
         os: [macOS-latest, windows-latest, ubuntu-latest]
 
+    env:
+      NESTAPIKEY: ${{ secrets.NESTAPIKEY }}
+
     steps:
       - name: Setup repo
         uses: actions/checkout@v2

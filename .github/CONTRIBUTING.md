@@ -49,6 +49,8 @@ drake format
 drake lint
 ```
 
+Make sure to use [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/).
+
 ### Pull request
 
 **Please PR to the `dev` branch!**
