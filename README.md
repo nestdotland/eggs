@@ -28,10 +28,12 @@
       src="https://github.com/nestdotland/eggs/workflows/Ship/badge.svg"
       alt="Eggs ship"
     >
-    <img
-      src="https://img.shields.io/discord/722823139960291328?label=Discord&logo=discord"
-      alt="Discord"
-    >
+    <a href="https://discord.gg/hYUsX3H">
+      <img
+        src="https://img.shields.io/discord/722823139960291328?label=Discord&logo=discord"
+        alt="Discord"
+      >
+    </a>
   </p>
 </p>
 
@@ -202,3 +204,5 @@ All contributions are welcome! If you can think of a command or feature that
 might benefit nest.land, fork this repository and make a pull request from
 your branch with the additions. Make sure to use [Conventional
 Commits](https://www.conventionalcommits.org/en/v1.0.0/)
+
+[Contribution guide](.github/CONTRIBUTING.md)

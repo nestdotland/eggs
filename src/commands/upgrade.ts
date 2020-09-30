@@ -1,6 +1,6 @@
 import {
   Command,
-  Nest,
+  NestLand,
   log,
   semver,
 } from "../../deps.ts";
@@ -12,7 +12,7 @@ import { setupLog } from "../utilities/log.ts";
 export async function upgrade(options: DefaultOptions) {
   await setupLog(options.debug);
 
-  const newVersion = await Nest.getLatestVersion("eggs");
+  const newVersion = await NestLand.getLatestVersion("eggs");
   if (semver.eq(newVersion, version)) {
     log.info("You are already using the latest CLI version!");
     return;

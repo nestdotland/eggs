@@ -1,4 +1,11 @@
-import { Command, HelpCommand, CompletionsCommand, log } from "./deps.ts";
+import {
+  Command,
+  CompletionsCommand,
+  HelpCommand,
+  log,
+  NestLand,
+  UpdateNotifier,
+} from "./deps.ts";
 import type { DefaultOptions } from "./src/commands.ts";
 import { linkCommand } from "./src/commands/link.ts";
 import { initCommand } from "./src/commands/init.ts";
@@ -28,6 +35,14 @@ const commands = {
 };
 
 await setupLog();
+
+const notifier = new UpdateNotifier({
+  name: "eggs",
+  registry: NestLand,
+  currentVersion: version,
+});
+
+const checkForUpdates = notifier.checkForUpdates();
 
 const eggs = new Command<DefaultOptions, []>()
   .throwErrors()
@@ -61,6 +76,8 @@ try {
   if (options.outputLog) {
     await writeLogFile();
   }
+  await notification();
+
   if (errorOccurred) {
     Deno.exit(1);
   }
@@ -82,5 +99,12 @@ try {
   } else {
     await handleError(err);
   }
+
+  await notification();
   Deno.exit(1);
+}
+
+async function notification() {
+  await checkForUpdates;
+  notifier.notify("eggs upgrade");
 }
