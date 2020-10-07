@@ -64,7 +64,7 @@ function ensureCompleteConfig(
     isConfigComplete = false;
   }
 
-  config.entry = config.entry || "/mod.ts";
+  config.entry = config.entry || "./mod.ts";
   config.checkAll = config.checkAll ?? true;
   config.description = config.description || "";
   config.repository = config.repository || "";

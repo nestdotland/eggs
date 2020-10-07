@@ -62,7 +62,7 @@ export type { ITypeInfo } from "https://x.nest.land/cliffy@0.14.1/flags/types.ts
 /**************** semver ****************/
 export * as semver from "https://deno.land/x/semver@v1.0.0/mod.ts";
 
-/**************** bade64 ****************/
+/**************** base64 ****************/
 export * as base64 from "https://denopkg.com/chiefbiiko/base64@v0.2.0/mod.ts";
 
 /**************** hatcher ****************/
