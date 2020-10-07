@@ -32,6 +32,7 @@ export interface Config {
   files?: string[];
   ignore?: string[];
 
+  handsfree?: boolean;
   checkFormat?: boolean | string;
   checkTests?: boolean | string;
   checkInstallation?: boolean;

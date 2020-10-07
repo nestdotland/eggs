@@ -40,14 +40,14 @@ task("link", [], async function () {
 desc("Reports the details of what would have been published.");
 task("dry-publish", [], async function () {
   await sh(
-    `deno run -A --unstable eggs.ts publish eggs -do --no-check-all --check-installation --entry eggs.ts --version ${version}-dev --dry-run`,
+    `deno run -A --unstable eggs.ts publish eggs -do --no-check-all --check-installation --entry eggs.ts --version ${version}-dev --handsfree --dry-run `,
   );
 });
 
 desc("Publishes eggs to the nest.land registry.");
 task("publish", [], async function () {
   await sh(
-    `deno run -A --unstable eggs.ts publish eggs -do --no-check-all --check-installation --entry eggs.ts --version ${version}`,
+    `deno run -A --unstable eggs.ts publish eggs -do --no-check-all --check-installation --entry eggs.ts --version ${version} --handsfree`,
   );
 });
 

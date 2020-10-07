@@ -8,6 +8,7 @@ import {
   dirname,
   existsSync,
   green,
+  gray,
   italic,
   join,
   log,
@@ -66,7 +67,7 @@ function ensureCompleteConfig(
     isConfigComplete = false;
   }
 
-  config.entry = config.entry || "./mod.ts";
+  config.entry = config.entry || "/mod.ts";
   config.checkAll = config.checkAll ?? true;
   config.description = config.description || "";
   config.repository = config.repository || "";
@@ -323,36 +324,30 @@ export async function publish(options: Options, name?: string) {
     entry: egg.entry,
   };
 
-  log.debug("Module: ", module);
+  log.info(`${bold("The resulting module is:")} ${Deno.inspect(module)}`);
+
+  log.info(bold("Files to publish:"));
+  for (const file of matched) {
+    log.info(
+      ` - ${dim(file.path)}  ${
+        gray(dim("(" + (file.lstat.size / 1000000).toString() + "MB)"))
+      }`,
+    );
+  }
 
   if (!options.handsfree) {
-    log.info("Files to publish:");
-
-    for (const file of matched) {
-      log.info(
-        ` - ${dim(file.path)}  ${
-          dim("(" + (file.lstat.size / 1000000).toString() + "MB)")
-        }`,
-      );
-    }
-
     const confirmation: boolean = await Confirm.prompt({
-      message: "Are you sure you want to publish these files?",
+      message: "Are you sure you want to publish this module?",
       default: false,
     });
 
     if (!confirmation) {
       log.info("Publish cancelled.");
-      Deno.exit(0);
+      return;
     }
   }
 
   if (options.dryRun) {
-    log.info(`This was a dry run, the resulting module is:`, module);
-    log.info("The matched files were:");
-    matched.forEach((file) => {
-      log.info(` - ${file.path}`);
-    });
     return;
   }
 
