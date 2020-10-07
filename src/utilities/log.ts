@@ -11,8 +11,8 @@ import {
   Spinner,
   stripColor,
   underline,
-  yellow,
   wait,
+  yellow,
 } from "../../deps.ts";
 
 import { version } from "../version.ts";

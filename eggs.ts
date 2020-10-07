@@ -18,10 +18,10 @@ import { infoCommand } from "./src/commands/info.ts";
 import { version } from "./src/version.ts";
 
 import {
-  handleError,
-  writeLogFile,
-  setupLog,
   errorOccurred,
+  handleError,
+  setupLog,
+  writeLogFile,
 } from "./src/utilities/log.ts";
 
 const commands = {

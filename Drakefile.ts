@@ -1,4 +1,4 @@
-import { desc, run, task, sh } from "https://x.nest.land/drake@1.4.1/mod.ts";
+import { desc, run, sh, task } from "https://x.nest.land/drake@1.4.1/mod.ts";
 import { version } from "./src/version.ts";
 
 desc("Run tests.");
