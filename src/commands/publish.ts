@@ -2,12 +2,14 @@ import {
   basename,
   bold,
   Command,
+  Confirm,
   dependencyTree,
+  dim,
   dirname,
   existsSync,
-  join,
   green,
   italic,
+  join,
   log,
   semver,
   stringType,
@@ -27,13 +29,13 @@ import {
   writeConfig,
 } from "../context/config.ts";
 import { gatherContext } from "../context/context.ts";
-import { parseIgnore, extendsIgnore } from "../context/ignore.ts";
+import { extendsIgnore, parseIgnore } from "../context/ignore.ts";
 import type { Ignore } from "../context/ignore.ts";
 import { MatchedFile, matchFiles, readFiles } from "../context/files.ts";
 
 import { getAPIKey } from "../keyfile.ts";
 import { version } from "../version/version.ts";
-import { setupLog, highlight, spinner } from "../log.ts";
+import { highlight, setupLog, spinner } from "../log.ts";
 
 function ensureCompleteConfig(
   config: Partial<Config>,
@@ -336,6 +338,28 @@ async function publishCommand(options: Options, name?: string) {
 
   log.debug("Module: ", module);
 
+  if (!options.handsfree) {
+    log.info("Files to publish:");
+
+    for (const file of matched) {
+      log.info(
+        ` - ${dim(file.path)}  ${
+          dim("(" + (file.lstat.size / 1000000).toString() + "MB)")
+        }`,
+      );
+    }
+
+    const confirmation: boolean = await Confirm.prompt({
+      message: "Are you sure you want to publish these files?",
+      default: false,
+    });
+
+    if (!confirmation) {
+      log.info("Publish cancelled.");
+      Deno.exit(0);
+    }
+  }
+
   if (options.dryRun) {
     log.info(`This was a dry run, the resulting module is:`, module);
     log.info("The matched files were:");
@@ -404,6 +428,7 @@ interface Options extends DefaultOptions {
   checkTests?: boolean | string;
   checkInstallation?: boolean;
   checkAll?: boolean;
+  handsfree?: boolean;
 }
 
 type Arguments = [string];
@@ -418,6 +443,10 @@ export const publish = new Command<Options, Arguments>()
   .option(
     "-d, --dry-run",
     "No changes will actually be made, reports the details of what would have been published.",
+  )
+  .option(
+    "--handsfree",
+    "Don't display the confirmation message with the staged files.",
   )
   .option(
     "--description <value:string>",
