@@ -1,19 +1,15 @@
 import {
   Command,
   getLatestVersion,
-  globalModulesConfigPath,
   green,
   log,
   parseURL,
-  readGlobalModuleConfig,
   semver,
-  versionSubstitute,
   yellow,
-  writeGlobalModuleConfig,
 } from "../../deps.ts";
-import { version } from "../version/version.ts";
+import { version } from "../version.ts";
 import type { DefaultOptions } from "../commands.ts";
-import { setupLog } from "../log.ts";
+import { setupLog } from "../utilities/log.ts";
 
 /** What the constructed dependency objects should contain */
 interface ModuleToUpdate {
@@ -24,105 +20,14 @@ interface ModuleToUpdate {
 
 const decoder = new TextDecoder("utf-8");
 
-async function updateGlobalModules(
+export async function update(
   options: Options,
   requestedModules: string[],
 ): Promise<void> {
-  const configPath = globalModulesConfigPath();
-  const config = await readGlobalModuleConfig();
+  await setupLog(options.debug);
 
-  if (config === undefined) return;
+  log.debug("Options: ", options);
 
-  log.debug("Config: ", config);
-
-  for (const executable in config) {
-    const module = config[executable];
-
-    if (
-      requestedModules.length && requestedModules.indexOf(executable) === -1
-    ) {
-      continue;
-    }
-
-    // Get latest release
-    const latestRelease = await getLatestVersion(
-      module.registry,
-      module.name,
-      module.owner,
-    );
-
-    // Basic safety net
-    if (!module.version || !semver.valid(module.version)) {
-      log.debug("Invalid version", module.name, module.version);
-      continue;
-    }
-
-    if (!latestRelease || !semver.valid(latestRelease)) {
-      log.warning(`Could not find the latest version of ${module.name}.`);
-      continue;
-    }
-
-    if (semver.eq(module.version, latestRelease)) {
-      log.debug(module.name, "is already up to date!");
-      continue;
-    }
-
-    // Update the dependency
-    const indexOfURL = module.arguments.findIndex((arg: string) =>
-      arg.match(/https:\/\//)
-    );
-
-    const newArgs = module.arguments.slice();
-    newArgs[indexOfURL] = newArgs[indexOfURL].replace(
-      versionSubstitute,
-      latestRelease,
-    );
-
-    const options = newArgs.filter((x) => x !== "-f");
-
-    const installation = Deno.run({
-      cmd: [
-        "deno",
-        "install",
-        "-f",
-        ...options,
-      ],
-    });
-
-    const status = await installation.status();
-    installation.close();
-
-    const stdout = new TextDecoder("utf-8").decode(await installation.output());
-    const stderr = new TextDecoder("utf-8").decode(
-      await installation.stderrOutput(),
-    );
-
-    log.debug("stdout: ", stdout);
-    log.debug("stderr: ", stderr);
-
-    if (status.success === false || status.code !== 0) {
-      log.error(`Update failed for ${executable}`);
-      continue;
-    }
-
-    module.version = latestRelease;
-
-    log.info(
-      `${executable} (${module.name}) ${yellow(module.version)} -> ${
-        green(latestRelease)
-      }`,
-    );
-  }
-
-  await writeGlobalModuleConfig(config);
-
-  log.info("Updated your dependencies!");
-}
-
-async function updateLocalModules(
-  options: Options,
-  requestedModules: string[],
-): Promise<void> {
   /** Gather the path to the user's dependency file using the CLI arguments */
   let pathToDepFile = "";
   try {
@@ -159,7 +64,7 @@ async function updateLocalModules(
     let { name, parsedURL, registry, owner, version } = parseURL(line);
 
     // TODO(@qu4k): edge case: dependency isn't a module, for example: from
-    //  "https://x.nest.land/std@version/version.ts";, will return -> "version.ts";
+    //  "https://x.nest.land/std@version.ts";, will return -> "version.ts";
     // Issue: "Mandarine.TS" is a module while "version.ts" isn't
 
     // Now we have the name, ignore dependency if requested dependencies are set and it isn't one requested
@@ -226,13 +131,13 @@ async function updateLocalModules(
   log.info("Updated your dependencies!");
 }
 
-interface Options extends DefaultOptions {
+export interface Options extends DefaultOptions {
   file: string;
   global: boolean;
 }
-type Arguments = [string[]];
+export type Arguments = [string[]];
 
-export const update = new Command<Options, Arguments>()
+export const updateCommand = new Command<Options, Arguments>()
   .description("Update your dependencies")
   .version(version)
   .arguments("[deps...:string]")
@@ -241,15 +146,4 @@ export const update = new Command<Options, Arguments>()
     "Set dependency filename",
     { default: "deps.ts" },
   )
-  .option("-g, --global", "Update global modules")
-  .action(async (options: Options, requestedModules: string[] = []) => {
-    await setupLog(options.debug);
-
-    log.debug("Options: ", options);
-
-    if (options.global) {
-      await updateGlobalModules(options, requestedModules);
-    } else {
-      await updateLocalModules(options, requestedModules);
-    }
-  });
+  .action(update);

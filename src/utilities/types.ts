@@ -1,4 +1,4 @@
-import { ITypeInfo, semver, stringType } from "../deps.ts";
+import { ITypeInfo, semver, stringType } from "../../deps.ts";
 
 export const releases = [
   "patch",
@@ -42,7 +42,7 @@ export function versionType({ name, value }: ITypeInfo): string {
 export function validateURL(value: string): boolean {
   const urlRegex =
     /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()!@:%_\+.~#?&\/\/=]*)/;
-  return value === "" || !!value.match(urlRegex);
+  return !!value.match(urlRegex);
 }
 
 export function urlType({ name, value }: ITypeInfo): string {

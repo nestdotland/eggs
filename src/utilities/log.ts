@@ -13,9 +13,9 @@ import {
   underline,
   yellow,
   wait,
-} from "../deps.ts";
+} from "../../deps.ts";
 
-import { version } from "./version/version.ts";
+import { version } from "../version.ts";
 
 const DEBUG_LOG_FILE = "./eggs-debug.log";
 
@@ -178,7 +178,7 @@ export function highlight(msg: string) {
 }
 
 const ci = Deno.env.get("CI");
-const ciSpinner = { stop: () => {} };
+const ciSpinner = { stop: () => {}, text: "" } as Spinner;
 
 export class spinner {
   static info(msg: string) {

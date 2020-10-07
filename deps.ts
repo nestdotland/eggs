@@ -9,7 +9,7 @@ export {
   join,
   relative,
   resolve,
-} from "https://x.nest.land/std@0.69.0/path/mod.ts";
+} from "https://x.nest.land/std@0.70.0/path/mod.ts";
 
 export {
   exists,
@@ -17,29 +17,29 @@ export {
   expandGlob,
   expandGlobSync,
   walkSync,
-} from "https://x.nest.land/std@0.69.0/fs/mod.ts";
+} from "https://x.nest.land/std@0.70.0/fs/mod.ts";
 
-export * as log from "https://x.nest.land/std@0.69.0/log/mod.ts";
+export * as log from "https://x.nest.land/std@0.70.0/log/mod.ts";
 
-export { LogRecord } from "https://x.nest.land/std@0.69.0/log/logger.ts";
+export { LogRecord } from "https://x.nest.land/std@0.70.0/log/logger.ts";
 
-export type { LevelName } from "https://x.nest.land/std@0.69.0/log/levels.ts";
-export { LogLevels } from "https://x.nest.land/std@0.69.0/log/levels.ts";
+export type { LevelName } from "https://x.nest.land/std@0.70.0/log/levels.ts";
+export { LogLevels } from "https://x.nest.land/std@0.70.0/log/levels.ts";
 
-export { BaseHandler } from "https://x.nest.land/std@0.69.0/log/handlers.ts";
+export { BaseHandler } from "https://x.nest.land/std@0.70.0/log/handlers.ts";
 
-export * from "https://x.nest.land/std@0.69.0/fmt/colors.ts";
+export * from "https://x.nest.land/std@0.70.0/fmt/colors.ts";
 
 export {
   assert,
   assertEquals,
   assertMatch,
-} from "https://x.nest.land/std@0.69.0/testing/asserts.ts";
+} from "https://x.nest.land/std@0.70.0/testing/asserts.ts";
 
 export {
   parse as parseYaml,
   stringify as stringifyYaml,
-} from "https://x.nest.land/std@0.69.0/encoding/yaml.ts";
+} from "https://x.nest.land/std@0.70.0/encoding/yaml.ts";
 
 /**************** cliffy ****************/
 export {
@@ -51,6 +51,7 @@ export {
 export { string as stringType } from "https://x.nest.land/cliffy@0.14.1/flags/types/string.ts";
 
 export {
+  Checkbox,
   Confirm,
   Input,
   List,
@@ -67,24 +68,13 @@ export * as base64 from "https://denopkg.com/chiefbiiko/base64@v0.2.0/mod.ts";
 
 /**************** hatcher ****************/
 export {
-  globalModulesConfigPath,
-  installUpdateHandler,
-} from "https://x.nest.land/hatcher@0.8.2/mod.ts";
-
-export type { GlobalModuleConfig } from "https://x.nest.land/hatcher@0.8.2/lib/config.ts";
-export {
-  readGlobalModuleConfig,
-  writeGlobalModuleConfig,
-} from "https://x.nest.land/hatcher@0.8.2/lib/config.ts";
-
-export { versionSubstitute } from "https://x.nest.land/hatcher@0.8.2/lib/utils.ts";
-
-export {
   getLatestVersion,
+  NestLand,
   parseURL,
-} from "https://x.nest.land/hatcher@0.8.2/lib/registries.ts";
+  UpdateNotifier,
+} from "https://x.nest.land/hatcher@0.9.2/mod.ts";
 
-export { NestLand as Nest } from "https://x.nest.land/hatcher@0.8.2/lib/registries/NestLand.ts";
+export { install as installHatcher } from "https://x.nest.land/hatcher@0.9.2/lib/cli.ts";
 
 /**************** analyzer ****************/
 export type { DependencyTree } from "https://x.nest.land/analyzer@0.0.6/deno/tree.ts";

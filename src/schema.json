@@ -1,0 +1,82 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "nestdotland/eggs.json",
+  "properties": {
+    "name": {
+      "description": "The name of your module/repository.",
+      "type": ["string"],
+      "examples": ["my-module"]
+    },
+    "description": {
+      "description": "Your module/repository description.",
+      "type": "string",
+      "examples": ["This is the description of my repository"]
+    },
+    "version": {
+      "type": "string",
+      "description": "Current version of your module. Must follow semver.",
+      "examples": ["0.0.1"]
+    },
+    "bump": {
+      "type": "string",
+      "description": "Increment the version by release type. See https://docs.nest.land/eggs/configuration.html#field-information.",
+      "examples": ["patch"]
+    },
+    "entry": {
+      "type": "string",
+      "description": "The index file of your project. This is what users will see when they try to import your module from our registry! Defaults to ./mod.ts.",
+      "default": "./mod.ts"
+    },
+    "unstable": {
+      "type": "boolean",
+      "description": "Is this version unstable?. Default value is determined by Semantic Versioning rules.",
+      "examples": [false]
+    },
+    "unlisted": {
+      "type": "boolean",
+      "description": "Should people be able to find this module/version on the gallery?. Defaults to false.",
+      "default": false
+    },
+    "repository": {
+      "type": "string",
+      "description": "A link to your repository. Defaults to null.",
+      "default": "null"
+    },
+    "files": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "All the files that should be uploaded to nest.land. Supports file globbing. Do not use ./**/* for the files field! This has been known to cause errors in the publishing process.",
+      "examples": [["src/**/*"]]
+    },
+    "ignore": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "All the files that should be ignored when uploading to nest.land. Supports file globbing.",
+      "examples": [["tests/**/*"]]
+    },
+    "checkFormat": {
+      "type": ["boolean", "string"],
+      "description": "Automatically format your code before publishing to the blockchain. Defaults to false",
+      "default": false
+    },
+    "checkTests": {
+      "type": ["boolean", "string"],
+      "description": "Run deno test. Defaults to false.",
+      "default": false
+    },
+    "checkInstallation": {
+      "type": "boolean",
+      "description": "Simulates a dummy installation and check for missing files in the dependency tree. Defaults to false.",
+      "default": false
+    },
+    "checkAll": {
+      "type": "boolean",
+      "description": "Performs all checks. Defaults to true.",
+      "default": true
+    }
+  }
+}
