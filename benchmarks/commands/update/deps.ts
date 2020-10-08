@@ -1,7 +1,7 @@
 // std
 export {
-  runBenchmarks,
   bench,
+  runBenchmarks,
 } from "https://x.nest.land/std@0.61.0/testing/bench.ts";
 import * as archive from "https://x.nest.land/std@0.61.0/archive/tar.ts";
 import * as denoSync from "https://x.nest.land/std@0.61.0/async/mod.ts";

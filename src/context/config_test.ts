@@ -1,5 +1,5 @@
 import { assertEquals } from "../../test/deps.ts";
-import { configFormat, ConfigFormat } from "./config.ts";
+import { ConfigFormat, configFormat } from "./config.ts";
 
 Deno.test({
   name: "internal | config | file matching",

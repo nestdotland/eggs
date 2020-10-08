@@ -1,9 +1,4 @@
-import {
-  Command,
-  NestLand,
-  log,
-  semver,
-} from "../../deps.ts";
+import { Command, log, NestLand, semver } from "../../deps.ts";
 import type { DefaultOptions } from "../commands.ts";
 
 import { version } from "../version.ts";

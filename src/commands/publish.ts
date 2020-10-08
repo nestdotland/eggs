@@ -2,12 +2,15 @@ import {
   basename,
   bold,
   Command,
+  Confirm,
   dependencyTree,
+  dim,
   dirname,
   existsSync,
-  join,
+  gray,
   green,
   italic,
+  join,
   log,
   semver,
   stringType,
@@ -27,13 +30,13 @@ import {
   writeConfig,
 } from "../context/config.ts";
 import { gatherContext } from "../context/context.ts";
-import { parseIgnore, extendsIgnore } from "../context/ignore.ts";
+import { extendsIgnore, parseIgnore } from "../context/ignore.ts";
 import type { Ignore } from "../context/ignore.ts";
 import { MatchedFile, matchFiles, readFiles } from "../context/files.ts";
 
 import { getAPIKey } from "../keyfile.ts";
 import { version } from "../version.ts";
-import { setupLog, highlight, spinner } from "../utilities/log.ts";
+import { highlight, setupLog, spinner } from "../utilities/log.ts";
 
 function ensureCompleteConfig(
   config: Partial<Config>,
@@ -321,14 +324,30 @@ export async function publish(options: Options, name?: string) {
     entry: egg.entry,
   };
 
-  log.debug("Module: ", module);
+  log.info(`${bold("The resulting module is:")} ${Deno.inspect(module)}`);
+
+  log.info(bold("Files to publish:"));
+  for (const file of matched) {
+    log.info(
+      ` - ${dim(file.path)}  ${
+        gray(dim("(" + (file.lstat.size / 1000000).toString() + "MB)"))
+      }`,
+    );
+  }
+
+  if (!options.handsfree) {
+    const confirmation: boolean = await Confirm.prompt({
+      message: "Are you sure you want to publish this module?",
+      default: false,
+    });
+
+    if (!confirmation) {
+      log.info("Publish cancelled.");
+      return;
+    }
+  }
 
   if (options.dryRun) {
-    log.info(`This was a dry run, the resulting module is:`, module);
-    log.info("The matched files were:");
-    matched.forEach((file) => {
-      log.info(` - ${file.path}`);
-    });
     return;
   }
 
@@ -391,6 +410,7 @@ export interface Options extends DefaultOptions {
   checkTests?: boolean | string;
   checkInstallation?: boolean;
   checkAll?: boolean;
+  handsfree?: boolean;
 }
 export type Arguments = [string];
 
@@ -404,6 +424,10 @@ export const publishCommand = new Command<Options, Arguments>()
   .option(
     "-d, --dry-run",
     "No changes will actually be made, reports the details of what would have been published.",
+  )
+  .option(
+    "--handsfree",
+    "Don't display the confirmation message with the staged files.",
   )
   .option(
     "--description <value:string>",

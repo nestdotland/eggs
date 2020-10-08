@@ -1,8 +1,4 @@
-import {
-  Command,
-  log,
-  installHatcher,
-} from "../../deps.ts";
+import { Command, installHatcher, log } from "../../deps.ts";
 import type { DefaultOptions } from "../commands.ts";
 import { version } from "../version.ts";
 import { setupLog } from "../utilities/log.ts";
