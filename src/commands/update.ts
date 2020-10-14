@@ -61,8 +61,7 @@ export async function update(
    * Skips the dependency if it is not versioned (no need to try to update it) */
   const dependenciesToUpdate: Array<ModuleToUpdate> = [];
   for (const line of dependencyFileContents) {
-    const processedURL = parseURL(line);
-    const { name, parsedURL, registry, owner, version } = processedURL;
+    const { name, parsedURL, registry, owner, version } = parseURL(line);
 
     // TODO(@qu4k): edge case: dependency isn't a module, for example: from
     //  "https://x.nest.land/std@version.ts";, will return -> "version.ts";
