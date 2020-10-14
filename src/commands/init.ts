@@ -31,7 +31,7 @@ export async function init(options: Options) {
 
   let currentConfig: Partial<Config> = {};
 
-  let configPath = await defaultConfig();
+  const configPath = await defaultConfig();
   if (configPath) {
     log.warning("An egg config file already exists...");
     const override = await Confirm.prompt("Do you want to override it?");

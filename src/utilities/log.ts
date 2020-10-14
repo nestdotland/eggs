@@ -61,7 +61,7 @@ class ConsoleHandler extends BaseHandler {
 
     if (detailedLog) {
       for (const arg of record.args) {
-        msg += ` ${Deno.inspect(arg, { depth: 10 })}`;
+        msg += ` ${Deno.inspect(arg, { depth: 10, colors: true })}`;
       }
     }
 
@@ -100,7 +100,7 @@ class FileHandler extends BaseHandler {
     msg += ` ${stripColor(record.msg)}`;
 
     for (const arg of record.args) {
-      msg += ` ${stripColor(Deno.inspect(arg, { depth: Infinity }))}`;
+      msg += ` ${Deno.inspect(arg, { depth: Infinity })}`;
     }
 
     return msg;
