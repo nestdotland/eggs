@@ -245,7 +245,7 @@ async function checkUp(
 export async function publish(options: Options, name?: string) {
   await setupLog(options.debug);
 
-  let apiKey = await getAPIKey();
+  const apiKey = await getAPIKey();
   if (!apiKey) {
     log.error(
       `No API Key file found. You can add one using ${
@@ -259,7 +259,7 @@ export async function publish(options: Options, name?: string) {
   const gatheredOptions = gatherOptions(options, name);
   if (!gatheredContext || !gatheredOptions) return;
 
-  let egg: Partial<Config> = {
+  const egg: Partial<Config> = {
     ...gatheredContext,
     ...gatheredOptions,
   };
@@ -318,22 +318,29 @@ export async function publish(options: Options, name?: string) {
     description: egg.description,
     repository: egg.repository,
     unlisted: egg.unlisted,
-    stable: !egg.unstable || isVersionUnstable(egg.version),
+    stable: !(egg.unstable ?? isVersionUnstable(egg.version)),
     upload: true,
     latest: semver.compare(egg.version, latest) === 1,
     entry: egg.entry,
   };
 
-  log.info(`${bold("The resulting module is:")} ${Deno.inspect(module)}`);
+  log.info(
+    `${bold("The resulting module is:")} ${
+      Deno.inspect(module, { colors: true })
+        .replace(/^\s*{([\s\S]*)\n}\s*$/, "$1")
+        .replace(/\n\s{2}/g, "\n        - ")
+    }`,
+  );
 
-  log.info(bold("Files to publish:"));
-  for (const file of matched) {
-    log.info(
-      ` - ${dim(file.path)}  ${
-        gray(dim("(" + (file.lstat.size / 1000000).toString() + "MB)"))
-      }`,
-    );
-  }
+  const filesToPublish = matched.reduce(
+    (previous, current) => {
+      return `${previous}\n        - ${dim(current.path)}  ${
+        gray(dim("(" + (current.lstat.size / 1000000).toString() + "MB)"))
+      }`;
+    },
+    "Files to publish:",
+  );
+  log.info(filesToPublish);
 
   if (!options.handsfree) {
     const confirmation: boolean = await Confirm.prompt({
