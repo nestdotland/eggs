@@ -17,9 +17,9 @@ Please remember that:
 
   * The person fixing the bug would have to figure out these details anyway. Please be respectful of their time.
   * You might figure out the issues yourself as you work on extracting these details.
-  * If you list multiple bugs/concerns in this one issue, it makes it hrd to track the progress.
+  * If you list multiple bugs/concerns in this one issue, it makes it hard to track the progress.
   * If you open an issue that has many duplicates, the triager may close your issue.
-  * If yuo file something completely blank in the body, the triager may close your issue without further explanation or engagement.
+  * If you file something completely blank in the body, the triager may close your issue without further explanation or engagement.
 
 -->
 
@@ -62,6 +62,6 @@ Please remember that:
 
 ## Additional context
 
-<!-- Any aditional information that may help us solve this issue -->
+<!-- Any additional information that may help us solve this issue -->
 
 <!--   Thanks for helping us help you!-->
