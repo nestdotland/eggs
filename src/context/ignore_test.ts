@@ -4,7 +4,7 @@ import { parseIgnore } from "./ignore.ts";
 Deno.test({
   name: "internal | ignore | parsing",
   fn(): void {
-    let matched = parseIgnore(`
+    const matched = parseIgnore(`
 extends .gitignore
 extends ./dir/*
 .git/*

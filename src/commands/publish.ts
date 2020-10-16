@@ -2,19 +2,22 @@ import {
   basename,
   bold,
   Command,
+  Confirm,
   dependencyTree,
+  dim,
   dirname,
   existsSync,
-  join,
+  gray,
   green,
   italic,
+  join,
   log,
   semver,
   stringType,
   yellow,
 } from "../../deps.ts";
 import type { DefaultOptions } from "../commands.ts";
-import { releaseType, urlType, versionType } from "../types.ts";
+import { releaseType, urlType, versionType } from "../utilities/types.ts";
 
 import { ENDPOINT } from "../api/common.ts";
 import { fetchModule } from "../api/fetch.ts";
@@ -27,13 +30,13 @@ import {
   writeConfig,
 } from "../context/config.ts";
 import { gatherContext } from "../context/context.ts";
-import { parseIgnore, extendsIgnore } from "../context/ignore.ts";
+import { extendsIgnore, parseIgnore } from "../context/ignore.ts";
 import type { Ignore } from "../context/ignore.ts";
 import { MatchedFile, matchFiles, readFiles } from "../context/files.ts";
 
 import { getAPIKey } from "../keyfile.ts";
-import { version } from "../version/version.ts";
-import { setupLog, highlight, spinner } from "../log.ts";
+import { version } from "../version.ts";
+import { highlight, setupLog, spinner } from "../utilities/log.ts";
 
 function ensureCompleteConfig(
   config: Partial<Config>,
@@ -90,27 +93,7 @@ function ensureFiles(config: Config, matched: MatchedFile[]): boolean {
 }
 
 async function deprecationWarnings(config: Config) {
-  if (typeof config.stable === "boolean") {
-    log.warning(
-      `${
-        yellow("[Deprecated - stable]")
-      } Module stability is detected automatically. If you still want to specify the stability of your module, use the ${
-        bold("unstable")
-      } field.`,
-    );
-  }
-  if (typeof config.fmt === "boolean") {
-    log.warning(
-      `${yellow("[Deprecated - fmt]")} Use the ${bold("checkFormat")} field.`,
-    );
-  }
-  if (config?.ignore && !Array.isArray(config.ignore)) {
-    log.warning(
-      `${yellow("[Deprecated - ignore as Ignore]")} Write ${
-        bold("ignore")
-      } field as a string array.`,
-    );
-  }
+  // no deprecated feature for the time being :)
 }
 
 function isVersionUnstable(v: string) {
@@ -160,27 +143,33 @@ async function checkUp(
   config: Config,
   matched: MatchedFile[],
 ): Promise<boolean> {
-  if (config.checkFormat ?? (config.fmt || config.checkAll)) {
-    const wait = spinner.info("Formatting your code...");
+  if (config.checkFormat ?? config.checkAll) {
+    const wait = spinner.info("Checking if the source files are formatted...");
     const process = Deno.run(
       {
         cmd: typeof config.checkFormat === "string"
           ? config.checkFormat?.split(" ")
-          : ["deno", "fmt"].concat(
+          : ["deno", "fmt", "--check"].concat(
             matched.map((file) => file.fullPath).filter(
               (path) => path.match(/\.(js|jsx|ts|tsx|json)$/),
             ),
           ),
-        stderr: "null",
-        stdout: "null",
+        stderr: "piped",
+        stdout: "piped",
       },
     );
     const status = await process.status();
+    const stdout = new TextDecoder("utf-8").decode(await process.output());
+    const stderr = new TextDecoder("utf-8").decode(
+      await process.stderrOutput(),
+    );
     wait.stop();
     if (status.success) {
-      log.info("Formatted your code.");
+      log.info("Source files are formatted.");
     } else {
-      log.error(`${italic("deno fmt")} returned a non-zero code.`);
+      log.error("Some source files are not properly formatted.");
+      log.error(stdout);
+      log.error(stderr);
       return false;
     }
   }
@@ -192,12 +181,15 @@ async function checkUp(
         cmd: typeof config.checkTests === "string"
           ? config.checkTests?.split(" ")
           : ["deno", "test", "-A", "--unstable"],
-        stderr: "null",
+        stderr: "piped",
         stdout: "piped",
       },
     );
     const status = await process.status();
     const stdout = new TextDecoder("utf-8").decode(await process.output());
+    const stderr = new TextDecoder("utf-8").decode(
+      await process.stderrOutput(),
+    );
     wait.stop();
     if (status.success) {
       log.info("Tests passed successfully.");
@@ -205,7 +197,9 @@ async function checkUp(
       if (stdout.match(/^No matching test modules found/)) {
         log.info("No matching test modules found, tests skipped.");
       } else {
-        log.error(`${italic("deno test")} returned a non-zero code.`);
+        log.error("Some tests were not successful.");
+        log.error(stdout);
+        log.error(stderr);
         return false;
       }
     }
@@ -248,10 +242,10 @@ async function checkUp(
   return true;
 }
 
-async function publishCommand(options: Options, name?: string) {
+export async function publish(options: Options, name?: string) {
   await setupLog(options.debug);
 
-  let apiKey = await getAPIKey();
+  const apiKey = await getAPIKey();
   if (!apiKey) {
     log.error(
       `No API Key file found. You can add one using ${
@@ -265,19 +259,15 @@ async function publishCommand(options: Options, name?: string) {
   const gatheredOptions = gatherOptions(options, name);
   if (!gatheredContext || !gatheredOptions) return;
 
-  let egg: Partial<Config> = {
+  const egg: Partial<Config> = {
     ...gatheredContext,
     ...gatheredOptions,
   };
 
   log.debug("Raw config:", egg);
 
-  // TODO(@oganexon): deprecate egg.ignore as Ignore
   const ignore = contextIgnore ||
-    egg.ignore &&
-      (Array.isArray(egg.ignore)
-        ? await extendsIgnore(parseIgnore(egg.ignore.join()))
-        : egg.ignore);
+    egg.ignore && await extendsIgnore(parseIgnore(egg.ignore.join()));
 
   if (!ensureCompleteConfig(egg, ignore)) return;
 
@@ -328,20 +318,43 @@ async function publishCommand(options: Options, name?: string) {
     description: egg.description,
     repository: egg.repository,
     unlisted: egg.unlisted,
-    stable: egg.stable || !egg.unstable || isVersionUnstable(egg.version),
+    stable: !(egg.unstable ?? isVersionUnstable(egg.version)),
     upload: true,
     latest: semver.compare(egg.version, latest) === 1,
     entry: egg.entry,
   };
 
-  log.debug("Module: ", module);
+  log.info(
+    `${bold("The resulting module is:")} ${
+      Deno.inspect(module, { colors: true })
+        .replace(/^\s*{([\s\S]*)\n}\s*$/, "$1")
+        .replace(/\n\s{2}/g, "\n        - ")
+    }`,
+  );
+
+  const filesToPublish = matched.reduce(
+    (previous, current) => {
+      return `${previous}\n        - ${dim(current.path)}  ${
+        gray(dim("(" + (current.lstat.size / 1000000).toString() + "MB)"))
+      }`;
+    },
+    "Files to publish:",
+  );
+  log.info(filesToPublish);
+
+  if (!options.handsfree) {
+    const confirmation: boolean = await Confirm.prompt({
+      message: "Are you sure you want to publish this module?",
+      default: false,
+    });
+
+    if (!confirmation) {
+      log.info("Publish cancelled.");
+      return;
+    }
+  }
 
   if (options.dryRun) {
-    log.info(`This was a dry run, the resulting module is:`, module);
-    log.info("The matched files were:");
-    matched.forEach((file) => {
-      log.info(` - ${file.path}`);
-    });
     return;
   }
 
@@ -358,7 +371,7 @@ async function publishCommand(options: Options, name?: string) {
     throw new Error("Something broke when sending pieces... ");
   }
 
-  const configPath = defaultConfig();
+  const configPath = await defaultConfig();
   if (configPath) {
     await writeConfig(egg, configFormat(configPath));
     log.debug("Updated configuration.");
@@ -389,7 +402,7 @@ async function publishCommand(options: Options, name?: string) {
   log.info(highlight("https://github.com/nestdotland/nest.land/discussions"));
 }
 
-interface Options extends DefaultOptions {
+export interface Options extends DefaultOptions {
   dryRun?: boolean;
   bump?: semver.ReleaseType;
   version?: string;
@@ -404,11 +417,11 @@ interface Options extends DefaultOptions {
   checkTests?: boolean | string;
   checkInstallation?: boolean;
   checkAll?: boolean;
+  handsfree?: boolean;
 }
+export type Arguments = [string];
 
-type Arguments = [string];
-
-export const publish = new Command<Options, Arguments>()
+export const publishCommand = new Command<Options, Arguments>()
   .description("Publishes your module to the nest.land registry.")
   .version(version)
   .type("release", releaseType)
@@ -418,6 +431,10 @@ export const publish = new Command<Options, Arguments>()
   .option(
     "-d, --dry-run",
     "No changes will actually be made, reports the details of what would have been published.",
+  )
+  .option(
+    "--handsfree",
+    "Don't display the confirmation message with the staged files.",
   )
   .option(
     "--description <value:string>",
@@ -450,10 +467,10 @@ export const publish = new Command<Options, Arguments>()
     "--check-format [value:string]",
     "Automatically format your code before publishing",
   )
-  .option("--check-tests [value:string]", `Run ${italic("deno test")}.`)
+  .option("--check-tests [value:string]", "Test your code.")
   .option(
     "--check-installation",
     "Simulates a dummy installation and check for missing files in the dependency tree.",
   )
   .option("--check-all", "Performs all checks.")
-  .action(publishCommand);
+  .action(publish);

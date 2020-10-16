@@ -1,4 +1,4 @@
-import { envENDPOINT } from "../environment.ts";
+import { envENDPOINT } from "../utilities/environment.ts";
 
 export const ENDPOINT = envENDPOINT();
 

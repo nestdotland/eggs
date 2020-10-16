@@ -1,6 +1,6 @@
 import {
   basename,
-  existsSync,
+  exists,
   expandGlob,
   globToRegExp,
   join,
@@ -18,10 +18,12 @@ const DEFAULT_IGNORES = [
   ".eggignore",
 ];
 
-export function defaultIgnore(wd: string = Deno.cwd()): string | undefined {
-  return DEFAULT_IGNORES.find((path) => {
-    return existsSync(join(wd, path));
-  });
+export async function defaultIgnore(
+  wd: string = Deno.cwd(),
+): Promise<string | undefined> {
+  for (const path of DEFAULT_IGNORES) {
+    if (await exists(join(wd, path))) return path;
+  }
 }
 
 export async function readIgnore(path: string): Promise<Ignore> {

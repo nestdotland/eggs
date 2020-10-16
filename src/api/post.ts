@@ -51,7 +51,7 @@ export async function postPublishModule(
   key: string,
   module: PublishModule,
 ): Promise<PublishResponse | undefined> {
-  let response: PublishResponse | undefined = await postResource(
+  const response: PublishResponse | undefined = await postResource(
     "/api/publish",
     { "Authorization": key },
     module,
@@ -68,7 +68,7 @@ export async function postPieces(
   uploadToken: string,
   pieces: StringMap,
 ): Promise<PiecesResponse | undefined> {
-  let response: PiecesResponse | undefined = await postResource(
+  const response: PiecesResponse | undefined = await postResource(
     "/api/piece",
     { "X-UploadToken": uploadToken },
     {
