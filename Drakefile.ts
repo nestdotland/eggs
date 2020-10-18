@@ -1,4 +1,4 @@
-import { desc, run, sh, task } from "https://x.nest.land/drake@1.4.1/mod.ts";
+import { desc, run, sh, task } from "https://x.nest.land/drake@1.4.4/mod.ts";
 import { version } from "./src/version.ts";
 
 desc("Run tests.");
@@ -40,14 +40,14 @@ task("link", [], async function () {
 desc("Reports the details of what would have been published.");
 task("dry-publish", [], async function () {
   await sh(
-    `deno run -A --unstable eggs.ts publish eggs -do --no-check-all --check-installation --entry eggs.ts --version ${version}-dev --handsfree --dry-run `,
+    `deno run -A --unstable eggs.ts publish eggs -doY --no-check --check-installation --entry eggs.ts --version ${version}-dev --dry-run `,
   );
 });
 
 desc("Publishes eggs to the nest.land registry.");
 task("publish", [], async function () {
   await sh(
-    `deno run -A --unstable eggs.ts publish eggs -do --no-check-all --check-installation --entry eggs.ts --version ${version} --handsfree`,
+    `deno run -A --unstable eggs.ts publish eggs -doY --no-check --check-installation --entry eggs.ts --version ${version}`,
   );
 });
 

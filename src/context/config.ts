@@ -23,20 +23,21 @@ export interface Config {
   name: string;
   entry: string;
   description: string;
-  repository: string;
-  version: string;
-  bump?: semver.ReleaseType;
+  homepage: string;
   unstable?: boolean;
   unlisted: boolean;
+
+  version: string;
+  releaseType?: semver.ReleaseType;
 
   files?: string[];
   ignore?: string[];
 
-  handsfree?: boolean;
+  yes?: boolean;
   checkFormat?: boolean | string;
   checkTests?: boolean | string;
   checkInstallation?: boolean;
-  checkAll: boolean;
+  noCheck: boolean;
 }
 
 /** Filenames of the default configs.
