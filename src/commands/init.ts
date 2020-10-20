@@ -56,8 +56,8 @@ export async function init(options: Options) {
     message: "Description:",
     default: currentConfig.description || existing?.description,
   }) || undefined;
-  const repository: string | undefined = await Input.prompt({
-    message: "Module repository:",
+  const homepage: string | undefined = await Input.prompt({
+    message: "Module homepage:",
     default: currentConfig.homepage || existing?.repository,
     validate: (value) => value === "" || validateURL(value),
   }) || undefined;
@@ -113,7 +113,7 @@ export async function init(options: Options) {
 
   const check: boolean | undefined = await Confirm.prompt({
     message: "Perform all checks before publication?",
-    default: !(currentConfig.noCheck ?? false),
+    default: currentConfig.check ?? true,
   });
   const noCheck = !check;
 
@@ -131,17 +131,18 @@ export async function init(options: Options) {
       : false;
   if (checkFormat === "") checkFormat = true;
 
-  let checkTests: boolean | string | undefined = noCheck && await Confirm.prompt({
-      message: "Test your code before publication?",
-      default: (!!currentConfig.checkTests) ?? false,
-    })
-    ? await Input.prompt({
-      message: "Testing command (leave blank for default):",
-      default: typeof currentConfig.checkTests === "string"
-        ? currentConfig.checkTests
-        : undefined,
-    })
-    : false;
+  let checkTests: boolean | string | undefined =
+    noCheck && await Confirm.prompt({
+        message: "Test your code before publication?",
+        default: (!!currentConfig.checkTests) ?? false,
+      })
+      ? await Input.prompt({
+        message: "Testing command (leave blank for default):",
+        default: typeof currentConfig.checkTests === "string"
+          ? currentConfig.checkTests
+          : undefined,
+      })
+      : false;
   if (checkTests === "") checkTests = true;
 
   const checkInstallation: boolean | undefined = noCheck &&
@@ -164,12 +165,12 @@ export async function init(options: Options) {
     },
   });
 
-  const config = {
+  const config: Partial<Config> = {
     "$schema": `https://x.nest.land/eggs@${eggsVersion}/src/schema.json`,
     name,
     entry,
     description,
-    repository,
+    homepage,
     version,
     releaseType: releaseType as semver.ReleaseType,
     unstable,
@@ -179,7 +180,7 @@ export async function init(options: Options) {
     checkFormat,
     checkTests,
     checkInstallation,
-    noCheck,
+    check,
   };
 
   log.debug("Config: ", config, format);

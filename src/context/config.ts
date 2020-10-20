@@ -37,7 +37,7 @@ export interface Config {
   checkFormat?: boolean | string;
   checkTests?: boolean | string;
   checkInstallation?: boolean;
-  noCheck: boolean;
+  check: boolean;
 }
 
 /** Filenames of the default configs.

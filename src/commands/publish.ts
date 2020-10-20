@@ -67,12 +67,13 @@ function ensureCompleteConfig(
     isConfigComplete = false;
   }
 
-  config.entry = config.entry || "/mod.ts";
-  config.description = config.description || "";
-  config.homepage = config.homepage || "";
-  config.unlisted = config.unlisted ?? false;
-  config.files = config.files ?? [];
-  config.ignore = config.ignore ?? [];
+  config.entry ||= "/mod.ts";
+  config.description ||= "";
+  config.homepage ||= "";
+  config.files ??= [];
+  config.ignore ??= [];
+  config.unlisted ??= false;
+  config.check ??= true;
 
   return isConfigComplete;
 }
@@ -132,7 +133,7 @@ function gatherOptions(
     options.checkTests !== undefined && (cfg.checkTests = options.checkTests);
     options.checkInstallation !== undefined &&
       (cfg.checkInstallation = options.checkInstallation);
-    options.noCheck !== undefined && (cfg.noCheck = options.noCheck);
+    options.check !== undefined && (cfg.check = options.check);
     return cfg;
   } catch (err) {
     log.error(err);
@@ -144,7 +145,7 @@ async function checkUp(
   config: Config,
   matched: MatchedFile[],
 ): Promise<boolean> {
-  if (config.checkFormat ?? (!config.noCheck)) {
+  if (config.checkFormat ?? config.check) {
     const wait = spinner.info("Checking if the source files are formatted...");
     const process = Deno.run(
       {
@@ -175,7 +176,7 @@ async function checkUp(
     }
   }
 
-  if (config.checkTests ?? (!config.noCheck)) {
+  if (config.checkTests ?? config.check) {
     const wait = spinner.info("Testing your code...");
     const process = Deno.run(
       {
@@ -206,7 +207,7 @@ async function checkUp(
     }
   }
 
-  if (config.checkInstallation ?? (!config.noCheck)) {
+  if (config.checkInstallation ?? config.check) {
     const wait = spinner.info("Test installation...");
     const tempDir = await Deno.makeTempDir();
     for (let i = 0; i < matched.length; i++) {
@@ -418,7 +419,7 @@ export interface Options extends DefaultOptions {
   checkFormat?: boolean | string;
   checkTests?: boolean | string;
   checkInstallation?: boolean;
-  noCheck?: boolean;
+  check?: boolean;
 }
 export type Arguments = [string];
 
@@ -473,5 +474,9 @@ export const publishCommand = new Command<Options, Arguments>()
     "--check-installation",
     "Simulates a dummy installation and check for missing files in the dependency tree.",
   )
-  .option("--no-check", "Don't perform any check.")
+  .option(
+    "--check",
+    `Use ${italic("--no-check")} to not perform any check.`,
+    { default: true },
+  )
   .action(publish);

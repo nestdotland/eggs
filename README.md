@@ -206,3 +206,6 @@ your branch with the additions. Make sure to use [Conventional
 Commits](https://www.conventionalcommits.org/en/v1.0.0/)
 
 [Contribution guide](.github/CONTRIBUTING.md)
+
+
+|
