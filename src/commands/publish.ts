@@ -70,8 +70,7 @@ function ensureCompleteConfig(
   config.entry ||= "/mod.ts";
   config.description ||= "";
   config.homepage ||= "";
-  config.files ??= [];
-  config.ignore ??= [];
+  config.ignore ||= [];
   config.unlisted ??= false;
   config.check ??= true;
 
