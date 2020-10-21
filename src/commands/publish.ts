@@ -49,14 +49,14 @@ function ensureCompleteConfig(
     isConfigComplete = false;
   }
 
-  if (!config.version && !config.bump) {
+  if (!config.version && !config.releaseType) {
     log.error(
       "Your module configuration must provide a version or release type.",
     );
     isConfigComplete = false;
   }
 
-  if (!config.files && !ignore) {
+  if (!config.files && !ignore && !config.entry) {
     log.error(
       `Your module configuration must provide files to upload in the form of a ${
         italic("files")
@@ -67,11 +67,12 @@ function ensureCompleteConfig(
     isConfigComplete = false;
   }
 
-  config.entry = config.entry || "/mod.ts";
-  config.checkAll = config.checkAll ?? true;
-  config.description = config.description || "";
-  config.repository = config.repository || "";
-  config.unlisted = config.unlisted ?? false;
+  config.entry ||= "/mod.ts";
+  config.description ||= "";
+  config.homepage ||= "";
+  config.ignore ||= [];
+  config.unlisted ??= false;
+  config.check ??= true;
 
   return isConfigComplete;
 }
@@ -112,17 +113,17 @@ function gatherOptions(
       (cfg.version = versionType(
         { name: "version", value: options.version, label: "", type: "" },
       ));
-    options.bump &&
-      (cfg.bump = releaseType(
-        { name: "bump", value: options.bump, label: "", type: "" },
+    options.releaseType &&
+      (cfg.releaseType = releaseType(
+        { name: "bump", value: options.releaseType, label: "", type: "" },
       ));
     options.description && (cfg.description = options.description);
     options.entry && (cfg.entry = options.entry);
     options.unstable !== undefined && (cfg.unstable = options.unstable);
     options.unlisted !== undefined && (cfg.unstable = options.unlisted);
-    options.repository &&
-      (cfg.repository = urlType(
-        { name: "repository", value: options.repository, label: "", type: "" },
+    options.homepage &&
+      (cfg.homepage = urlType(
+        { name: "homepage", value: options.homepage, label: "", type: "" },
       ));
     options.files && (cfg.files = options.files);
     options.ignore && (cfg.ignore = options.ignore);
@@ -131,7 +132,7 @@ function gatherOptions(
     options.checkTests !== undefined && (cfg.checkTests = options.checkTests);
     options.checkInstallation !== undefined &&
       (cfg.checkInstallation = options.checkInstallation);
-    options.checkAll !== undefined && (cfg.checkAll = options.checkAll);
+    options.check !== undefined && (cfg.check = options.check);
     return cfg;
   } catch (err) {
     log.error(err);
@@ -143,7 +144,7 @@ async function checkUp(
   config: Config,
   matched: MatchedFile[],
 ): Promise<boolean> {
-  if (config.checkFormat ?? config.checkAll) {
+  if (config.checkFormat ?? config.check) {
     const wait = spinner.info("Checking if the source files are formatted...");
     const process = Deno.run(
       {
@@ -174,7 +175,7 @@ async function checkUp(
     }
   }
 
-  if (config.checkTests ?? config.checkAll) {
+  if (config.checkTests ?? config.check) {
     const wait = spinner.info("Testing your code...");
     const process = Deno.run(
       {
@@ -205,7 +206,7 @@ async function checkUp(
     }
   }
 
-  if (config.checkInstallation ?? config.checkAll) {
+  if (config.checkInstallation ?? config.check) {
     const wait = spinner.info("Test installation...");
     const tempDir = await Deno.makeTempDir();
     for (let i = 0; i < matched.length; i++) {
@@ -291,10 +292,10 @@ export async function publish(options: Options, name?: string) {
   if (existing) {
     latest = existing.getLatestVersion();
     egg.description = egg.description || existing.description;
-    egg.repository = egg.repository || existing.repository || "";
+    egg.homepage = egg.homepage || existing.repository || "";
   }
-  if (egg.bump) {
-    egg.version = semver.inc(egg.version || latest, egg.bump) as string;
+  if (egg.releaseType) {
+    egg.version = semver.inc(egg.version || latest, egg.releaseType) as string;
   }
   if (
     existing &&
@@ -316,7 +317,7 @@ export async function publish(options: Options, name?: string) {
     name: egg.name,
     version: egg.version,
     description: egg.description,
-    repository: egg.repository,
+    repository: egg.homepage,
     unlisted: egg.unlisted,
     stable: !(egg.unstable ?? isVersionUnstable(egg.version)),
     upload: true,
@@ -342,7 +343,7 @@ export async function publish(options: Options, name?: string) {
   );
   log.info(filesToPublish);
 
-  if (!options.handsfree) {
+  if (!options.yes) {
     const confirmation: boolean = await Confirm.prompt({
       message: "Are you sure you want to publish this module?",
       default: false,
@@ -404,20 +405,20 @@ export async function publish(options: Options, name?: string) {
 
 export interface Options extends DefaultOptions {
   dryRun?: boolean;
-  bump?: semver.ReleaseType;
+  yes?: boolean;
   version?: string;
-  description?: string;
+  releaseType?: semver.ReleaseType;
   entry?: string;
+  description?: string;
+  homepage?: string;
   unstable?: boolean;
   unlisted?: boolean;
-  repository?: string;
   files?: string[];
   ignore?: string[];
   checkFormat?: boolean | string;
   checkTests?: boolean | string;
   checkInstallation?: boolean;
-  checkAll?: boolean;
-  handsfree?: boolean;
+  check?: boolean;
 }
 export type Arguments = [string];
 
@@ -433,15 +434,15 @@ export const publishCommand = new Command<Options, Arguments>()
     "No changes will actually be made, reports the details of what would have been published.",
   )
   .option(
-    "--handsfree",
-    "Don't display the confirmation message with the staged files.",
+    "-Y, --yes",
+    "Disable confirmation prompts.",
   )
   .option(
     "--description <value:string>",
     "A description of your module that will appear on the gallery.",
   )
   .option(
-    "--bump <value:release>",
+    "--release-type <value:release>",
     "Increment the version by the release type.",
   )
   .option("--version <value:version>", "Set the version.")
@@ -452,8 +453,8 @@ export const publishCommand = new Command<Options, Arguments>()
   .option("--unstable", "Flag this version as unstable.")
   .option("--unlisted", "Hide this module/version on the gallery.")
   .option(
-    "--repository <value:url>",
-    "A link to your repository.",
+    "--homepage <value:url>",
+    "A link to your homepage. Usually a repository.",
   )
   .option(
     "--files <values...:string>",
@@ -472,5 +473,9 @@ export const publishCommand = new Command<Options, Arguments>()
     "--check-installation",
     "Simulates a dummy installation and check for missing files in the dependency tree.",
   )
-  .option("--check-all", "Performs all checks.")
+  .option(
+    "--check",
+    `Use ${italic("--no-check")} to not perform any check.`,
+    { default: true },
+  )
   .action(publish);

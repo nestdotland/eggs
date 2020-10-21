@@ -20,7 +20,7 @@ import type { semver } from "../../deps.ts";
 import { validateURL, validateVersion } from "../utilities/types.ts";
 import { fetchModule } from "../api/fetch.ts";
 import type { DefaultOptions } from "../commands.ts";
-import { version } from "../version.ts";
+import { version as eggsVersion } from "../version.ts";
 import { setupLog } from "../utilities/log.ts";
 
 /** Init Command.
@@ -56,12 +56,12 @@ export async function init(options: Options) {
     message: "Description:",
     default: currentConfig.description || existing?.description,
   }) || undefined;
-  const repository: string | undefined = await Input.prompt({
-    message: "Module repository:",
-    default: currentConfig.repository || existing?.repository,
+  const homepage: string | undefined = await Input.prompt({
+    message: "Module homepage:",
+    default: currentConfig.homepage || existing?.repository,
     validate: (value) => value === "" || validateURL(value),
   }) || undefined;
-  let bump: string | undefined = await Select.prompt({
+  let releaseType: string | undefined = await Select.prompt({
     message: "Semver increment:",
     options: [
       { name: "none", value: "none" },
@@ -81,9 +81,9 @@ export async function init(options: Options) {
       next: ["down", "2", "d"],
     },
   });
-  if (bump === "none") bump = undefined;
+  if (releaseType === "none") releaseType = undefined;
 
-  const version_: string | undefined = await Input.prompt({
+  const version: string | undefined = await Input.prompt({
     message: "Version:",
     default: existing?.getLatestVersion(),
     validate: (value) => value === "" || validateVersion(value),
@@ -111,13 +111,14 @@ export async function init(options: Options) {
   });
   if (ignore.length === 1 && ignore[0] === "") ignore = undefined;
 
-  const checkAll: boolean | undefined = await Confirm.prompt({
+  const check: boolean | undefined = await Confirm.prompt({
     message: "Perform all checks before publication?",
-    default: currentConfig.checkAll ?? true,
+    default: currentConfig.check ?? true,
   });
+  const noCheck = !check;
 
   let checkFormat: boolean | string | undefined =
-    checkAll && await Confirm.prompt({
+    noCheck && await Confirm.prompt({
         message: "Check source files formatting before publication?",
         default: (!!currentConfig.checkFormat) ?? false,
       })
@@ -131,7 +132,7 @@ export async function init(options: Options) {
   if (checkFormat === "") checkFormat = true;
 
   let checkTests: boolean | string | undefined =
-    checkAll && await Confirm.prompt({
+    noCheck && await Confirm.prompt({
         message: "Test your code before publication?",
         default: (!!currentConfig.checkTests) ?? false,
       })
@@ -144,7 +145,7 @@ export async function init(options: Options) {
       : false;
   if (checkTests === "") checkTests = true;
 
-  const checkInstallation: boolean | undefined = checkAll &&
+  const checkInstallation: boolean | undefined = noCheck &&
     await Confirm.prompt({
       message: "Install module and check for missing files before publication?",
       default: currentConfig.checkInstallation ?? false,
@@ -164,14 +165,14 @@ export async function init(options: Options) {
     },
   });
 
-  const config = {
-    "$schema": `https://x.nest.land/eggs@${version}/src/schema.json`,
+  const config: Partial<Config> = {
+    "$schema": `https://x.nest.land/eggs@${eggsVersion}/src/schema.json`,
     name,
     entry,
     description,
-    repository,
-    version: version_,
-    bump: bump as semver.ReleaseType,
+    homepage,
+    version,
+    releaseType: releaseType as semver.ReleaseType,
     unstable,
     unlisted,
     files,
@@ -179,7 +180,7 @@ export async function init(options: Options) {
     checkFormat,
     checkTests,
     checkInstallation,
-    checkAll,
+    check,
   };
 
   log.debug("Config: ", config, format);
@@ -193,6 +194,6 @@ export type Options = DefaultOptions;
 export type Arguments = [];
 
 export const initCommand = new Command<Options, Arguments>()
-  .version(version)
+  .version(eggsVersion)
   .description("Initiates a new module for the nest.land registry.")
   .action(init);
