@@ -11,11 +11,11 @@ import {
   Spinner,
   stripColor,
   underline,
-  yellow,
   wait,
-} from "../deps.ts";
+  yellow,
+} from "../../deps.ts";
 
-import { version } from "./version/version.ts";
+import { version } from "../version.ts";
 
 const DEBUG_LOG_FILE = "./eggs-debug.log";
 
@@ -61,7 +61,7 @@ class ConsoleHandler extends BaseHandler {
 
     if (detailedLog) {
       for (const arg of record.args) {
-        msg += ` ${Deno.inspect(arg, { depth: 10 })}`;
+        msg += ` ${Deno.inspect(arg, { depth: 10, colors: true })}`;
       }
     }
 
@@ -100,7 +100,7 @@ class FileHandler extends BaseHandler {
     msg += ` ${stripColor(record.msg)}`;
 
     for (const arg of record.args) {
-      msg += ` ${stripColor(Deno.inspect(arg, { depth: Infinity }))}`;
+      msg += ` ${Deno.inspect(arg, { depth: Infinity })}`;
     }
 
     return msg;
@@ -178,7 +178,7 @@ export function highlight(msg: string) {
 }
 
 const ci = Deno.env.get("CI");
-const ciSpinner = { stop: () => {} };
+const ciSpinner = { stop: () => {}, text: "" } as Spinner;
 
 export class spinner {
   static info(msg: string) {

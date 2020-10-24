@@ -24,9 +24,8 @@ export function matchFiles(
   let matched: MatchedFile[] = [];
 
   if (config.files) {
-    config.files.push(config.entry);
-    for (let file of config.files) {
-      let matches = [
+    for (const file of [config.entry, ...config.files]) {
+      const matches = [
         ...expandGlobSync(file, {
           root: Deno.cwd(),
           extended: true,

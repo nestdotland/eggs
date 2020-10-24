@@ -28,6 +28,12 @@
       src="https://github.com/nestdotland/eggs/workflows/Ship/badge.svg"
       alt="Eggs ship"
     >
+    <a href="https://discord.gg/hYUsX3H">
+      <img
+        src="https://img.shields.io/discord/722823139960291328?label=Discord&logo=discord"
+        alt="Discord"
+      >
+    </a>
   </p>
 </p>
 
@@ -49,7 +55,7 @@
 **Note: You need to upgrade to Deno v1.4.1 or newer in order to use our CLI.**
 
 ```shell script
-deno install -A -f --unstable -n eggs https://x.nest.land/eggs@0.2.3/mod.ts
+deno install -Afq --unstable https://x.nest.land/eggs@0.3.0/eggs.ts
 ```
 
 For more information, see the [documentation](https://docs.nest.land/).
@@ -156,7 +162,7 @@ After `eggs update`:
 ```ts
 import * as colors from "https://deno.land/std@0.58.0/fmt/colors.ts";
 import * as bcrypt from "https://deno.land/x/bcrypt@v0.2.1/mod.ts"
-import * as eggs from "https://x.nest.land/eggs@0.2.3/mod.ts"
+import * as eggs from "https://x.nest.land/eggs@0.3.0/mod.ts"
 import * as http from "https://deno.land/std/http/mod.ts"
 ```
 
@@ -191,7 +197,12 @@ eggs upgrade
 
 ## Contributing
 
+<img alt="GitHub Hacktoberfest combined status" src="https://img.shields.io/github/hacktoberfest/2020/nestdotland/eggs?logo=digitalocean">
+
+
 All contributions are welcome! If you can think of a command or feature that
 might benefit nest.land, fork this repository and make a pull request from
 your branch with the additions. Make sure to use [Conventional
 Commits](https://www.conventionalcommits.org/en/v1.0.0/)
+
+[Contribution guide](.github/CONTRIBUTING.md)

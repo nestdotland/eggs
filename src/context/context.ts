@@ -12,7 +12,7 @@ export async function gatherContext(
     denies: [],
     extends: [],
   };
-  const configPath = defaultConfig(wd);
+  const configPath = await defaultConfig(wd);
 
   if (configPath) {
     try {
@@ -23,7 +23,7 @@ export async function gatherContext(
     }
   }
 
-  const ignorePath = defaultIgnore(wd);
+  const ignorePath = await defaultIgnore(wd);
   if (ignorePath) {
     try {
       ignore = await readIgnore(ignorePath);

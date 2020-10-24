@@ -1,146 +1,24 @@
-import {
-  bold,
-  Command,
-  exists,
-  getLatestVersion,
-  GlobalModuleConfig,
-  globalModulesConfigPath,
-  installUpdateHandler,
-  log,
-  parseURL,
-  readGlobalModuleConfig,
-  semver,
-  writeGlobalModuleConfig,
-} from "../../deps.ts";
+import { Command, installHatcher, log } from "../../deps.ts";
 import type { DefaultOptions } from "../commands.ts";
-import { version } from "../version/version.ts";
-import { setupLog } from "../log.ts";
+import { version } from "../version.ts";
+import { setupLog } from "../utilities/log.ts";
 
-const installPrefix = "eggs--";
-const oneDay = 1000 * 60 * 60 * 24;
-
-const configPath = globalModulesConfigPath();
-
-async function installCommand(
-  options: DefaultOptions,
+export async function install(
+  options: Options,
   ...args: string[]
 ): Promise<void> {
   await setupLog(options.debug);
 
   /** help option need to be parsed manually */
   if (["-h", "--help", "help"].includes(args[0])) {
-    install.help();
+    installCommand.help();
     return;
   }
 
-  const indexOfURL = args.findIndex((arg) => arg.match(/https:\/\//));
-  const indexOfName = args.indexOf("-n");
-
-  if (indexOfURL < 0) {
-    log.error("You need to pass in a module URL.");
-    return;
-  }
-
-  const url = args[indexOfURL];
-  let { name, parsedURL, registry, owner, version } = parseURL(url);
-  let alias: string;
-
-  log.debug("Module info: ", name, parsedURL, registry, owner, version);
-
-  const currentVersion = semver.valid(version) ??
-    await getLatestVersion(registry, name, owner);
-
-  if (!currentVersion || !semver.valid(currentVersion)) {
-    log.warning(`Could not find the latest version of ${name}.`);
-    await installModuleWithoutUpdates(args);
-    return;
-  }
-
-  /** If no exec name is given, provide one */
-  if (indexOfName < 0) {
-    args.splice(indexOfURL, 0, installPrefix + name);
-    args.splice(indexOfURL, 0, "-n");
-    alias = name;
-  } else {
-    alias = args[indexOfName + 1];
-    args[indexOfName + 1] = installPrefix + alias;
-  }
-
-  const executable = installPrefix + alias;
-
-  await installModuleHandler(args);
-  await installUpdateHandler(alias, executable);
-
-  /** After installation, the URL is ready to be updated */
-  args[args.findIndex((arg) => arg.match(/https:\/\//))] = parsedURL;
-
-  const configExists = await exists(configPath);
-  let config: GlobalModuleConfig | undefined;
-  try {
-    config = configExists ? await readGlobalModuleConfig() : {};
-
-    if (config === undefined) return;
-  } catch (err) {
-    log.error(err);
-    return;
-  }
-
-  config[executable] = {
-    registry,
-    name,
-    alias,
-    owner,
-    version: currentVersion,
-    arguments: args,
-    lastUpdateCheck: Date.now(),
-  };
-
-  log.debug("Config: ", config);
-
-  await writeGlobalModuleConfig(config);
-
-  log.info(`Successfully installed ${bold(name)} !`);
+  await installHatcher(args);
 }
 
-async function installModuleHandler(args: string[]): Promise<void> {
-  const options = args.filter((x) => x !== "-f");
-  const installation = Deno.run({
-    cmd: [
-      "deno",
-      "install",
-      "-f",
-      ...options,
-    ],
-  });
-
-  const status = await installation.status();
-  installation.close();
-
-  if (status.success === false || status.code !== 0) {
-    throw new Error("Module handler installation failed.");
-  }
-}
-
-async function installModuleWithoutUpdates(args: string[]): Promise<void> {
-  const installation = Deno.run({
-    cmd: [
-      "deno",
-      "install",
-      ...args,
-    ],
-  });
-
-  const status = await installation.status();
-  installation.close();
-
-  if (status.success === false || status.code !== 0) {
-    throw new Error("Module installation failed.");
-  }
-}
-
-const desc = `A simple wrapper around the ${
-  bold("deno install")
-} command to handle global script updates.
+const desc = `Add update notification to any CLI.
 
 Installs a script as an executable in the installation root's bin directory.
   eggs install --allow-net --allow-read https://x.nest.land/std/http/file_server.ts
@@ -166,9 +44,10 @@ The installation root is determined, in order of precedence:
 
 These must be added to the path manually if required.`;
 
-type Arguments = string[];
+export type Options = DefaultOptions;
+export type Arguments = string[];
 
-export const install = new Command<DefaultOptions, Arguments>()
+export const installCommand = new Command<Options, Arguments>()
   .version(version)
   .description(desc)
   .arguments("[options...:string]")
@@ -198,4 +77,4 @@ export const install = new Command<DefaultOptions, Arguments>()
   .option("--unstable", "Enable unstable APIs")
   /** Unknown options cannot be parsed */
   .useRawArgs()
-  .action(installCommand);
+  .action(install);

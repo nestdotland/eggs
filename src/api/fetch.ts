@@ -1,4 +1,4 @@
-import { IModule, Module } from "../module.ts";
+import { IModule, Module } from "./module.ts";
 import { apiFetch, ENDPOINT } from "./common.ts";
 
 export async function fetchResource<T>(query: string): Promise<T | undefined> {
@@ -14,7 +14,9 @@ export async function fetchResource<T>(query: string): Promise<T | undefined> {
 }
 
 export async function fetchModule(name: string): Promise<Module | undefined> {
-  let module: IModule | undefined = await fetchResource(`/api/package/${name}`);
+  const module: IModule | undefined = await fetchResource(
+    `/api/package/${name}`,
+  );
   if (!module) return undefined;
   return new Module(module);
 }

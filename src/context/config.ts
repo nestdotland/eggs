@@ -1,5 +1,5 @@
 import {
-  existsSync,
+  exists,
   extname,
   join,
   parseYaml,
@@ -7,7 +7,6 @@ import {
   stringifyYaml,
 } from "../../deps.ts";
 import { writeJson } from "../utilities/json.ts";
-import type { Ignore } from "./ignore.ts";
 
 /** Supported configuration formats. */
 export enum ConfigFormat {
@@ -19,26 +18,26 @@ export enum ConfigFormat {
  * All fields are optional but most
  * commands require at least some. */
 export interface Config {
+  $schema: string;
+
   name: string;
   entry: string;
   description: string;
-  repository: string;
-  version: string;
-  bump?: semver.ReleaseType;
-  stable?: boolean; // ! DEPRECATED
+  homepage: string;
   unstable?: boolean;
   unlisted: boolean;
 
-  files?: string[];
-  ignore?:
-    | string[]
-    | Ignore; // ! DEPRECATED
+  version: string;
+  releaseType?: semver.ReleaseType;
 
-  fmt?: boolean; // ! DEPRECATED
+  files?: string[];
+  ignore?: string[];
+
+  yes?: boolean;
   checkFormat?: boolean | string;
   checkTests?: boolean | string;
   checkInstallation?: boolean;
-  checkAll: boolean;
+  check: boolean;
 }
 
 /** Filenames of the default configs.
@@ -52,10 +51,12 @@ const DEFAULT_CONFIGS = [
 ];
 
 /** Get default config in cwd. */
-export function defaultConfig(wd: string = Deno.cwd()): string | undefined {
-  return DEFAULT_CONFIGS.find((path) => {
-    return existsSync(join(wd, path));
-  });
+export async function defaultConfig(
+  wd: string = Deno.cwd(),
+): Promise<string | undefined> {
+  for (const path of DEFAULT_CONFIGS) {
+    if (await exists(join(wd, path))) return path;
+  }
 }
 
 /** Get config format for provided path.

@@ -16,8 +16,11 @@ jobs:
       - name: Setup Deno
         uses: denolib/setup-deno@v2
 
+      - name: Setup Drake
+        run: deno run -A Drakefile.ts setup-github-actions
+
       - name: Check formatting
-        run: deno fmt --check
+        run: drake check-format
 
   lint:
     name: deno lint
@@ -31,6 +34,9 @@ jobs:
 
       - name: Setup Deno
         uses: denolib/setup-deno@v2
+      
+      - name: Setup Drake
+        run: deno run -A Drakefile.ts setup-github-actions
 
       - name: Run linter
-        run: deno lint --unstable
+        run: drake lint
