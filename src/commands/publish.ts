@@ -7,11 +7,13 @@ import {
   dim,
   dirname,
   existsSync,
+  globToRegExp,
   gray,
   green,
   italic,
   join,
   log,
+  relative,
   semver,
   stringType,
   yellow,
@@ -67,7 +69,7 @@ function ensureCompleteConfig(
     isConfigComplete = false;
   }
 
-  config.entry ||= "/mod.ts";
+  config.entry ||= "./mod.ts";
   config.description ||= "";
   config.homepage ||= "";
   config.ignore ||= [];
@@ -82,11 +84,10 @@ function ensureFiles(config: Config, matched: MatchedFile[]): boolean {
     log.warning("No README found at project root, continuing without one...");
   }
 
-  config.entry = config.entry
-    ?.replace(/^[.]/, "")
-    .replace(/^[^/]/, (s: string) => `/${s}`);
+  config.entry = "./" + relative(Deno.cwd(), config.entry).replace(/\\/g, "/");
+  const entryRegExp = globToRegExp(config.entry);
 
-  if (!matched.find((e) => e.path === config.entry)) {
+  if (!matched.find((e) => entryRegExp.test(e.path))) {
     log.error(`${config.entry} was not found. This file is required.`);
     return false;
   }
@@ -322,7 +323,9 @@ export async function publish(options: Options, name?: string) {
     stable: !(egg.unstable ?? isVersionUnstable(egg.version)),
     upload: true,
     latest: semver.compare(egg.version, latest) === 1,
-    entry: egg.entry,
+    entry: egg.entry.substr(1),
+    // TODO(@oganexon): make this format consistent between eggs & website
+    // (here we need to have "/" at the start of the string, where in the website "/" is removed)
   };
 
   log.info(
@@ -365,7 +368,14 @@ export async function publish(options: Options, name?: string) {
     throw new Error("Something broke when publishing... ");
   }
 
-  const pieceResponse = await postPieces(uploadResponse.token, matchedContent);
+  const pieceResponse = await postPieces(
+    uploadResponse.token,
+    Object.entries(matchedContent).reduce((prev, [key, value]) => {
+      prev[key.substr(1)] = value;
+      return prev;
+    }, {} as Record<string, string>),
+  );
+  // TODO(@oganexon): same, needs consistency
 
   if (!pieceResponse) {
     // TODO(@qu4k): provide better error reporting
