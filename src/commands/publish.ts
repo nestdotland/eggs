@@ -10,6 +10,7 @@ import {
   globToRegExp,
   gray,
   green,
+  isVersionUnstable,
   italic,
   join,
   log,
@@ -96,10 +97,6 @@ function ensureFiles(config: Config, matched: MatchedFile[]): boolean {
 
 async function deprecationWarnings(config: Config) {
   // no deprecated feature for the time being :)
-}
-
-function isVersionUnstable(v: string) {
-  return !((semver.major(v) === 0) || semver.prerelease(v));
 }
 
 function gatherOptions(

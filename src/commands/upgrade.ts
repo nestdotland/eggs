@@ -7,7 +7,11 @@ import { setupLog } from "../utilities/log.ts";
 export async function upgrade(options: DefaultOptions) {
   await setupLog(options.debug);
 
-  const newVersion = await NestLand.getLatestVersion("eggs");
+  const newVersion = await NestLand.latestVersion("eggs");
+  if (!newVersion) {
+    log.error("Could not retrieve latest version.");
+    return;
+  }
   if (semver.eq(newVersion, version)) {
     log.info("You are already using the latest CLI version!");
     return;
@@ -18,11 +22,8 @@ export async function upgrade(options: DefaultOptions) {
       "deno",
       "install",
       "--unstable",
-      "-A",
-      "-f",
-      "-n",
-      "eggs",
-      `https://x.nest.land/eggs@${newVersion}/mod.ts`,
+      "-Afq",
+      `https://x.nest.land/eggs@${newVersion}/eggs.ts`,
     ],
     stdout: "piped",
     stderr: "piped",

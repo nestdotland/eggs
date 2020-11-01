@@ -9,7 +9,7 @@ export {
   join,
   relative,
   resolve,
-} from "https://x.nest.land/std@0.74.0/path/mod.ts";
+} from "https://x.nest.land/std@0.75.0/path/mod.ts";
 
 export {
   exists,
@@ -17,29 +17,29 @@ export {
   expandGlob,
   expandGlobSync,
   walkSync,
-} from "https://x.nest.land/std@0.74.0/fs/mod.ts";
+} from "https://x.nest.land/std@0.75.0/fs/mod.ts";
 
-export * as log from "https://x.nest.land/std@0.74.0/log/mod.ts";
+export * as log from "https://x.nest.land/std@0.75.0/log/mod.ts";
 
-export { LogRecord } from "https://x.nest.land/std@0.74.0/log/logger.ts";
+export { LogRecord } from "https://x.nest.land/std@0.75.0/log/logger.ts";
 
-export type { LevelName } from "https://x.nest.land/std@0.74.0/log/levels.ts";
-export { LogLevels } from "https://x.nest.land/std@0.74.0/log/levels.ts";
+export type { LevelName } from "https://x.nest.land/std@0.75.0/log/levels.ts";
+export { LogLevels } from "https://x.nest.land/std@0.75.0/log/levels.ts";
 
-export { BaseHandler } from "https://x.nest.land/std@0.74.0/log/handlers.ts";
+export { BaseHandler } from "https://x.nest.land/std@0.75.0/log/handlers.ts";
 
-export * from "https://x.nest.land/std@0.74.0/fmt/colors.ts";
+export * from "https://x.nest.land/std@0.75.0/fmt/colors.ts";
 
 export {
   assert,
   assertEquals,
   assertMatch,
-} from "https://x.nest.land/std@0.74.0/testing/asserts.ts";
+} from "https://x.nest.land/std@0.75.0/testing/asserts.ts";
 
 export {
   parse as parseYaml,
   stringify as stringifyYaml,
-} from "https://x.nest.land/std@0.74.0/encoding/yaml.ts";
+} from "https://x.nest.land/std@0.75.0/encoding/yaml.ts";
 
 /**************** cliffy ****************/
 export {
@@ -68,13 +68,15 @@ export * as base64 from "https://denopkg.com/chiefbiiko/base64@v0.2.0/mod.ts";
 
 /**************** hatcher ****************/
 export {
-  getLatestVersion,
+  latestVersion,
   NestLand,
   parseURL,
   UpdateNotifier,
-} from "https://x.nest.land/hatcher@0.9.2/mod.ts";
+} from "https://x.nest.land/hatcher@0.10.1/mod.ts";
 
-export { install as installHatcher } from "https://x.nest.land/hatcher@0.9.2/lib/cli.ts";
+export { isVersionUnstable } from "https://x.nest.land/hatcher@0.10.1/lib/utilities/utils.ts";
+
+export { install as installHatcher } from "https://x.nest.land/hatcher@0.10.1/lib/cli.ts";
 
 /**************** analyzer ****************/
 export type { DependencyTree } from "https://x.nest.land/analyzer@0.0.6/deno/tree.ts";

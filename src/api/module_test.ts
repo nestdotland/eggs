@@ -17,7 +17,7 @@ Deno.test({
       ],
     });
 
-    const maze_generator = new Module({
+    const mazeGenerator = new Module({
       name: "maze_generator",
       owner: "TheWizardBear",
       description: "A module for generating mazes",
@@ -30,6 +30,6 @@ Deno.test({
     });
 
     assertEquals(eggs.getLatestVersion(), "0.1.9-rc1");
-    assertEquals(maze_generator.getLatestVersion(), "0.1.0-alpha.0");
+    assertEquals(mazeGenerator.getLatestVersion(), "0.1.0-alpha.0");
   },
 });
