@@ -1,7 +1,7 @@
 import {
   Command,
-  getLatestVersion,
   green,
+  latestVersion,
   log,
   parseURL,
   semver,
@@ -76,7 +76,7 @@ export async function update(
     }
 
     // Get latest release
-    const latestRelease = await getLatestVersion(registry, name, owner);
+    const latestRelease = await latestVersion(registry, name, owner);
 
     // Basic safety net
 

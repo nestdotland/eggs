@@ -9,10 +9,12 @@ import {
   green,
   italic,
   log,
+  magenta,
   parseURL,
   red,
   resolve,
   rgb24,
+  yellow,
 } from "../../deps.ts";
 import type { DefaultOptions } from "../commands.ts";
 import { version } from "../version.ts";
@@ -29,6 +31,8 @@ const format = {
   denoLand: cyan("deno.land"),
   github: blue("github.com"),
   denopkgCom: green("denopkg.com"),
+  skypack: magenta("cdn.skypack.dev"),
+  jspm: yellow("jspm.dev"),
 };
 
 /** Info Command. */
@@ -153,6 +157,12 @@ function beautifyDependency(dep: string) {
         return `${format.denopkgCom} ${bold(`${owner}/${name}`)} ${
           formatVersion(version)
         } ${formatPath(relativePath)}`;
+
+      case "cdn.skypack.dev":
+        return `${format.skypack} ${bold(name)} ${formatVersion(version)}`;
+
+      case "jspm.dev":
+        return `${format.jspm} ${bold(name)} ${formatVersion(version)}`;
 
       default:
         return dep;
