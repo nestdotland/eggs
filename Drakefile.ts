@@ -35,21 +35,21 @@ desc("Links the nest.land API key.");
 task("link", [], async function () {
   await sh(
     `deno run -A --unstable eggs.ts link ${Deno.env.get("NESTAPIKEY") ||
-      "null"} -do`,
+      "null"} -Do`,
   );
 });
 
 desc("Reports the details of what would have been published.");
 task("dry-publish", [], async function () {
   await sh(
-    `deno run -A --unstable eggs.ts publish eggs -doY --no-check --check-installation --entry eggs.ts --version ${version}-dev --dry-run `,
+    `deno run -A --unstable eggs.ts publish eggs -DoY --no-check --check-installation --entry eggs.ts --version ${version}-dev --dry-run `,
   );
 });
 
 desc("Publishes eggs to the nest.land registry.");
 task("publish", [], async function () {
   await sh(
-    `deno run -A --unstable eggs.ts publish eggs -doY --no-check --check-installation --entry eggs.ts --version ${version}`,
+    `deno run -A --unstable eggs.ts publish eggs -DoY --no-check --check-installation --entry eggs.ts --version ${version}`,
   );
 });
 
