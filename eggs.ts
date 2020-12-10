@@ -51,7 +51,7 @@ const eggs = new Command<DefaultOptions, []>()
   .description(
     "nest.land - A module registry and CDN for Deno, on the permaweb",
   )
-  .option("-d, --debug", "Print additional information.", { global: true })
+  .option("-D, --debug", "Print additional information.", { global: true })
   .option(
     "-o, --output-log",
     "Create a log file after command completion.",
