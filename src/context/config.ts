@@ -69,7 +69,7 @@ export function configFormat(path: string): ConfigFormat {
 
 /** writeYaml. (similar to writeJson)
  * @private */
-async function writeYaml(filename: string, content: string): Promise<void> {
+function writeYaml(filename: string, content: string): void {
   return Deno.writeFileSync(filename, new TextEncoder().encode(content));
 }
 
