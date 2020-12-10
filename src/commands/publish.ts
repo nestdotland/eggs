@@ -481,8 +481,7 @@ export const publishCommand = new Command<Options, Arguments>()
     "Simulates a dummy installation and check for missing files in the dependency tree.",
   )
   .option(
-    "--check",
-    `Use ${italic("--no-check")} to not perform any check.`,
-    { default: true },
+    "--no-check",
+    `Use this option to not perform any check.`,
   )
   .action(publish);
