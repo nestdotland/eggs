@@ -52,10 +52,10 @@
 
 ## Installation
 
-**Note: You need to upgrade to Deno v1.4.1 or newer in order to use our CLI.**
+**Note: You need to upgrade to Deno v1.6.0 or newer in order to use our CLI.**
 
 ```shell script
-deno install -Afq --unstable https://x.nest.land/eggs@0.3.0/eggs.ts
+deno install -Afq --unstable https://x.nest.land/eggs@0.3.4/eggs.ts
 ```
 
 For more information, see the [documentation](https://docs.nest.land/).
@@ -196,9 +196,6 @@ eggs upgrade
 ```
 
 ## Contributing
-
-<img alt="GitHub Hacktoberfest combined status" src="https://img.shields.io/github/hacktoberfest/2020/nestdotland/eggs?logo=digitalocean">
-
 
 All contributions are welcome! If you can think of a command or feature that
 might benefit nest.land, fork this repository and make a pull request from
