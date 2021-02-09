@@ -3,8 +3,9 @@
 Documentation for benchmarks of CLI commands.
 
 # Contents
-* [Commands](#commands)
-    * [Update](#update)
+
+- [Commands](#commands)
+  - [Update](#update)
 
 # Commands
 
@@ -12,19 +13,24 @@ Documentation for benchmarks of CLI commands.
 
 **Cautions**
 
-* There may be a time where the deps are too out of date. They need to be out of date for `update` to update them,
-  so just bump them up to the release before the latest std
+- There may be a time where the deps are too out of date. They need to be out of
+  date for `update` to update them, so just bump them up to the release before
+  the latest std
 
 **How it Works**
 
-* This benchmark uses a separate `deps.ts` file. The reason for this is so we can have a 'realworld' example, where many dependencies are used, and from various registries
+- This benchmark uses a separate `deps.ts` file. The reason for this is so we
+  can have a 'realworld' example, where many dependencies are used, and from
+  various registries
 
-* All but 1 dependency are out of date, to fully represent the test, as the `update` would update all the out of date dependencies
+- All but 1 dependency are out of date, to fully represent the test, as the
+  `update` would update all the out of date dependencies
 
-* This benchmark shows the execution time for running `update` against 14 separate dependencies, all varying from:
-    * deno.land/std/
-    * deno.land/x/
-    * x.nest.land
+- This benchmark shows the execution time for running `update` against 14
+  separate dependencies, all varying from:
+  - deno.land/std/
+  - deno.land/x/
+  - x.nest.land
 
 **How to Run**
 
