@@ -55,7 +55,7 @@
 **Note: You need to upgrade to Deno v1.6.0 or newer in order to use our CLI.**
 
 ```shell script
-deno install -Afq --unstable https://x.nest.land/eggs@0.3.5/eggs.ts
+deno install -Afq --unstable https://x.nest.land/eggs@0.3.6/eggs.ts
 ```
 
 For more information, see the [documentation](https://docs.nest.land/).
@@ -127,14 +127,6 @@ will be modified by adding them as arguments.
 ```shell script
 eggs update # Updates everything
 eggs update http fs eggs # Updates only http, fs, eggs
-```
-
-Scripts installed with `eggs install` can also be updated with the `-g`
-parameter.
-
-```shell script
-eggs update -g # Updates every script installed with eggs install
-eggs update eggs denon -g # Updates only eggs, denon
 ```
 
 Several registries are supported. The current ones are:

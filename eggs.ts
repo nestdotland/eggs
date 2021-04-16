@@ -58,7 +58,7 @@ const eggs = new Command<DefaultOptions, []>()
     { global: true },
   )
   .action(() => {
-    eggs.help();
+    eggs.showHelp();
   })
   .command("help", new HelpCommand())
   .command("completions", new CompletionsCommand())
@@ -91,9 +91,9 @@ try {
   ) {
     const command = Deno.args[0] as keyof typeof commands;
     if (command in commands) {
-      commands[command].help();
+      commands[command].showHelp();
     } else {
-      eggs.help();
+      eggs.showHelp();
     }
     log.error(err.message);
   } else {
