@@ -1,4 +1,4 @@
-import { Command, installHatcher, log } from "../../deps.ts";
+import { Command, installHatcher } from "../../deps.ts";
 import type { DefaultOptions } from "../commands.ts";
 import { version } from "../version.ts";
 import { setupLog } from "../utilities/log.ts";
@@ -11,7 +11,7 @@ export async function install(
 
   /** help option need to be parsed manually */
   if (["-h", "--help", "help"].includes(args[0])) {
-    installCommand.help();
+    installCommand.showHelp();
     return;
   }
 

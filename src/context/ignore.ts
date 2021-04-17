@@ -97,7 +97,7 @@ export function parseIgnore(
       } else {
         ignore.denies.push(pattern);
       }
-    } catch (err) {
+    } catch {
       log.error(`Parsing ${name} file. Error at line ${i + 1}`);
     }
   }

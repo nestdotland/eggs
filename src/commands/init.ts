@@ -1,6 +1,5 @@
 import {
   basename,
-  Checkbox,
   Command,
   Confirm,
   Input,

@@ -1,23 +1,21 @@
 import {
-  basename,
+  basename as _basename,
   bold,
   Command,
   Confirm,
-  dependencyTree,
+  dependencyTree as _dependencyTree,
   dim,
-  dirname,
+  dirname as _dirname,
   existsSync,
   globToRegExp,
   gray,
   green,
   isVersionUnstable,
   italic,
-  join,
+  join as _join,
   log,
   relative,
   semver,
-  stringType,
-  yellow,
 } from "../../deps.ts";
 import type { DefaultOptions } from "../commands.ts";
 import { releaseType, urlType, versionType } from "../utilities/types.ts";
@@ -95,7 +93,7 @@ function ensureFiles(config: Config, matched: MatchedFile[]): boolean {
   return true;
 }
 
-async function deprecationWarnings(config: Config) {
+async function deprecationWarnings(_config: Config) {
   // no deprecated feature for the time being :)
 }
 
@@ -204,7 +202,8 @@ async function checkUp(
     }
   }
 
-  if (config.checkInstallation ?? config.check) {
+  // Test disabled: analyzer is still unstable
+  /* if (config.checkInstallation ?? config.check) {
     const wait = spinner.info("Test installation...");
     const tempDir = await Deno.makeTempDir();
     for (let i = 0; i < matched.length; i++) {
@@ -236,7 +235,7 @@ async function checkUp(
       }
       return false;
     }
-  }
+  } */
 
   return true;
 }
