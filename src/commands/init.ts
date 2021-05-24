@@ -49,21 +49,24 @@ export async function init(options: Options) {
 
   const entry: string | undefined = await Input.prompt({
     message: "Entry file:",
-    default: currentConfig.entry,
-  }) || undefined;
+    default: currentConfig.entry ?? "./mod.ts",
+  });
+
   const description: string | undefined = await Input.prompt({
     message: "Description:",
-    default: currentConfig.description || existing?.description,
-  }) || undefined;
+    default: currentConfig.description ?? existing?.description ?? "",
+  });
+
   const homepage: string | undefined = await Input.prompt({
     message: "Module homepage:",
-    default: currentConfig.homepage || existing?.repository,
-    validate: (value) => value === "" || validateURL(value),
-  }) || undefined;
-  let releaseType: string | undefined = await Select.prompt({
-    message: "Semver increment:",
+    default: currentConfig.homepage ?? existing?.repository ?? "",
+    validate: (value: string) => value === "" || validateURL(value),
+  });
+
+  let releaseType: string | null | undefined = await Select.prompt({
+    message: "Automatic semver increment:",
     options: [
-      { name: "none", value: "none" },
+      { name: "disabled", value: "none" },
       Select.separator("--------"),
       { name: "patch", value: "patch" },
       { name: "minor", value: "minor" },
@@ -75,97 +78,99 @@ export async function init(options: Options) {
       { name: "premajor", value: "premajor" },
       { name: "prerelease", value: "prerelease" },
     ],
+    default: "none",
     keys: {
-      previous: ["up", "8", "u"],
-      next: ["down", "2", "d"],
+      previous: ["up", "8", "u", "k"],
+      next: ["down", "2", "d", "j"],
     },
   });
-  if (releaseType === "none") releaseType = undefined;
+  if (releaseType === "none") releaseType = null;
 
   const version: string | undefined = await Input.prompt({
     message: "Version:",
-    default: existing?.getLatestVersion(),
-    validate: (value) => value === "" || validateVersion(value),
-  }) || undefined;
+    default: currentConfig.version ?? existing?.getLatestVersion() ?? "",
+    validate: (value: string) => value === "" || validateVersion(value),
+  });
 
   const unstable: boolean | undefined = await Confirm.prompt({
     message: "Is this an unstable version?",
     default: currentConfig.unstable ?? false,
-  }) || undefined;
+  });
 
   const unlisted: boolean | undefined = await Confirm.prompt({
     message: "Should this module be hidden in the gallery?",
     default: currentConfig.unlisted ?? false,
-  }) || undefined;
+  });
 
   let files: string[] | undefined = await List.prompt({
     message: "Files and relative directories to publish, separated by a comma:",
-    default: currentConfig.files,
+    default: currentConfig.files ?? [],
   });
-  if (files.length === 1 && files[0] === "") files = undefined;
+  if (files?.length === 1 && files[0] === "") files = [];
 
   let ignore: string[] | undefined = await List.prompt({
     message: "Files and relative directories to ignore, separated by a comma:",
-    default: currentConfig.ignore,
+    default: currentConfig.ignore ?? [],
   });
-  if (ignore.length === 1 && ignore[0] === "") ignore = undefined;
+  if (ignore?.length === 1 && ignore[0] === "") ignore = [];
 
   const check: boolean | undefined = await Confirm.prompt({
     message: "Perform all checks before publication?",
-    default: currentConfig.check ?? true,
+    default: currentConfig.check ?? false,
   });
   const noCheck = !check;
 
-  let checkFormat: boolean | string | undefined =
-    noCheck && await Confirm.prompt({
+  let checkFormat: boolean | string | undefined = noCheck &&
+      (await Confirm.prompt({
         message: "Check source files formatting before publication?",
-        default: (!!currentConfig.checkFormat) ?? false,
-      })
-      ? await Input.prompt({
-        message: "Formatting command (leave blank for default):",
-        default: typeof currentConfig.checkFormat === "string"
-          ? currentConfig.checkFormat
-          : undefined,
-      })
-      : false;
+        default: !!currentConfig.checkFormat ?? false,
+      }))
+    ? await Input.prompt({
+      message: "Formatting command (leave blank for default):",
+      default: typeof currentConfig.checkFormat === "string"
+        ? currentConfig.checkFormat
+        : undefined,
+    })
+    : false;
   if (checkFormat === "") checkFormat = true;
 
-  let checkTests: boolean | string | undefined =
-    noCheck && await Confirm.prompt({
+  let checkTests: boolean | string | undefined = noCheck &&
+      (await Confirm.prompt({
         message: "Test your code before publication?",
-        default: (!!currentConfig.checkTests) ?? false,
-      })
-      ? await Input.prompt({
-        message: "Testing command (leave blank for default):",
-        default: typeof currentConfig.checkTests === "string"
-          ? currentConfig.checkTests
-          : undefined,
-      })
-      : false;
+        default: !!currentConfig.checkTests ?? false,
+      }))
+    ? await Input.prompt({
+      message: "Testing command (leave blank for default):",
+      default: typeof currentConfig.checkTests === "string"
+        ? currentConfig.checkTests
+        : undefined,
+    })
+    : false;
   if (checkTests === "") checkTests = true;
 
   const checkInstallation: boolean | undefined = noCheck &&
-    await Confirm.prompt({
+    (await Confirm.prompt({
       message: "Install module and check for missing files before publication?",
       default: currentConfig.checkInstallation ?? false,
-    });
+    }));
 
   const format = await Select.prompt({
     message: "Config format: ",
-    default: (configPath ? configFormat(configPath) : ConfigFormat.JSON)
-      .toUpperCase(),
+    default: configPath
+      ? configFormat(configPath).toUpperCase()
+      : ConfigFormat.JSON,
     options: [
       { name: "YAML", value: ConfigFormat.YAML },
       { name: "JSON", value: ConfigFormat.JSON },
     ],
     keys: {
-      previous: ["up", "8", "u"],
-      next: ["down", "2", "d"],
+      previous: ["up", "8", "u", "k"],
+      next: ["down", "2", "d", "j"],
     },
   });
 
   const config: Partial<Config> = {
-    "$schema": `https://x.nest.land/eggs@${eggsVersion}/src/schema.json`,
+    $schema: `https://x.nest.land/eggs@${eggsVersion}/src/schema.json`,
     name,
     entry,
     description,
