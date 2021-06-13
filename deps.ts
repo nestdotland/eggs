@@ -46,9 +46,9 @@ export {
   Command,
   CompletionsCommand,
   HelpCommand,
-} from "https://x.nest.land/cliffy@0.18.2/command/mod.ts";
+} from "https://x.nest.land/cliffy@0.19.1/command/mod.ts";
 
-export { string as stringType } from "https://x.nest.land/cliffy@0.18.2/flags/types/string.ts";
+export { string as stringType } from "https://x.nest.land/cliffy@0.19.1/flags/types/string.ts";
 
 export {
   Checkbox,
@@ -56,12 +56,12 @@ export {
   Input,
   List,
   Select,
-} from "https://x.nest.land/cliffy@0.18.2/prompt/mod.ts";
+} from "https://x.nest.land/cliffy@0.19.1/prompt/mod.ts";
 
-export type { ITypeInfo } from "https://x.nest.land/cliffy@0.18.2/flags/types.ts";
+export type { ITypeInfo } from "https://x.nest.land/cliffy@0.19.1/flags/types.ts";
 
 /**************** semver ****************/
-export * as semver from "https://deno.land/x/semver@v1.3.0/mod.ts";
+export * as semver from "https://deno.land/x/semver@v1.4.0/mod.ts";
 
 /**************** base64 ****************/
 export * as base64 from "https://denopkg.com/chiefbiiko/base64@v0.2.0/mod.ts";
@@ -72,9 +72,9 @@ export {
   NestLand,
   parseURL,
   UpdateNotifier,
-} from "https://x.nest.land/hatcher@0.10.1/mod.ts";
+} from "https://x.nest.land/hatcher@0.10.2/mod.ts";
 
-export { isVersionUnstable } from "https://x.nest.land/hatcher@0.10.1/lib/utilities/utils.ts";
+export { isVersionUnstable } from "https://x.nest.land/hatcher@0.10.2/lib/utilities/utils.ts";
 
 export { install as installHatcher } from "https://x.nest.land/hatcher@0.10.1/lib/cli.ts";
 
