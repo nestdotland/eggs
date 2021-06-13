@@ -70,7 +70,7 @@ task("get-version", [], async function () {
 
 task("setup-github-actions", [], async function () {
   const process = Deno.run({
-    cmd: ["deno", "install", "-A", "-n", "drake", "Drakefile.ts"],
+    cmd: ["deno", "install", "-A", "--unstable", "-n", "drake", "Drakefile.ts"],
   });
   await process.status();
   process.close();

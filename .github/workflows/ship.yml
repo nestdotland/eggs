@@ -20,7 +20,7 @@ jobs:
         uses: denolib/setup-deno@v2
 
       - name: Setup Drake
-        run: deno run -A Drakefile.ts setup-github-actions
+        run: deno run -A --unstable Drakefile.ts setup-github-actions
 
       - name: Get eggs version
         run: drake get-version
