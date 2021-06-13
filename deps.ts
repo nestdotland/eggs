@@ -76,7 +76,7 @@ export {
 
 export { isVersionUnstable } from "https://x.nest.land/hatcher@0.10.2/lib/utilities/utils.ts";
 
-export { install as installHatcher } from "https://x.nest.land/hatcher@0.10.1/lib/cli.ts";
+export { install as installHatcher } from "https://x.nest.land/hatcher@0.10.2/lib/cli.ts";
 
 /**************** analyzer ****************/
 export type { DependencyTree } from "https://x.nest.land/analyzer@0.0.6/deno/tree.ts";
