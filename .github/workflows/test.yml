@@ -29,7 +29,7 @@ jobs:
         uses: denolib/setup-deno@v2
 
       - name: Setup Drake
-        run: deno run -A Drakefile.ts setup-github-actions
+        run: deno run -A --unstable Drakefile.ts setup-github-actions
 
       - name: Run tests
         run: drake test
@@ -65,7 +65,7 @@ jobs:
           deno-version: nightly
 
       - name: Setup Drake
-        run: deno run -A Drakefile.ts setup-github-actions
+        run: deno run -A --unstable Drakefile.ts setup-github-actions
 
       - name: Run tests
         run: drake test
