@@ -1,4 +1,4 @@
-import { desc, run, sh, task } from "https://x.nest.land/drake@1.4.4/mod.ts";
+import { desc, run, sh, task } from "https://x.nest.land/drake@1.5.0/mod.ts";
 import { version } from "./src/version.ts";
 import { join } from "./deps.ts";
 
