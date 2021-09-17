@@ -6,30 +6,22 @@ const encoder = new TextEncoder();
 
 desc("Run tests.");
 task("test", [], async function () {
-  await sh(
-    `deno test -A --unstable`,
-  );
+  await sh(`deno test -A --unstable`);
 });
 
 desc("Format source files.");
 task("format", [], async function () {
-  await sh(
-    `deno fmt`,
-  );
+  await sh(`deno fmt`);
 });
 
 desc("Format source files.");
 task("check-format", [], async function () {
-  await sh(
-    `deno fmt --check`,
-  );
+  await sh(`deno fmt --check`);
 });
 
 desc("Lint source files.");
 task("lint", [], async function () {
-  await sh(
-    `deno lint --unstable`,
-  );
+  await sh(`deno lint --unstable`);
 });
 
 desc("Links the nest.land API key.");
@@ -43,14 +35,14 @@ task("link", [], async function () {
 desc("Reports the details of what would have been published.");
 task("dry-publish", [], async function () {
   await sh(
-    `deno run -A --unstable eggs.ts publish eggs -DoY --no-check --check-installation --entry eggs.ts --version ${version}-dev --dry-run `,
+    `deno run -A --unstable eggs.ts publish eggs -DYod --entry eggs.ts --version ${version}-dev --no-check --check-installation`,
   );
 });
 
 desc("Publishes eggs to the nest.land registry.");
 task("publish", [], async function () {
   await sh(
-    `deno run -A --unstable eggs.ts publish eggs -DoY --no-check --check-installation --entry eggs.ts --version ${version}`,
+    `deno run -A --unstable eggs.ts publish eggs -DYo --entry eggs.ts --version ${version} --no-check --check-installation`,
   );
 });
 
