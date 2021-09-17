@@ -4,7 +4,6 @@ on:
   push:
     branches: [master]
 
-
 jobs:
   release:
     runs-on: ubuntu-latest
@@ -17,7 +16,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Setup Deno
-        uses: denolib/setup-deno@v2
+        uses: maximousblk/setup-deno@v1
 
       - name: Setup Drake
         run: deno run -A --unstable Drakefile.ts setup-github-actions
