@@ -55,7 +55,7 @@
 **Note: You need to upgrade to Deno v1.6.0 or newer in order to use our CLI.**
 
 ```shell script
-deno install -Afq --unstable https://x.nest.land/eggs@0.3.8/eggs.ts
+deno install -Afq --unstable https://x.nest.land/eggs@0.3.10/eggs.ts
 ```
 
 For more information, see the [documentation](https://docs.nest.land/).
