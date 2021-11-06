@@ -35,8 +35,10 @@ task("lint", [], async function () {
 desc("Links the nest.land API key.");
 task("link", [], async function () {
   await sh(
-    `deno run -A --unstable eggs.ts link ${Deno.env.get("NESTAPIKEY") ||
-      "null"} -Do`,
+    `deno run -A --unstable eggs.ts link ${
+      Deno.env.get("NESTAPIKEY") ||
+      "null"
+    } -Do`,
   );
 });
 

@@ -44,7 +44,7 @@ export async function info(options: Options, file?: string) {
     let importsResolved = 0;
 
     const progress = () =>
-      wait.text = (`${importsResolved} / ${importsFound} imports`);
+      wait.text = `${importsResolved} / ${importsFound} imports`;
     const onImportFound = (count: number) => {
       importsFound = count;
       progress();
