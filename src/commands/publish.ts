@@ -255,7 +255,7 @@ export async function publish(options: Options, name?: string) {
   }
 
   const [gatheredContext, contextIgnore] = await gatherContext();
-  log.debug("config:", options);
+  log.debug("Options:", options);
   const gatheredOptions = gatherOptions(options, name);
   if (!gatheredContext || !gatheredOptions) return;
 
