@@ -116,7 +116,7 @@ function gatherOptions(
     options.description && (cfg.description = options.description);
     options.entry && (cfg.entry = options.entry);
     options.unstable !== undefined && (cfg.unstable = options.unstable);
-    options.unlisted !== undefined && (cfg.unstable = options.unlisted);
+    options.unlisted !== undefined && (cfg.unlisted = options.unlisted);
     options.homepage &&
       (cfg.homepage = urlType(
         { name: "homepage", value: options.homepage, label: "", type: "" },
@@ -129,6 +129,7 @@ function gatherOptions(
     options.checkInstallation !== undefined &&
       (cfg.checkInstallation = options.checkInstallation);
     options.check !== undefined && (cfg.check = options.check);
+    options.yes !== undefined && (cfg.yes = options.yes);
     return cfg;
   } catch (err) {
     log.error(err);
@@ -254,6 +255,7 @@ export async function publish(options: Options, name?: string) {
   }
 
   const [gatheredContext, contextIgnore] = await gatherContext();
+  log.debug("Options:", options);
   const gatheredOptions = gatherOptions(options, name);
   if (!gatheredContext || !gatheredOptions) return;
 
