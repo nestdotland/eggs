@@ -1,4 +1,5 @@
 import {
+  detectIndent,
   exists,
   extname,
   join,
@@ -83,7 +84,16 @@ export async function writeConfig(
       await writeYaml(join(Deno.cwd(), "egg.yml"), stringifyYaml(data));
       break;
     case ConfigFormat.JSON:
-      await writeJson(join(Deno.cwd(), "egg.json"), data, { spaces: 2 });
+      const configPath = join(Deno.cwd(), "egg.json");
+
+      let indent = "  ";
+
+      if (await exists(configPath)) {
+        const currentConfigString = await Deno.readTextFile(configPath);
+        ({ indent } = detectIndent(currentConfigString));
+      }
+
+      await writeJson(configPath, data, { indent });
       break;
     default:
       throw new Error(`Unknown config format: ${format}`);
