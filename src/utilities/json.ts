@@ -3,7 +3,7 @@ type Replacer = (key: string, value: unknown) => unknown;
 
 export interface WriteJsonOptions extends Deno.WriteFileOptions {
   replacer?: Array<number | string> | Replacer;
-  spaces?: number | string;
+  indent?: string;
 }
 
 function serialize(
@@ -16,7 +16,7 @@ function serialize(
     const jsonString = JSON.stringify(
       object,
       options.replacer as string[],
-      options.spaces,
+      options.indent,
     );
     return `${jsonString}\n`;
   } catch (err) {

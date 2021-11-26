@@ -84,3 +84,6 @@ export { dependencyTree } from "https://x.nest.land/analyzer@0.0.6/deno/tree.ts"
 
 /**************** wait ****************/
 export { Spinner, wait } from "https://deno.land/x/wait@0.1.12/mod.ts";
+
+/**************** detect-indent ****************/
+export { default as detectIndent } from "https://jspm.dev/detect-indent@7";
