@@ -85,8 +85,13 @@ export async function writeConfig(
       break;
     case ConfigFormat.JSON:
       const configPath = join(Deno.cwd(), "egg.json");
-      const currentConfigString = await Deno.readTextFile(configPath);
-      const { indent } = detectIndent(currentConfigString);
+
+      let indent = "  ";
+
+      if (await exists(configPath)) {
+        const currentConfigString = await Deno.readTextFile(configPath);
+        ({ indent } = detectIndent(currentConfigString));
+      }
 
       await writeJson(configPath, data, { indent });
       break;
