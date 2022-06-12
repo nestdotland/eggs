@@ -8,7 +8,7 @@ export async function postResource<T>(
   query: string,
   headers: StringMap,
   data: Record<string, unknown>,
-): Promise<T | undefined> {
+): Promise<T | Error> {
   // TODO(@qu4k): add test resource
   try {
     const response = await apiFetch(`${ENDPOINT}${query}`, {
@@ -20,11 +20,16 @@ export async function postResource<T>(
       body: JSON.stringify(data),
     });
 
-    if (!response || !response.ok) return undefined;
+    if (!response.ok) {
+      return new Error(
+        `The server respond with ${response.status} ${response.statusText}:\n` +
+          await response.text(),
+      );
+    }
     const value = await response.json();
     return value as T;
-  } catch {
-    return undefined;
+  } catch (e) {
+    return e;
   }
 }
 
@@ -50,8 +55,8 @@ export interface PublishModule extends Record<string, unknown> {
 export async function postPublishModule(
   key: string,
   module: PublishModule,
-): Promise<PublishResponse | undefined> {
-  const response: PublishResponse | undefined = await postResource(
+): Promise<PublishResponse | Error> {
+  const response: PublishResponse | Error = await postResource(
     "/api/publish",
     { "Authorization": key },
     module,
@@ -67,8 +72,8 @@ export interface PiecesResponse {
 export async function postPieces(
   uploadToken: string,
   pieces: StringMap,
-): Promise<PiecesResponse | undefined> {
-  const response: PiecesResponse | undefined = await postResource(
+): Promise<PiecesResponse | Error> {
+  const response: PiecesResponse | Error = await postResource(
     "/api/piece",
     { "X-UploadToken": uploadToken },
     {

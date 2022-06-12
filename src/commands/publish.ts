@@ -361,23 +361,25 @@ export async function publish(options: Options, name?: string) {
   }
 
   const uploadResponse = await postPublishModule(apiKey, module);
-  if (!uploadResponse) {
-    // TODO(@qu4k): provide better error reporting
-    throw new Error("Something broke when publishing... ");
+  if (uploadResponse instanceof Error) {
+    throw new Error(
+      `Something broke when publishing; ${uploadResponse.message}`,
+    );
   }
 
   const pieceResponse = await postPieces(
     uploadResponse.token,
     Object.entries(matchedContent).reduce((prev, [key, value]) => {
-      prev[key.substr(1)] = value;
+      prev[key.substring(1)] = value;
       return prev;
     }, {} as Record<string, string>),
   );
   // TODO(@oganexon): same, needs consistency
 
-  if (!pieceResponse) {
-    // TODO(@qu4k): provide better error reporting
-    throw new Error("Something broke when sending pieces... ");
+  if (pieceResponse instanceof Error) {
+    throw new Error(
+      `Something broke when sending pieces; ${pieceResponse.message}`,
+    );
   }
 
   const configPath = await defaultConfig();
